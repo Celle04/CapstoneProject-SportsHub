@@ -148,6 +148,33 @@ class AdminAssistedPasswordResetTest extends TestCase
         ])->assertSessionHasErrors('password');
     }
 
+    public function test_a_forced_change_athlete_is_redirected_from_every_other_route(): void
+    {
+        $student = $this->createStudent();
+        $student->markPasswordChangeRequired();
+
+        $forced = $student->fresh();
+
+        // Routes registered outside the student portal group.
+        $this->actingAs($forced)->get(route('notifications.index'))->assertRedirect(route('student.change-password'));
+        $this->actingAs($forced)->post(route('notifications.read-all'))->assertRedirect(route('student.change-password'));
+
+        // Routes inside the student portal group.
+        $this->actingAs($forced)->get(route('student.dashboard'))->assertRedirect(route('student.change-password'));
+        $this->actingAs($forced)->get(route('student.profile'))->assertRedirect(route('student.change-password'));
+
+        // The change password page and logout stay reachable.
+        $this->actingAs($forced)->get(route('student.change-password'))->assertOk();
+    }
+
+    public function test_an_administrator_is_never_sent_to_the_athlete_change_password_page(): void
+    {
+        $admin = $this->createAdmin();
+        $admin->forceFill(['must_change_password' => true])->save();
+
+        $this->actingAs($admin->fresh())->get(route('dashboard'))->assertOk();
+    }
+
     public function test_a_student_cannot_access_the_administrative_reset_action(): void
     {
         $admin = $this->createAdmin();

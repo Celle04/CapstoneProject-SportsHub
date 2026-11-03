@@ -14,6 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'force.password.change' => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
         ]);
+
+        /*
+         * Enforce the mandatory password change on every authenticated web
+         * request, not only on the student portal route group. Without this a
+         * forced-change athlete could keep using the one-time temporary
+         * password on any route registered outside the group.
+         */
+        $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChangeMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
