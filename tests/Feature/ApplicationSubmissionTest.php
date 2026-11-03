@@ -62,4 +62,21 @@ class ApplicationSubmissionTest extends TestCase
         $response->assertSessionHasErrors(['email', 'sport_id', 'parent_consent']);
         $this->assertSame(0, Application::count());
     }
+
+    public function test_public_applications_are_rate_limited(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post(route('application.store'), $this->applicationPayload([
+                'student_id' => '2026-'.str_pad((string) $attempt, 4, '0', STR_PAD_LEFT),
+                'email' => "applicant{$attempt}@example.com",
+            ]))->assertRedirect(route('application.create'));
+        }
+
+        $this->post(route('application.store'), $this->applicationPayload([
+            'student_id' => '2026-9999',
+            'email' => 'applicant-last@example.com',
+        ]))->assertStatus(429);
+
+        $this->assertSame(5, Application::count());
+    }
 }

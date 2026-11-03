@@ -125,7 +125,15 @@ Route::get('/apply', function () {
     return view('application.create', ['sports' => Sport::orderBy('name')->get()]);
 })->name('application.create');
 
-Route::post('/apply', [ApplicationController::class, 'store'])->name('application.store');
+/*
+ * Public applications carry three file uploads each, so the submission is
+ * rate limited per network source. A genuine applicant submits once (twice if
+ * they fix a mistake), and a shared school or home network can still put a
+ * handful of students through in the same window.
+ */
+Route::post('/apply', [ApplicationController::class, 'store'])
+    ->middleware('throttle:5,10')
+    ->name('application.store');
 
 /*
  * PortalNavigation is the single source of truth for both portals, so the
