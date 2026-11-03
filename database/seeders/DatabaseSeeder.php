@@ -23,6 +23,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        /*
+         * The seed data below includes well-known demo accounts with the
+         * password "password". It must never reach a real installation, so the
+         * seeder refuses to run outside the local and testing environments.
+         */
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command?->warn('DatabaseSeeder is disabled outside the local and testing environments.');
+
+            return;
+        }
+
         // User::factory(10)->create();
 
         User::updateOrCreate(['email' => 'admin@example.com'], [
