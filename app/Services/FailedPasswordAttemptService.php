@@ -108,7 +108,9 @@ class FailedPasswordAttemptService
         return [
             'account' => $account?->name,
             'account_email' => $account?->email,
-            'identifier' => $identifier,
+            // Only the masked form leaves this service, so the raw address the
+            // visitor typed never reaches a mailbox or the log file.
+            'identifier' => self::maskIdentifier($identifier),
             'role' => $role,
             'when' => now()->format('M j, Y g:i A'),
             'ip' => $request->ip() ?: 'Unknown',
@@ -311,7 +313,7 @@ class FailedPasswordAttemptService
             'Incorrect password entered (%s) for %s [%s] from %s.',
             $context,
             $details['account'] ?? 'an unknown account',
-            self::maskIdentifier((string) $details['identifier']),
+            $details['identifier'] ?? 'unknown',
             $details['ip'],
         ));
     }

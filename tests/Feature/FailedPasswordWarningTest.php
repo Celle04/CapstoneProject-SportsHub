@@ -7,6 +7,7 @@ use App\Notifications\FailedPasswordAttemptNotification;
 use App\Notifications\FailedPasswordNotification;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -59,6 +60,60 @@ class FailedPasswordWarningTest extends TestCase
         // so the form cannot be used to flood the coordinators or to discover
         // which addresses are enrolled.
         Notification::assertNothingSent();
+    }
+
+    public function test_the_warning_email_never_contains_the_raw_identifier(): void
+    {
+        Notification::fake();
+
+        $this->athlete();
+        $this->coordinator();
+
+        $this->post(route('login.submit'), [
+            'username' => 'athlete@example.com',
+            'password' => 'wrong-password',
+            'role' => 'Student',
+        ]);
+
+        Notification::assertSentTo(
+            User::where('email', 'coordinator@example.com')->firstOrFail(),
+            FailedPasswordAttemptNotification::class,
+            function (FailedPasswordAttemptNotification $notification) {
+                // The notification payload the email is built from must carry
+                // only the masked identifier.
+                return ! str_contains((string) ($notification->details['identifier'] ?? ''), 'athlete@example.com')
+                    && str_contains((string) ($notification->details['identifier'] ?? ''), '***@example.com');
+            },
+        );
+    }
+
+    public function test_the_log_never_contains_the_raw_identifier(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.username' => null,
+            'mail.mailers.smtp.password' => null,
+        ]);
+
+        $this->athlete();
+        $this->coordinator();
+
+        $logged = [];
+        Log::listen(function ($message) use (&$logged) {
+            $logged[] = (string) $message->message.' '.json_encode($message->context);
+        });
+
+        $this->post(route('login.submit'), [
+            'username' => 'athlete@example.com',
+            'password' => 'wrong-password',
+            'role' => 'Student',
+        ])->assertSessionHasErrors('username');
+
+        $this->assertNotEmpty($logged, 'A warning should have been logged.');
+
+        foreach ($logged as $line) {
+            $this->assertStringNotContainsString('athlete@example.com', $line);
+        }
     }
 
     public function test_a_successful_sign_in_sends_no_warning(): void
