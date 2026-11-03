@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
          * password on any route registered outside the group.
          */
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChangeMiddleware::class);
+
+        // Security headers on every web response (CSP is report-only for now).
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeadersMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
