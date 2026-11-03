@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SanitizesCsvCells;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use App\Models\Event;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AttendanceController extends Controller
 {
+    use SanitizesCsvCells;
+
     public function __construct(private readonly AttendanceSessionService $attendance)
     {
     }
@@ -224,23 +227,6 @@ class AttendanceController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="SNNHS_Attendance_'.$label.'_'.$date.'.csv"',
         ]);
-    }
-
-    /**
-     * Sanitize a CSV cell to protect against formula injection. Cells that
-     * begin with a formula character are prefixed with a tab so spreadsheet
-     * applications treat the value as literal text instead of executing it.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    private function csvCell(string $value): string
-    {
-        if (preg_match('#^[=+\-@\t\r\n]#', $value)) {
-            return "\t".$value;
-        }
-
-        return $value;
     }
 
     public function exportPdf(AttendanceSession $session): Response

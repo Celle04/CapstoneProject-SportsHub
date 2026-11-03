@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SanitizesCsvCells;
 use App\Models\Application;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
@@ -28,6 +29,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReportController extends Controller
 {
+    use SanitizesCsvCells;
+
     public const REPORTS = ['athletes', 'attendance', 'coaches', 'athlete-summary'];
 
     /**
@@ -143,10 +146,13 @@ class ReportController extends Controller
                 if ($payload['grouped'] && ($row['group'] ?? null) !== $group) {
                     $group = $row['group'] ?? null;
                     fputcsv($handle, []);
-                    fputcsv($handle, [strtoupper((string) $group)]);
+                    fputcsv($handle, [$this->csvCell(strtoupper((string) $group))]);
                 }
 
-                fputcsv($handle, array_map(fn (array $column) => (string) ($row[$column['key']] ?? ''), $payload['columns']));
+                fputcsv($handle, array_map(
+                    fn (array $column) => $this->csvCell((string) ($row[$column['key']] ?? '')),
+                    $payload['columns'],
+                ));
             }
 
             fclose($handle);

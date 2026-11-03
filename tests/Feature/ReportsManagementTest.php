@@ -365,6 +365,29 @@ class ReportsManagementTest extends TestCase
         $this->assertStringContainsString('Student ID', $csv);
     }
 
+    public function test_the_athlete_csv_export_neutralises_formula_cells(): void
+    {
+        $admin = $this->admin();
+        $sport = $this->sport('Fencing');
+
+        User::factory()->create([
+            'name' => '=HYPERLINK("http://evil.example","click")',
+            'role' => 'Student',
+            'sport_id' => $sport->id,
+            'student_id' => '2026-8002',
+        ]);
+
+        $csv = $this->actingAs($admin)
+            ->get(route('reports.export', ['format' => 'csv', 'report' => 'athletes']))
+            ->assertOk()
+            ->streamedContent();
+
+        // The dangerous value is still visible, but prefixed with a tab so a
+        // spreadsheet treats it as literal text instead of running it.
+        $this->assertStringContainsString("\t=HYPERLINK", $csv);
+        $this->assertStringNotContainsString(',=HYPERLINK', $csv);
+    }
+
     public function test_the_athlete_list_can_be_categorized_by_sport_boys_and_girls(): void
     {
         $admin = $this->admin();
