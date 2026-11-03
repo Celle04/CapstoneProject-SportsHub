@@ -32,6 +32,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 Route::get('/', function () {
     return view('landing', [
@@ -588,8 +589,18 @@ Route::post('/notifications/{notification}/read', function (string $notification
 Route::get('/notifications/{notification}', function (string $notification) {
     abort_unless(auth()->check(), 403);
     $record = auth()->user()->notifications()->whereKey($notification)->firstOrFail();
-    $target = data_get($record->data, 'url') ?: route('notifications.index');
+    $target = (string) (data_get($record->data, 'url') ?: '');
     $record->markAsRead();
+
+    /*
+     * A notification only ever points at an in-app page. Anything that is not
+     * a path on this site (for example an external host slipped into the
+     * notification payload) is dropped, so this route can never be used as an
+     * open redirect for phishing.
+     */
+    if (! Str::startsWith($target, url('/')) && ! Str::startsWith($target, '/')) {
+        $target = route('notifications.index');
+    }
 
     return redirect()->to($target);
 })->middleware('auth')->name('notifications.open');

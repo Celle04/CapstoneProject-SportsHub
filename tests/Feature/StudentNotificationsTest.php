@@ -67,6 +67,38 @@ class StudentNotificationsTest extends TestCase
         $this->assertSame(0, $student->unreadNotifications()->count());
     }
 
+    public function test_opening_a_notification_never_redirects_to_an_external_host(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification(
+            'Sketchy update',
+            'Do not follow this.',
+            'https://evil.example/phishing',
+        ));
+
+        $notification = $student->notifications()->firstOrFail();
+
+        $this->actingAs($student)
+            ->get(route('notifications.open', $notification->id))
+            ->assertRedirect(route('notifications.index'));
+    }
+
+    public function test_opening_an_in_app_notification_still_redirects_to_its_page(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification(
+            'Schedule update',
+            'Practice time changed.',
+            route('student.schedule'),
+        ));
+
+        $notification = $student->notifications()->firstOrFail();
+
+        $this->actingAs($student)
+            ->get(route('notifications.open', $notification->id))
+            ->assertRedirect(route('student.schedule'));
+    }
+
     public function test_upcoming_event_updates_notify_students_in_the_affected_sports(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);
