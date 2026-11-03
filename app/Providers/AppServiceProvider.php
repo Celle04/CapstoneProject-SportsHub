@@ -7,6 +7,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -48,5 +49,15 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(20)->by('ip|'.$request->ip()),
             ];
         });
+
+        /*
+         * In production every generated URL - reset links, redirects, the
+         * storage URL of uploaded photos - is forced to HTTPS, so a request
+         * that arrives over plain HTTP is never handed back an http link. The
+         * HTTP->HTTPS redirect itself is the web server's job.
+         */
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
