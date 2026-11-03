@@ -94,7 +94,7 @@ Route::post('/login', function () {
     );
 
     return redirect()->route('login')->withErrors(['username' => 'Invalid email or password.'])->withInput(request()->only('username', 'role'));
-})->name('login.submit');
+})->middleware('throttle:login')->name('login.submit');
 
 // Password reset runs entirely through Laravel's password broker: the broker
 // creates and hashes the token, delivers the branded notification, enforces

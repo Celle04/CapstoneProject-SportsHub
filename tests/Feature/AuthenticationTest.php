@@ -90,4 +90,65 @@ class AuthenticationTest extends TestCase
     {
         $this->get(route('dashboard'))->assertRedirect(route('login'));
     }
+
+    public function test_login_is_rate_limited_per_identifier_and_address(): void
+    {
+        User::factory()->create([
+            'email' => 'athlete@example.com',
+            'username' => 'athlete1',
+            'password' => 'password',
+            'role' => 'Student',
+        ]);
+
+        // Five wrong attempts are allowed; each is still a normal rejection.
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post(route('login.submit'), [
+                'username' => 'athlete1',
+                'password' => 'wrong-password',
+                'role' => 'Student',
+            ])->assertRedirect(route('login'));
+        }
+
+        // The sixth attempt in the same minute is throttled.
+        $this->post(route('login.submit'), [
+            'username' => 'athlete1',
+            'password' => 'wrong-password',
+            'role' => 'Student',
+        ])->assertStatus(429);
+
+        $this->assertGuest();
+    }
+
+    public function test_login_rate_limit_does_not_block_a_different_account(): void
+    {
+        User::factory()->create([
+            'email' => 'first@example.com',
+            'username' => 'first.athlete',
+            'password' => 'password',
+            'role' => 'Student',
+        ]);
+        User::factory()->create([
+            'email' => 'second@example.com',
+            'username' => 'second.athlete',
+            'password' => 'password',
+            'role' => 'Student',
+        ]);
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post(route('login.submit'), [
+                'username' => 'first.athlete',
+                'password' => 'wrong-password',
+                'role' => 'Student',
+            ]);
+        }
+
+        // A different identifier from the same address can still sign in.
+        $this->post(route('login.submit'), [
+            'username' => 'second.athlete',
+            'password' => 'password',
+            'role' => 'Student',
+        ])->assertRedirect(route('student.dashboard'));
+
+        $this->assertAuthenticated();
+    }
 }
