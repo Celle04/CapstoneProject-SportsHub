@@ -40,11 +40,11 @@ class FailedPasswordWarningTest extends TestCase
         Notification::assertSentTo($coordinator, FailedPasswordAttemptNotification::class);
     }
 
-    public function test_an_unknown_account_is_only_reported_to_the_coordinators(): void
+    public function test_an_unknown_account_is_not_reported_to_the_coordinators(): void
     {
         Notification::fake();
 
-        $coordinator = $this->coordinator();
+        $this->coordinator();
 
         $response = $this->post(route('login.submit'), [
             'username' => 'nobody@example.com',
@@ -55,10 +55,10 @@ class FailedPasswordWarningTest extends TestCase
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('username');
 
-        Notification::assertSentTo($coordinator, FailedPasswordAttemptNotification::class);
-        // Only the coordinator warning, so the form cannot be used to send
-        // mail to an address that has no account.
-        Notification::assertCount(1);
+        // An identifier that matches no account is counted but never forwarded,
+        // so the form cannot be used to flood the coordinators or to discover
+        // which addresses are enrolled.
+        Notification::assertNothingSent();
     }
 
     public function test_a_successful_sign_in_sends_no_warning(): void

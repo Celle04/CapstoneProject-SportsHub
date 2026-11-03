@@ -55,7 +55,15 @@ class FailedPasswordAttemptService
             $this->send($account, new FailedPasswordNotification('login', $details), 'account holder');
         }
 
-        $this->warnCoordinators('login', $details, $request);
+        /*
+         * Only a real account is reported to the coordinators. An identifier
+         * that matched nothing is counted but never forwarded, so the sign-in
+         * form cannot be used to make the app email the coordinators or to
+         * reveal which addresses are enrolled.
+         */
+        if ($account) {
+            $this->warnCoordinators('login', $details, $request);
+        }
     }
 
     /**
