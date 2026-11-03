@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,7 +127,7 @@ class PasswordResetController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email'],
             'token' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => PasswordRules::default(),
         ], [
             'password.confirmed' => 'The new passwords do not match.',
         ]);

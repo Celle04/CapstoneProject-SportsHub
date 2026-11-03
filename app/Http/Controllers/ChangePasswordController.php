@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\FailedPasswordAttemptService;
+use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -34,7 +35,7 @@ class ChangePasswordController extends Controller
 
         $validator = Validator::make($request->all(), [
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+            'password' => PasswordRules::change(),
         ], [
             'current_password.current_password' => 'The temporary password is incorrect.',
             'password.confirmed' => 'The new passwords do not match.',

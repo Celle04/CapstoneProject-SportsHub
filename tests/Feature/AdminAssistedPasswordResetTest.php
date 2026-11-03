@@ -17,6 +17,11 @@ class AdminAssistedPasswordResetTest extends TestCase
     {
         parent::setUp();
         $this->withoutMiddleware([ValidateCsrfToken::class, ThrottleRequests::class]);
+
+        // These tests exercise the reset behaviour itself, so the password is
+        // treated as already confirmed. The confirmation requirement has its
+        // own test below.
+        $this->withSession(['auth.password_confirmed_at' => now()->unix()]);
     }
 
     private function createAdmin(): User
@@ -113,12 +118,12 @@ class AdminAssistedPasswordResetTest extends TestCase
 
         $this->post(route('student.change-password.update'), [
             'current_password' => $temporaryPassword,
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ])->assertRedirect(route('student.dashboard'));
 
         $this->assertFalse($student->fresh()->needsPasswordChange());
-        $this->assertTrue(Hash::check('new-strong-password', $student->fresh()->password));
+        $this->assertTrue(Hash::check('NewStrongPass1', $student->fresh()->password));
 
         // The dashboard is now accessible again.
         $this->actingAs($student->fresh())
@@ -146,6 +151,22 @@ class AdminAssistedPasswordResetTest extends TestCase
             'password' => $temporaryPassword,
             'password_confirmation' => $temporaryPassword,
         ])->assertSessionHasErrors('password');
+    }
+
+    public function test_the_password_reset_action_requires_password_confirmation(): void
+    {
+        $admin = $this->createAdmin();
+        $student = $this->createStudent();
+
+        // A fresh session has no recent confirmation, so the middleware sends
+        // the administrator to the confirm-password screen instead of acting.
+        $this->withSession(['auth.password_confirmed_at' => null]);
+
+        $this->actingAs($admin)
+            ->post(route('athletes.password.reset', $student), [], ['Accept' => 'application/json'])
+            ->assertStatus(423);
+
+        $this->assertFalse($student->fresh()->needsPasswordChange());
     }
 
     public function test_a_forced_change_athlete_is_redirected_from_every_other_route(): void

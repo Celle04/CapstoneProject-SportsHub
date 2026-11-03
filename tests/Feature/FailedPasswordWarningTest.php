@@ -160,8 +160,8 @@ class FailedPasswordWarningTest extends TestCase
 
         $response = $this->actingAs($athlete)->post(route('student.change-password.update'), [
             'current_password' => 'wrong-temporary-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'BrandNewPass1',
+            'password_confirmation' => 'BrandNewPass1',
         ]);
 
         $response->assertSessionHasErrors('current_password');
@@ -179,8 +179,8 @@ class FailedPasswordWarningTest extends TestCase
 
         $response = $this->actingAs($athlete)->patch(route('student.profile.password'), [
             'current_password' => 'wrong-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'BrandNewPass1',
+            'password_confirmation' => 'BrandNewPass1',
         ]);
 
         $response->assertSessionHasErrors('current_password');
@@ -197,8 +197,8 @@ class FailedPasswordWarningTest extends TestCase
 
         $this->actingAs($athlete)->patch(route('student.profile.password'), [
             'current_password' => 'wrong-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'BrandNewPass1',
+            'password_confirmation' => 'BrandNewPass1',
         ])->assertSessionHasErrors('current_password');
 
         $this->assertTrue(password_verify('correct-password', $athlete->fresh()->password));

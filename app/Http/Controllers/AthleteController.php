@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\HandlesProfilePhotos;
 use App\Models\Application;
 use App\Models\Sport;
 use App\Models\User;
+use App\Support\PasswordRules;
 use App\Support\PortalNavigation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,7 +63,7 @@ class AthleteController extends Controller
             'application_id' => ['required', 'exists:applications,id'],
             'email' => ['nullable', 'email', 'max:255'],
             'username' => ['required', 'string', 'max:100', 'unique:users,username'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => PasswordRules::default(),
         ]);
 
         $application = Application::findOrFail($validated['application_id']);

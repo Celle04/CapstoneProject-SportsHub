@@ -29,7 +29,7 @@ class AthleteAccountCreationTest extends TestCase
         ]);
 
         $this->actingAs(User::factory()->create(['role' => 'Administrator']))
-            ->post(route('athletes.store'), ['application_id' => $application->id, 'username' => 'ana.santos', 'password' => 'temporary-password', 'password_confirmation' => 'temporary-password'])
+            ->post(route('athletes.store'), ['application_id' => $application->id, 'username' => 'ana.santos', 'password' => 'TemporaryPass1', 'password_confirmation' => 'TemporaryPass1'])
             ->assertRedirect(route('athletes.index'));
 
         $this->assertDatabaseHas('users', ['email' => 'ana@example.com', 'username' => 'ana.santos', 'student_id' => '2026-102', 'sport_id' => $sport->id, 'role' => 'Student']);
@@ -74,8 +74,8 @@ class AthleteAccountCreationTest extends TestCase
                 'application_id' => $application->id,
                 'email' => 'ana.corrected@example.com',
                 'username' => 'ana.santos',
-                'password' => 'temporary-password',
-                'password_confirmation' => 'temporary-password',
+                'password' => 'TemporaryPass1',
+                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.index'));
 
@@ -92,8 +92,8 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'temporary-password',
-                'password_confirmation' => 'temporary-password',
+                'password' => 'TemporaryPass1',
+                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -112,8 +112,8 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'temporary-password',
-                'password_confirmation' => 'temporary-password',
+                'password' => 'TemporaryPass1',
+                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -132,8 +132,8 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.second',
-                'password' => 'temporary-password',
-                'password_confirmation' => 'temporary-password',
+                'password' => 'TemporaryPass1',
+                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -149,8 +149,8 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'temporary-password',
-                'password_confirmation' => 'temporary-password',
+                'password' => 'TemporaryPass1',
+                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertStatus(422);
 

@@ -21,6 +21,11 @@ class MedicalRecordsTest extends TestCase
         parent::setUp();
         $this->withoutMiddleware(ValidateCsrfToken::class);
         Storage::fake('private');
+
+        // Deleting a medical record now requires a recent password
+        // confirmation. Treat it as confirmed so the delete behaviour itself
+        // can be exercised; the requirement has its own test below.
+        $this->withSession(['auth.password_confirmed_at' => now()->unix()]);
     }
 
     /**
@@ -61,6 +66,20 @@ class MedicalRecordsTest extends TestCase
     {
         $this->get(route('admin.medical'))->assertRedirect(route('login'));
         $this->get(route('admin.medical.create'))->assertRedirect(route('login'));
+    }
+
+    public function test_deleting_a_medical_record_requires_password_confirmation(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id]));
+
+        $this->withSession(['auth.password_confirmed_at' => null]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.medical.destroy', $record))
+            ->assertRedirect(route('password.confirm'));
+
+        $this->assertDatabaseHas('medical_records', ['id' => $record->id]);
     }
 
     public function test_an_athlete_cannot_reach_any_medical_management_route(): void

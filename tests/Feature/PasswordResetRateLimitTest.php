@@ -32,8 +32,8 @@ class PasswordResetRateLimitTest extends TestCase
         $payload = [
             'email' => 'someone@example.com',
             'token' => 'forged-token',
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ];
 
         for ($attempt = 0; $attempt < 5; $attempt++) {

@@ -194,7 +194,7 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => $token,
-            'password' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
             'password_confirmation' => 'different-password',
         ])->assertRedirect(route('password.reset', ['token' => $token, 'email' => $user->email]))
             ->assertSessionHasErrors('password');
@@ -219,6 +219,25 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 
+    public function test_reset_rejects_a_password_that_is_not_strong_enough(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+        $token = $this->requestResetToken($user);
+
+        foreach (['lowercase1', 'UPPERCASE1', 'NoDigitsHere', 'Short1A'] as $weak) {
+            $this->post(route('password.update'), [
+                'email' => $user->email,
+                'token' => $token,
+                'password' => $weak,
+                'password_confirmation' => $weak,
+            ])->assertSessionHasErrors('password');
+        }
+
+        // The password is never changed by a rejected attempt.
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
+    }
+
     public function test_an_invalid_token_is_rejected_on_open_and_on_submit(): void
     {
         $user = $this->createUser();
@@ -230,8 +249,8 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => 'not-a-real-token',
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('email');
 
@@ -253,8 +272,8 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => $token,
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('email');
 
@@ -270,8 +289,8 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => $token,
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ])->assertRedirect(route('login'))
             ->assertSessionHas('success', 'Your password has been successfully reset. You can now log in with your new password.');
 
@@ -281,15 +300,15 @@ class PasswordResetTest extends TestCase
         $fresh = $user->fresh();
 
         $this->assertSame('Student', $fresh->role);
-        $this->assertNotSame('new-strong-password', $fresh->password);
+        $this->assertNotSame('NewStrongPass1', $fresh->password);
         $this->assertTrue(Hash::isHashed($fresh->password));
-        $this->assertTrue(Hash::check('new-strong-password', $fresh->password));
+        $this->assertTrue(Hash::check('NewStrongPass1', $fresh->password));
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
 
         // The athlete signs in with the new password and lands on the portal.
         $this->post(route('login.submit'), [
             'username' => 'athlete@example.com',
-            'password' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
             'role' => 'Student',
         ])->assertRedirect(route('student.dashboard'));
 
@@ -305,19 +324,19 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => $token,
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'NewStrongPass1',
+            'password_confirmation' => 'NewStrongPass1',
         ])->assertRedirect(route('login'));
 
         $this->post(route('password.update'), [
             'email' => $user->email,
             'token' => $token,
-            'password' => 'another-password',
-            'password_confirmation' => 'another-password',
+            'password' => 'AnotherPass1',
+            'password_confirmation' => 'AnotherPass1',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('email');
 
-        $this->assertTrue(Hash::check('new-strong-password', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewStrongPass1', $user->fresh()->password));
     }
 
     public function test_an_administrator_can_reset_and_still_logs_in_as_an_admin(): void
@@ -329,16 +348,16 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.update'), [
             'email' => $admin->email,
             'token' => $token,
-            'password' => 'admin-new-password',
-            'password_confirmation' => 'admin-new-password',
+            'password' => 'AdminNewPass1',
+            'password_confirmation' => 'AdminNewPass1',
         ])->assertRedirect(route('login'));
 
         $this->assertSame('Administrator', $admin->fresh()->role);
-        $this->assertTrue(Hash::check('admin-new-password', $admin->fresh()->password));
+        $this->assertTrue(Hash::check('AdminNewPass1', $admin->fresh()->password));
 
         $this->post(route('login.submit'), [
             'username' => 'admin@example.com',
-            'password' => 'admin-new-password',
+            'password' => 'AdminNewPass1',
             'role' => 'Administrator',
         ])->assertRedirect(route('dashboard'));
 

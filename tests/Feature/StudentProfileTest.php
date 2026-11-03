@@ -248,13 +248,13 @@ class StudentProfileTest extends TestCase
             ->from(route('student.profile'))
             ->patch(route('student.profile.password'), [
                 'current_password' => 'old-password',
-                'password' => 'new-password-1',
-                'password_confirmation' => 'new-password-1',
+                'password' => 'NewPassword1',
+                'password_confirmation' => 'NewPassword1',
             ])
             ->assertRedirect(route('student.profile'))
             ->assertSessionHas('success', 'Your password has been changed successfully.');
 
-        $this->assertTrue(Hash::check('new-password-1', $athlete->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword1', $athlete->fresh()->password));
     }
 
     public function test_the_new_password_works_on_login_and_the_old_one_stops_working(): void
@@ -263,8 +263,8 @@ class StudentProfileTest extends TestCase
 
         $this->actingAs($athlete)->patch(route('student.profile.password'), [
             'current_password' => 'old-password',
-            'password' => 'new-password-1',
-            'password_confirmation' => 'new-password-1',
+            'password' => 'NewPassword1',
+            'password_confirmation' => 'NewPassword1',
         ]);
 
         $this->post(route('logout'));
@@ -272,7 +272,7 @@ class StudentProfileTest extends TestCase
         $this->post(route('login.submit'), ['role' => 'Student', 'username' => 'juan@example.com', 'password' => 'old-password'])
             ->assertRedirect(route('login'));
 
-        $this->post(route('login.submit'), ['role' => 'Student', 'username' => 'juan@example.com', 'password' => 'new-password-1'])
+        $this->post(route('login.submit'), ['role' => 'Student', 'username' => 'juan@example.com', 'password' => 'NewPassword1'])
             ->assertRedirect(route('student.dashboard'));
     }
 
@@ -284,8 +284,8 @@ class StudentProfileTest extends TestCase
             ->from(route('student.profile'))
             ->patch(route('student.profile.password'), [
                 'current_password' => 'wrong-password',
-                'password' => 'new-password-1',
-                'password_confirmation' => 'new-password-1',
+                'password' => 'NewPassword1',
+                'password_confirmation' => 'NewPassword1',
             ])
             ->assertSessionHasErrors('current_password', 'The current password is incorrect.');
 
@@ -300,7 +300,7 @@ class StudentProfileTest extends TestCase
             ->from(route('student.profile'))
             ->patch(route('student.profile.password'), [
                 'current_password' => 'old-password',
-                'password' => 'new-password-1',
+                'password' => 'NewPassword1',
                 'password_confirmation' => 'different-password',
             ])
             ->assertSessionHasErrors('password', 'The new passwords do not match.');
@@ -330,12 +330,12 @@ class StudentProfileTest extends TestCase
 
         $this->actingAs($athlete)->patch(route('student.profile.password'), [
             'current_password' => 'old-password',
-            'password' => 'new-password-1',
-            'password_confirmation' => 'new-password-1',
+            'password' => 'NewPassword1',
+            'password_confirmation' => 'NewPassword1',
         ]);
 
-        $this->assertDatabaseMissing('users', ['password' => 'new-password-1']);
-        $this->assertStringNotContainsString('new-password-1', (string) $athlete->fresh()->password);
+        $this->assertDatabaseMissing('users', ['password' => 'NewPassword1']);
+        $this->assertStringNotContainsString('NewPassword1', (string) $athlete->fresh()->password);
     }
 
     public function test_admins_cannot_use_the_athlete_profile_endpoints(): void

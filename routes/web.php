@@ -113,6 +113,19 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:5,1')
     ->name('password.update');
 
+/*
+ * Password confirmation for high-impact administrator actions. Laravel's
+ * `password.confirm` middleware redirects here when the administrator has
+ * not confirmed their password recently.
+ */
+Route::get('/confirm-password', [\App\Http\Controllers\Auth\ConfirmPasswordController::class, 'show'])
+    ->middleware('auth')
+    ->name('password.confirm');
+
+Route::post('/confirm-password', [\App\Http\Controllers\Auth\ConfirmPasswordController::class, 'store'])
+    ->middleware('auth')
+    ->name('password.confirm.store');
+
 Route::post('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
@@ -882,7 +895,7 @@ Route::put('/athletes/{athlete}', [AthleteController::class, 'update'])->middlew
 Route::delete('/athletes/{athlete}', [AthleteController::class, 'destroy'])->middleware('auth')->name('athletes.destroy');
 
 Route::post('/athletes/{athlete}/password-reset', [AthleteController::class, 'resetPassword'])
-    ->middleware('auth')->name('athletes.password.reset');
+    ->middleware(['auth', 'administrator', 'password.confirm'])->name('athletes.password.reset');
 
 Route::get('/admin/medical', [MedicalController::class, 'index'])->middleware('auth')->name('admin.medical');
 Route::get('/admin/medical/create', [MedicalController::class, 'create'])->middleware('auth')->name('admin.medical.create');
@@ -896,7 +909,7 @@ Route::get('/admin/medical/{medical}/certificate/view', [MedicalController::clas
 Route::get('/admin/medical/{medical}', [MedicalController::class, 'show'])->middleware('auth')->name('admin.medical.show');
 Route::get('/admin/medical/{medical}/edit', [MedicalController::class, 'edit'])->middleware('auth')->name('admin.medical.edit');
 Route::put('/admin/medical/{medical}', [MedicalController::class, 'update'])->middleware('auth')->name('admin.medical.update');
-Route::delete('/admin/medical/{medical}', [MedicalController::class, 'destroy'])->middleware('auth')->name('admin.medical.destroy');
+Route::delete('/admin/medical/{medical}', [MedicalController::class, 'destroy'])->middleware(['auth', 'administrator', 'password.confirm'])->name('admin.medical.destroy');
 Route::get('/admin/medical/{medical}/certificate', [MedicalController::class, 'downloadCertificate'])->middleware('auth')->name('admin.medical.certificate');
 
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');
