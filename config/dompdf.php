@@ -78,23 +78,20 @@ return [
          * direct class use like:
          * $dompdf = new DOMPDF();  $dompdf->load_html($htmldata); $dompdf->render(); $pdfdata = $dompdf->output();
          */
-        'chroot' => realpath(base_path()),
+        'chroot' => realpath(public_path()),
 
         /**
          * Protocol whitelist
          *
-         * Protocols and PHP wrappers allowed in URIs, and the validation rules
-         * that determine if a resouce may be loaded. Full support is not guaranteed
-         * for the protocols/wrappers specified
-         * by this array.
+         * Protocol and PHP wrappers allowed in URIs. SportsHub certificates and
+         * reports only embed local images from the public folder, so only the
+         * file:// wrapper is allowed. Remote http(s) file access and data://
+         * URIs are switched off to remove SSRF and local-file-read paths.
          *
          * @var array
          */
         'allowed_protocols' => [
-            'data://' => ['rules' => []],
             'file://' => ['rules' => []],
-            'http://' => ['rules' => []],
-            'https://' => ['rules' => []],
         ],
 
         /**
@@ -243,14 +240,13 @@ return [
         /**
          * Enable inline JavaScript
          *
-         * If this setting is set to true then DOMPDF will automatically insert JavaScript code contained
-         * within <script type="text/javascript"> ... </script> tags as written into the PDF.
-         * NOTE: This is PDF-based JavaScript to be executed by the PDF viewer,
-         * not browser-based JavaScript executed by Dompdf.
+         * SportsHub renders certificates and reports from data, never from a
+         * user-supplied document, so PDF JavaScript is not needed and is left
+         * off.
          *
          * @var bool
          */
-        'enable_javascript' => true,
+        'enable_javascript' => false,
 
         /**
          * Enable remote file access

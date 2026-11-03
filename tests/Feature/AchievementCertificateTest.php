@@ -117,6 +117,45 @@ class AchievementCertificateTest extends TestCase
         $this->assertStringContainsString('certificate-achievement-'.$achievement->date_achieved->year.'-'.str_pad((string) $achievement->id, 4, '0', STR_PAD_LEFT).'.pdf', $disposition);
     }
 
+    public function test_the_certificate_pdf_still_renders_with_the_tightened_dompdf_settings(): void
+    {
+        [$admin, , , $achievement] = $this->context();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.achievements.certificate.pdf', $achievement))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $body = $response->getContent();
+
+        // A valid PDF produced by the local renderer (local logo, no remote
+        // access, JavaScript disabled).
+        $this->assertNotFalse($body);
+        $this->assertStringStartsWith('%PDF-', $body);
+    }
+
+    public function test_the_attendance_report_pdf_still_renders_with_the_tightened_dompdf_settings(): void
+    {
+        [$admin, $sport] = $this->context();
+
+        $session = \App\Models\AttendanceSession::create([
+            'title' => 'Morning Training',
+            'sport_id' => $sport->id,
+            'session_date' => now()->toDateString(),
+            'status' => 'Closed',
+            'created_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.attendance.sessions.export.pdf', $session))
+            ->assertOk();
+
+        $body = $response->getContent();
+
+        $this->assertNotFalse($body);
+        $this->assertStringStartsWith('%PDF-', $body);
+    }
+
     public function test_the_generator_and_certificate_routes_are_admin_only(): void
     {
         [$admin, , $athlete, $achievement] = $this->context();
