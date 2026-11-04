@@ -25,4 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = form.dataset.loadingLabel;
         });
     });
+
+    // "Remember me" is only offered to administrators. Athletes sign in on
+    // shared school computers, so a long-lived login cookie is kept off their
+    // screen. The checkbox itself is only shown when Administrator is chosen.
+    const roleSelect = document.getElementById('role');
+    const rememberRow = document.getElementById('remember-row');
+
+    if (roleSelect && rememberRow) {
+        const syncRememberVisibility = () => {
+            rememberRow.hidden = roleSelect.value !== 'Administrator';
+        };
+
+        roleSelect.addEventListener('change', syncRememberVisibility);
+        syncRememberVisibility();
+    }
 });

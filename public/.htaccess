@@ -23,3 +23,34 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ---------------------------------------------------------------------------
+# Correct MIME type for the web app manifest.
+# ---------------------------------------------------------------------------
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# The service worker must never be cached by the browser or an intermediary,
+# otherwise updates to sw.js would not be picked up. The manifest is revalidated
+# on every load for the same reason.
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    <Files "sw.js">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </Files>
+
+    <Files "manifest.webmanifest">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </Files>
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Basic hardening headers.
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

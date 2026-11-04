@@ -1,9 +1,9 @@
 <section class="student-sports">
     <header class="student-sports-heading">
         <div>
-            <span class="student-sports-kicker">SNNHS ATHLETICS</span>
-            <h2>Explore sports programs</h2>
-            <p>Meet the programs and coaches building our teams.</p>
+            <span class="student-sports-kicker">YOUR SPORTSHUB</span>
+            <h2>Sports programs</h2>
+            <p>Choose a program to view its enrolled athletes.</p>
         </div>
         <span class="student-sports-count">{{ ($studentSports ?? collect())->count() }} {{ ($studentSports ?? collect())->count() === 1 ? 'program' : 'programs' }}</span>
     </header>
@@ -110,41 +110,27 @@
 
             <section class="student-athlete-profile-view" aria-labelledby="student-athlete-profile-name" hidden>
                 <header class="student-athlete-profile-actions">
-                    <button class="student-athlete-back" type="button">&larr; Back to Members</button>
+                    <button class="student-athlete-back" type="button">Back to Members</button>
                     <button class="student-athlete-close" type="button" aria-label="Close athlete profile">&times;</button>
                 </header>
                 <p class="student-athlete-profile-message" role="status" aria-live="polite">Loading athlete profile...</p>
                 <div class="student-athlete-profile-content" hidden>
                     <div class="student-athlete-profile-identity">
-                        <img class="student-athlete-profile-photo" alt="" hidden>
-                        <span class="student-athlete-profile-initial" aria-hidden="true"></span>
-                        <div>
+                        <div class="student-athlete-profile-avatar">
+                            <img class="student-athlete-profile-photo" alt="" hidden>
+                            <span class="student-athlete-profile-initial" aria-hidden="true"></span>
+                        </div>
+                        <div class="student-athlete-profile-copy">
                             <span class="student-sport-modal-kicker">ATHLETE PROFILE</span>
                             <h2 id="student-athlete-profile-name"></h2>
                             <p class="student-athlete-profile-id"></p>
                             <span class="student-athlete-profile-status"></span>
                         </div>
                     </div>
-                    <div class="student-athlete-profile-fields">
-                        <section>
-                            <h3>Student information</h3>
-                            <dl>
-                                <div><dt>Grade</dt><dd data-profile-field="grade"></dd></div>
-                                <div><dt>Status</dt><dd data-profile-field="status"></dd></div>
-                            </dl>
-                        </section>
-                        <section>
-                            <h3>Sports information</h3>
-                            <dl>
-                                <div><dt>Sport</dt><dd data-profile-field="sport"></dd></div>
-                                <div><dt>Position / role</dt><dd data-profile-field="position"></dd></div>
-                                <div><dt>Team</dt><dd data-profile-field="team"></dd></div>
-                                <div><dt>Coach</dt><dd data-profile-field="coach"></dd></div>
-                                <div><dt>Jersey number</dt><dd data-profile-field="jersey"></dd></div>
-                                <div><dt>Enrollment approved</dt><dd data-profile-field="date_joined"></dd></div>
-                            </dl>
-                        </section>
-                    </div>
+                    <dl class="student-athlete-profile-fields">
+                        <div><dt>Sport</dt><dd data-profile-field="sport"></dd></div>
+                        <div><dt>Grade</dt><dd data-profile-field="grade"></dd></div>
+                    </dl>
                 </div>
             </section>
         </section>
@@ -528,6 +514,19 @@
         cursor: pointer;
     }
 
+    .student-athlete-back:hover,
+    .student-athlete-back:focus-visible,
+    .student-athlete-back:active {
+        border-color: var(--color-primary);
+        background: var(--color-primary);
+        color: var(--color-primary-contrast);
+    }
+
+    .student-athlete-back:focus-visible {
+        outline: 3px solid var(--color-primary-border);
+        outline-offset: 2px;
+    }
+
     .student-athlete-close {
         width: 2.4rem;
         height: 2.4rem;
@@ -550,40 +549,58 @@
     .student-athlete-profile-identity {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        margin: 1.25rem 0;
-        padding: 1rem;
+        gap: 1.1rem;
+        margin: 1.25rem 0 1rem;
+        padding: 1.25rem;
         border: 1px solid var(--color-border);
-        border-radius: 0.8rem;
-        background: var(--color-surface-muted);
+        border-radius: 1rem;
+        background: linear-gradient(135deg, var(--color-primary-soft), var(--color-surface-muted) 68%);
     }
 
-    .student-athlete-profile-photo,
-    .student-athlete-profile-initial {
+    .student-athlete-profile-avatar {
         display: inline-grid;
-        width: 5rem;
-        height: 5rem;
+        width: 4.5rem;
+        height: 4.5rem;
         flex: 0 0 auto;
         place-items: center;
         overflow: hidden;
         border-radius: 50%;
+        border: 3px solid var(--color-surface);
         background: var(--color-primary-soft);
+        box-shadow: 0 2px 8px rgba(23, 24, 43, 0.12);
+    }
+
+    .student-athlete-profile-photo,
+    .student-athlete-profile-initial {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        place-items: center;
+        border-radius: inherit;
         color: var(--color-primary);
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 800;
         object-fit: cover;
     }
 
+    .student-athlete-profile-photo[hidden],
+    .student-athlete-profile-initial[hidden] {
+        display: none;
+    }
+
+    .student-athlete-profile-copy { min-width: 0; }
+
     .student-athlete-profile-identity h2 {
-        margin: 0.2rem 0;
+        margin: 0.2rem 0 0.35rem;
         color: var(--color-text);
         font-size: clamp(1.25rem, 4vw, 1.7rem);
         overflow-wrap: anywhere;
     }
 
     .student-athlete-profile-id {
-        margin: 0.2rem 0 0.5rem;
+        margin: 0 0 0.65rem;
         color: var(--color-muted);
+        font-size: 0.92rem;
     }
 
     .student-athlete-profile-status {
@@ -598,30 +615,17 @@
 
     .student-athlete-profile-fields {
         display: grid;
-        gap: 1rem;
-    }
-
-    .student-athlete-profile-fields section {
-        border: 1px solid var(--color-border);
-        border-radius: 0.75rem;
-        padding: 1rem;
-    }
-
-    .student-athlete-profile-fields h3 {
-        margin: 0 0 0.75rem;
-        color: var(--color-primary);
-        font-size: 1rem;
-    }
-
-    .student-athlete-profile-fields dl {
-        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.75rem 1rem;
+        gap: 0.75rem;
         margin: 0;
     }
 
-    .student-athlete-profile-fields dl > div {
+    .student-athlete-profile-fields > div {
         min-width: 0;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        background: var(--color-surface);
     }
 
     .student-athlete-profile-fields dt {
@@ -635,6 +639,7 @@
     .student-athlete-profile-fields dd {
         margin: 0;
         color: var(--color-text);
+        font-weight: 700;
         overflow-wrap: anywhere;
     }
 
@@ -658,10 +663,11 @@
         .student-sport-table th,
         .student-sport-table td { padding: 0.6rem; }
         .student-athlete-profile-view { padding: 0.75rem 1rem 1rem; }
-        .student-athlete-profile-identity { align-items: flex-start; padding: 0.75rem; }
-        .student-athlete-profile-photo,
-        .student-athlete-profile-initial { width: 3.75rem; height: 3.75rem; font-size: 1.4rem; }
-        .student-athlete-profile-fields dl { grid-template-columns: 1fr; }
+        .student-athlete-profile-identity { gap: 0.8rem; padding: 0.85rem; }
+        .student-athlete-profile-avatar { width: 3.75rem; height: 3.75rem; }
+        .student-athlete-profile-initial { font-size: 1.35rem; }
+        .student-athlete-profile-fields { gap: 0.55rem; }
+        .student-athlete-profile-fields > div { padding: 0.75rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -959,7 +965,9 @@
 
                 const { profile } = await response.json();
                 profileName.textContent = profile.name;
-                profileStudentId.textContent = profile.student_id || 'Student ID not provided';
+                profileStudentId.textContent = profile.student_id
+                    ? `Student ID · ${profile.student_id}`
+                    : 'Student ID not provided';
                 profileStatus.textContent = profile.status;
                 profileInitial.textContent = profile.name.trim().charAt(0).toUpperCase() || '?';
                 profilePhoto.hidden = !profile.photo_url;
@@ -976,13 +984,7 @@
 
                 const fieldValues = {
                     grade: profile.grade || 'Not recorded',
-                    status: profile.status || 'Not recorded',
                     sport: profile.sport || 'Not recorded',
-                    position: 'Not recorded',
-                    team: 'Not recorded',
-                    coach: profile.coaches.length ? profile.coaches.join(', ') : 'Not assigned',
-                    jersey: 'Not recorded',
-                    date_joined: profile.date_joined || 'Not recorded',
                 };
                 Object.entries(fieldValues).forEach(([field, value]) => {
                     const element = profileView.querySelector(`[data-profile-field="${field}"]`);

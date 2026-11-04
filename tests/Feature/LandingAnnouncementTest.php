@@ -8,6 +8,8 @@ use App\Models\Sport;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -107,5 +109,42 @@ class LandingAnnouncementTest extends TestCase
         $this->get(route('landing'))
             ->assertOk()
             ->assertSee('New Event: Public Meet');
+    }
+
+    public function test_sport_logo_uploaded_by_admin_reflects_on_the_landing_page(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==');
+
+        $this->actingAs($admin)->post(route('sports.store'), [
+            'name' => 'Badminton',
+            'classification' => 'Racket Sport',
+            'gender' => 'Girls',
+            'description' => 'Shuttlecock sport',
+            'status' => 'Active',
+            'logo' => UploadedFile::fake()->createWithContent('badminton.png', $png),
+        ])->assertRedirect(route('sports.index'));
+
+        $sport = Sport::firstOrFail();
+        $this->assertNotNull($sport->logo_path);
+        Storage::disk('public')->assertExists($sport->logo_path);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Badminton')
+            ->assertSee($sport->logo_path)
+            ->assertSee('Badminton logo');
+    }
+
+    public function test_sport_without_logo_still_shows_fallback_on_the_landing_page(): void
+    {
+        Sport::create(['name' => 'Chess', 'classification' => 'Mind Sport', 'description' => 'Strategy sport', 'status' => 'Active']);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Chess')
+            ->assertSeeHtml('program-icon');
     }
 }

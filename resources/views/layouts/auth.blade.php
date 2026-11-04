@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SNNHS SportsHub')</title>
+    <meta name="theme-color" content="#10069F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SportsHub">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/portal.css') }}?v={{ filemtime(public_path('css/portal.css')) }}">
     <script>

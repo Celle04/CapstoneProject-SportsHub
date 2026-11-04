@@ -1407,7 +1407,7 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
 .student-dashboard-application > .text-link { display: inline-block; margin-top: 15px; }
 .student-sports { display: grid; gap: 18px; }
 .student-sports-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 2px 0 16px; border-bottom: 1px solid rgba(23, 24, 43, .12); }
-.student-sports-kicker { color: var(--color-primary); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.student-sports-kicker { color: var(--color-primary); font-size: 8px; font-weight: 700; letter-spacing: 0; text-transform: uppercase; }
 .student-sports-heading h2 { margin: 5px 0; font-size: 15px; font-weight: 800; }
 .student-sports-heading p { margin: 0; color: var(--color-muted); font-size: 10px; line-height: 1.45; }
 .student-sports-count { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #dce9e3; border-radius: 6px; color: var(--color-success); background: var(--color-success-soft); font-size: 10px; font-weight: 700; }
@@ -2658,8 +2658,11 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     html.sidebar-open .portal-sidebar { transform: translateX(0); }
     html.sidebar-open, html.sidebar-open body { overflow: hidden; }
     .portal-brand { min-height: 76px; }
-    .portal-nav { display: block; }
-    .portal-logout { position: static; width: 100%; margin-top: auto; }
+    /* Only the module list scrolls; logo header & logout footer stay pinned */
+    .portal-nav { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+    .portal-sidebar-foot { flex: 0 0 auto; }
+    .portal-sidebar-foot form { margin: 0; flex: 0 0 auto; }
+    .portal-logout { position: static; width: 100%; margin-top: 0; flex: 0 0 auto; }
     .portal-main { padding: 22px 14px; }
     .grid-3, .grid-4, .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .achievement-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -4345,13 +4348,14 @@ html[data-theme="dark"] .portal-topbar {
     .portal { display: block; padding: 0; }
     .portal-sidebar {
         position: fixed;
-        top: 0;
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
         left: 0;
         z-index: 50;
         width: min(86vw, 320px);
-        height: 100dvh;
-        max-height: 100dvh;
-        border-radius: 0 var(--hub-radius-lg) var(--hub-radius-lg) 0;
+        height: auto;
+        max-height: none;
+        border-radius: var(--hub-radius-lg);
         box-shadow: 22px 0 54px rgba(10, 12, 32, .45);
         transform: translateX(-100%);
         transition: transform .24s ease;
@@ -4361,7 +4365,9 @@ html[data-theme="dark"] .portal-topbar {
        steps aside and the header keeps the room it needs. */
     .portal-sidebar-collapse { display: none; }
     .portal-sidebar-head { padding-right: 58px; }
-    .portal-main { padding: 0 14px 30px; }
+    .portal-nav { overscroll-behavior: contain; }
+    .portal-sidebar-foot { flex: 0 0 auto; }
+    .portal-main { padding: calc(12px + env(safe-area-inset-top, 0px)) 14px 30px; }
     .portal-topbar { padding: 12px 14px; border-radius: var(--hub-radius-md); }
     .portal-breadcrumb { font-size: 12px; }
     .portal-breadcrumb-current { font-size: 15px; }

@@ -7,7 +7,17 @@
 
     <title>SNNHS SportsHub</title>
 
+    <meta name="theme-color" content="#10069F">
+    <meta name="description" content="Sports Activity Management System for SNNHS.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SportsHub">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
+
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/pwa.css') }}?v={{ filemtime(public_path('css/pwa.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
 </head>
 
@@ -63,6 +73,10 @@
 
 
         <div class="header-actions">
+
+            <button type="button" class="pwa-install-button pwa-install-button--landing" data-pwa-install aria-label="Install SportsHub" title="Install SportsHub">
+                Install
+            </button>
 
             <a
                 class="login-button"
@@ -289,9 +303,15 @@
 
                     <article class="program">
 
-                        <div class="program-icon">
-                            &#127942;
-                        </div>
+                        @if($sport->logo_path)
+                            <div class="program-icon program-icon--logo">
+                                <img src="{{ Storage::disk('public')->url($sport->logo_path) }}" alt="{{ $sport->name }} logo">
+                            </div>
+                        @else
+                            <div class="program-icon" aria-hidden="true">
+                                &#127942;
+                            </div>
+                        @endif
 
                         <div class="program-content">
 
@@ -418,6 +438,8 @@
 
     </footer>
 
+    @include('partials.pwa-install-dialog')
+
     <script>
         (function () {
             var nav = document.querySelector('.main-nav');
@@ -521,6 +543,9 @@
             setActive(nav.querySelector('.nav-link.active') || links[0]);
         })();
     </script>
+
+    <script src="{{ asset('js/offline.js') }}" defer></script>
+    <script src="{{ asset('js/pwa-install.js') }}" defer></script>
 
 </body>
 

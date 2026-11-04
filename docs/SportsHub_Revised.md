@@ -173,7 +173,7 @@ Umali (2025) recommended that schools institutionalize organized sports programs
 
 ---
 
-## 3. Technical Background
+## 3. TECHNICAL BACKGROUND
 
 The SportsHub is a web-based information system that will be used to coordinate sports activities, athlete records, coach assignments, event scheduling, attendance, medical clearances, achievements, and certificates at Surigao del Norte National High School (SNNHS). The system is developed using widely used and well-supported web technologies that are appropriate for an educational development project.
 
@@ -191,17 +191,19 @@ The SportsHub is a web-based information system that will be used to coordinate 
 
 ### 3.1 Conceptual Framework
 
-The SportsHub is guided by the Input–Process–Output–Evaluation (IPO-E) model, which shows how raw data entered into the system will be transformed through a series of operations into organized outputs that support sports management at SNNHS, and then assessed through a formal evaluation phase. As shown in Figure 1, the framework is made up of four main components: Input, Process, Output, and Evaluation, all supported by the system's technology stack and directed toward the central goal of the project.
+The SportsHub is guided by the Input–Process–Output–Evaluation (IPO-E) model, which shows how raw data entered into the system will be transformed through a series of operations into organized outputs that support sports management at SNNHS, and then assessed through a formal evaluation phase. As shown in Figure 1, the framework is made up of four main components: Input, Process, Output, and Evaluation, all supported by the system's technology stack and directed toward the central goal of the project. A feedback loop runs from the Evaluation component back to the Input and Process components, so that the weighted-mean results and observational findings are used to identify the specific records, operations, and quality attributes that require improvement in the next iteration of the system.
+
+![Figure 1. Conceptual Framework (IPO-E Model) — SportsHub, SNNHS](figures/figure1.png)
 
 **Figure 1. Conceptual Framework (IPO-E Model) — SportsHub, SNNHS**
 
 The **Input** component consists of all data that will be provided by the Administrator or Sports Coordinator, together with the documents submitted by the public. This includes sports program details, student-athlete profiles, coach information, event schedules, medical examination findings, injury incident reports, achievement records, and login credentials. From the public side, the input consists of the application form and its three supporting documents — a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form. These inputs are meant to replace the informal paper-based records currently used at SNNHS.
 
-The **Process** component covers the core operations of the system, such as adding, editing, deleting, and viewing records; verifying documents; approving or rejecting applications; scheduling events; generating attendance sessions and their rosters; recording attendance and check-ins; tracking medical clearance and check-up schedules; recording achievements; approving and issuing certificates; sending notifications; searching and filtering data; and generating reports. All of these are executed through a PHP Laravel backend connected to a MySQL database.
+The **Process** component is organized into three system modules (the Public Landing Page Module, the Athlete Module, and the Administrator Module) that carry out the core operations of the system, such as adding, editing, deleting, and viewing records; verifying documents; approving or rejecting applications; scheduling events; generating attendance sessions and their rosters; recording attendance and check-ins; tracking medical clearance and check-up schedules; recording achievements; approving and issuing certificates; sending notifications; searching and filtering data; and generating reports. The modules are built on PHP 8.2 and Laravel 12 (MVC) and exchange data with the Database Layer (MySQL) through the Eloquent ORM.
 
 The **Output** component represents the results that the system will produce: an organized athlete registry, a coach directory, an event calendar, printable participation and attendance reports, official achievement certificates in PDF form, an in-app notification feed for both athletes and coordinators, and an administrative command centre that gives coordinators an at-a-glance view of all sports data — total athletes, active sports programs, upcoming events, sessions open for check-in, pending applications, achievements and medals recorded, and the current attendance rate.
 
-The **Evaluation** component measures the quality of the system outputs using the ISO/IEC 25010 Software Quality Model, specifically assessing the system in terms of usability, reliability, and performance efficiency based on structured feedback from fifteen (15) SNNHS respondents. The evaluation is supported by an automated feature test suite that exercises every major module — applications, attendance, events, achievements, certificates, medical records, notifications, and the two password workflows — so that functional reliability is verified continuously alongside the user-facing survey.
+The **Evaluation** component measures the quality of the system outputs using the ISO/IEC 25010 Software Quality Model, specifically assessing the system in terms of usability, reliability, and performance efficiency. The primary evaluation tool is a structured fifteen-item questionnaire — five items per quality characteristic — administered on a five-point Likert scale ranging from 1 (Strongly Disagree) to 5 (Strongly Agree), developed by the research team and validated by the research adviser. The questionnaire is answered by fifteen (15) SNNHS respondents: the designated Sports Coordinator, three faculty members serving as sports advisers, and eleven student-athletes representing different sports categories. In addition to the questionnaire, the evaluation includes direct observation by the development team during the testing session, and it is supported by an automated feature test suite that exercises every major module — applications, attendance, events, achievements, certificates, medical records, notifications, and the two password workflows — so that functional reliability is verified continuously alongside the user-facing survey. The quantitative data are analyzed using descriptive statistics, specifically the weighted mean for each quality characteristic and the overall weighted mean across all items, and interpreted with the verbal interpretation scale presented in Table 1 of Section 4.5. The computed scores, the observational findings, and the recommended improvements are reported in Section 5.4 of this study, and the resulting feedback is fed back to the Input and Process components for the next iteration of the system.
 
 The system will be built using PHP 8.2 and Laravel 12 for the backend, Tailwind CSS 4 with a token-based CSS design system for the frontend interface, and MySQL for structured data storage. Together, these components will work as an integrated platform that provides SNNHS with a centralized, efficient, and accessible digital solution for managing school sports activities, replacing the disorganized manual practices that currently make it difficult for coaches and coordinators to track athlete participation and event schedules.
 
@@ -209,7 +211,7 @@ The system will be built using PHP 8.2 and Laravel 12 for the backend, Tailwind 
 
 ## 4. METHODOLOGY
 
-This project will follow the Rapid Application Development (RAD) methodology because of its emphasis on quick prototyping and iterative user feedback, which is well-suited for developing a web-based management system within an academic timeframe. The RAD model will allow the development team to move quickly from requirements gathering to design, receive feedback early, and make improvements before finalizing the software. This approach helps minimize development risks and keeps the project closely aligned with the real needs of Surigao del Norte National High School.
+This project followed the Rapid Application Development (RAD) methodology because of its emphasis on quick prototyping and iterative user feedback, which is well-suited for developing a web-based management system within an academic timeframe. The RAD model allowed the development team to move quickly from requirements gathering to design, receive feedback early, and make improvements before finalizing the software. This approach helps minimize development risks and keeps the project closely aligned with the real needs of Surigao del Norte National High School.
 
 The RAD methodology was also chosen because the project scope is clearly defined and the intended users, specifically the school administrator and sports coordinator, are accessible for feedback and validation throughout the development process. The four main phases of RAD applied in this study are: (1) Planning Requirements, (2) Prototype, (3) Receive Feedback, and (4) Finalize Software, followed by system evaluation.
 
@@ -217,7 +219,7 @@ The RAD methodology was also chosen because the project scope is clearly defined
 
 ### 4.1 Planning Requirements
 
-The planning phase will focus on identifying the functional and non-functional requirements of the SportsHub. Instead of relying solely on formal interviews or surveys, the requirements for this project are largely based on the personal experience of the researchers as former student-athletes in a Philippine public high school setting, particularly in schools similar to SNNHS in terms of context and available resources.
+The planning phase focused on identifying the functional and non-functional requirements of the SportsHub. Instead of relying solely on formal interviews or surveys, the requirements for this project are largely based on the personal experience of the researchers as former student-athletes in a Philippine public high school setting, particularly in schools similar to SNNHS in terms of context and available resources.
 
 As former student-athletes, the researchers have personally experienced the challenges of manually managed sports programs. Records of sports participation were often written on paper or encoded in basic spreadsheets, making it difficult to find information when needed. Coach assignments were communicated informally, and event schedules were posted on bulletin boards or shared through word-of-mouth. Athletes frequently missed or forgot upcoming events because there was no centralized notification or scheduling system in place. These real-life experiences provided a grounded and realistic basis for defining what the system needs to accomplish.
 
@@ -264,7 +266,7 @@ Based on these inputs, the following key requirements were identified for the Sp
 
 - View the public landing page and browse posted announcements and available sports programs
 - Submit a sports application form to express interest in joining a sport, including the required eligibility documents: a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form (no account created at this stage)
-- Eligibility requirements for joining a sport: (1) Medical Certificate — issued by a licensed physician certifying the student is physically fit for sports participation; (2) Birth Certificate — PSA-issued document confirming the student’s age and identity; (3) Parent’s or Guardian’s Consent Form — a signed document authorizing the student to participate in school sports activities. Incomplete submissions will not be processed.
+- Eligibility requirements for joining a sport: (1) Medical Certificate — issued by a licensed physician certifying the student is physically fit for sports participation; (2) Birth Certificate — PSA-issued document confirming the student’s age and identity; (3) Parent’s or Guardian’s Consent Form — a signed document authorizing the student to participate in school sports activities. Incomplete submissions were not processed.
 
 **Non-Functional Requirements:**
 
@@ -276,19 +278,19 @@ Based on these inputs, the following key requirements were identified for the Sp
 - Accessibility: The system must be accessible via standard desktop or laptop browsers without requiring additional software installation, and must remain readable on smaller screens
 - Offline tolerance: Previously loaded screens must remain browsable through the service-worker cache when the connection drops, with a clear offline page as the final fallback
 
-These requirements will serve as the foundation for the system's design and development, making sure that the SportsHub addresses the real and observed needs of SNNHS rather than generalized assumptions.
+These requirements served as the foundation for the system's design and development, making sure that the SportsHub addresses the real and observed needs of SNNHS rather than generalized assumptions.
 
 ### 4.2 Prototype
 
-After identifying the system requirements, a low-fidelity prototype will be developed to visualize the layout and workflow of the SportsHub before actual coding begins. The prototype will be created using Figma, a widely used interface design tool that allows for quick creation of wireframes and mockup screens. The main goal of this phase is to establish a shared visual understanding of the system among the development team and to present an early preview to the target users for initial feedback.
+After identifying the system requirements, a low-fidelity prototype was developed to visualize the layout and workflow of the SportsHub before actual coding began. The prototype was created using Figma, a widely used interface design tool that allows for quick creation of wireframes and mockup screens. The main goal of this phase was to establish a shared visual understanding of the system among the development team and to present an early preview to the target users for initial feedback.
 
-The prototype will cover all major modules of the system and will follow a clean and minimal design approach to ensure ease of navigation, especially for school administrators and coaches who may not be very familiar with digital management tools. The design will be guided by a single set of design tokens for colour, spacing, and status indication, which will later be applied in the actual front-end implementation.
+The prototype covered all major modules of the system and followed a clean and minimal design approach to ensure ease of navigation, especially for school administrators and coaches who may not be very familiar with digital management tools. The design was guided by a single set of design tokens for colour, spacing, and status indication, which were later applied in the actual front-end implementation.
 
-The following screens will be included in the prototype, organized by user role:
+The following screens were included in the prototype, organized by user role:
 
 *Public / Landing Page Screens:*
 
-- **Landing Page** — the public homepage accessible to all students without logging in. It will display posted announcements, an overview of available sports programs, and a button to submit a sports application
+- **Landing Page** — the public homepage accessible to all students without logging in. It displayed posted announcements, an overview of available sports programs, and a button to submit a sports application
 - **Application Form Page** — a form where interested students can submit their eligibility requirements and personal details including name, student ID, grade level, gender, sport of interest, medical certificate, birth certificate, and signed parent’s or guardian’s consent form. No account or password is created here — the form only sends their application and documents to the admin for review
 - **Login Page** — a single login screen for both Admin and Athletes, redirecting each user to their respective dashboard based on their role
 - **Forgot / Reset Password Pages** — screens for requesting a password reset link and for setting a new password from that link
@@ -321,68 +323,44 @@ The following screens will be included in the prototype, organized by user role:
 - **Certificate Requests** — a queue of athlete certificate requests with approve, generate, release, and issue actions
 - **Reports Module** — a report interface for generating and downloading athlete, coach, attendance, and per-athlete attendance summaries in CSV or PDF
 
-Each screen will be annotated with notes explaining the intended behavior of buttons, form validations, and navigation links. This will help the development team stay aligned during the coding phase and give the school stakeholders a clear preview of the system before any development resources are fully committed.
+The prototypes described above were presented to the respondents during the feedback phase, and their comments and suggestions were recorded and used as the basis for the improvements that were incorporated into the final system. Because these early wireframes were superseded by the working system, the implemented screens that resulted from this phase are presented in Section 5.3 in place of the original Figma mockups.
 
-*Figure 3. Landing Page Prototype — SportsHub*
-*Figure 4. Application Form Page Prototype — SportsHub*
-*Figure 5. Login Page Prototype — SportsHub*
-*Figure 6. Athlete Dashboard Prototype — SportsHub*
-*Figure 7. Sports Programs Prototype — SportsHub*
-*Figure 8. My Schedule Prototype — SportsHub*
-*Figure 9. Calendar Prototype — SportsHub*
-*Figure 10. Announcements Page Prototype — SportsHub*
-*Figure 11. Attendance Record Prototype — SportsHub*
-*Figure 12. My Achievements Prototype — SportsHub*
-*Figure 13. My Application Prototype — SportsHub*
-*Figure 14. Coach Info Page Prototype — SportsHub*
-*Figure 15. My Profile Page Prototype — SportsHub*
-*Figure 16. Admin Dashboard Prototype — SportsHub*
-*Figure 17. Applications Management Prototype — SportsHub*
-*Figure 18. Sports Management Prototype — SportsHub*
-*Figure 19. Athlete Management Prototype — SportsHub*
-*Figure 20. Coach Management Prototype — SportsHub*
-*Figure 21. Event Scheduling Prototype — SportsHub*
-*Figure 22. Attendance Management Prototype — SportsHub*
-*Figure 23. Medical Records Prototype — SportsHub*
-*Figure 24. Achievements Prototype — SportsHub*
-*Figure 25. Certificate Requests Prototype — SportsHub*
-*Figure 26. Reports Module Prototype — SportsHub*
 
 ### 4.3 Receive Feedback
 
-Once the prototype is completed, it will be presented to selected stakeholders for review. The goal of this phase is to gather constructive feedback from people who are most likely to use or be affected by the system before actual development begins. This will help the team identify any design issues, missing features, or improvements that need to be addressed early on.
+Once the prototype was completed, it was presented to selected stakeholders for review. The goal of this phase is to gather constructive feedback from people who are most likely to use or be affected by the system before actual development begins. This helped the team identify any design issues, missing features, or improvements that need to be addressed early on.
 
-The prototype walkthrough will be conducted with at least two or three faculty members involved in sports management at SNNHS, along with a small group of student-athletes who represent potential end-users. The researchers will guide them through each module of the prototype, explaining the purpose of each screen and how the features are intended to work. After the walkthrough, the participants will be asked to share their thoughts and suggestions through an informal feedback form or a short structured questionnaire.
+The prototype walkthrough was conducted with at least two or three faculty members involved in sports management at SNNHS, along with a small group of student-athletes who represent potential end-users. The researchers guided them through each module of the prototype, explaining the purpose of each screen and how the features are intended to work. After the walkthrough, the participants were asked to share their thoughts and suggestions through an informal feedback form or a short structured questionnaire.
 
-Feedback will be focused on the following key areas: clarity and ease of navigation, completeness of features based on the school’s actual needs, the overall layout and design of the interface, and any additional functions that the participants feel should be included. All feedback gathered will be documented and reviewed by the development team.
+Feedback was focused on the following key areas: clarity and ease of navigation, completeness of features based on the school’s actual needs, the overall layout and design of the interface, and any additional functions that the participants feel should be included. All feedback gathered was documented and reviewed by the development team.
 
-Based on the feedback received, the team will revise the prototype and update the system requirements if needed before moving on to the actual development phase. This iterative process is one of the key strengths of the RAD methodology and will help ensure that the final system is well-aligned with the real needs of the school community.
+Based on the feedback received, the team revised the prototype and updated the system requirements if needed before moving on to the actual development phase. This iterative process is one of the key strengths of the RAD methodology and helped ensure that the final system was well-aligned with the real needs of the school community.
 
 ### 4.4 Finalize Software
 
-After incorporating the feedback gathered from the stakeholder prototype review, the development team will proceed to finalize and build the SportsHub as a fully functional web-based system. This phase will involve the actual coding, integration of all system modules, internal testing, and preparation of the system for user evaluation. The finalization phase will follow the technical design established during the prototype stage and will apply the revisions identified during the feedback phase.
+After incorporating the feedback gathered from the stakeholder prototype review, the development team proceeded to finalize and build the SportsHub as a fully functional web-based system. This phase involved the actual coding, integration of all system modules, internal testing, and preparation of the system for user evaluation. The finalization phase followed the technical design established during the prototype stage and applied the revisions identified during the feedback phase.
 
-The system will be developed using the following technologies and tools:
+The system was developed using the following technologies and tools:
 
-**Frontend Development:** The user interface will be built using HTML5, CSS3, and JavaScript, with Tailwind CSS 4 compiled through Vite and a hand-authored CSS design system published as static assets in `public/css/`. The design system defines the primary and accent colours, neutral surfaces, status colours, and dark-mode values as CSS custom properties in `theme.css`, which are then consumed by `portal.css`, `landing.css`, and `sportshub.css`. A shared inline SVG sprite supplies the interface icons, and small focused scripts handle only behaviour that the server cannot provide — sidebar collapse, theme switching, confirmation dialogs, relative timestamps, profile photo handling, and form enhancements — so the pages remain fast and usable with scripting disabled for their core content.
+**Frontend Development:** The user interface was built using HTML5, CSS3, and JavaScript, with Tailwind CSS 4 compiled through Vite and a hand-authored CSS design system published as static assets in `public/css/`. The design system defines the primary and accent colours, neutral surfaces, status colours, and dark-mode values as CSS custom properties in `theme.css`, which are then consumed by `portal.css`, `landing.css`, and `sportshub.css`. A shared inline SVG sprite supplies the interface icons, and small focused scripts handle only behaviour that the server cannot provide — sidebar collapse, theme switching, confirmation dialogs, relative timestamps, profile photo handling, and form enhancements — so the pages remain fast and usable with scripting disabled for their core content.
 
-**Backend Development:** The server-side logic will be written in PHP 8.2 using the Laravel 12 framework. Laravel’s MVC (Model–View–Controller) architecture will be used to separate business logic from presentation, resulting in a well-organized and maintainable codebase. Laravel’s built-in authentication, validation, and notification features will be used to implement secure login functionality for the Administrator and Sports Coordinator. Dedicated services will carry the cross-cutting rules: attendance session creation, roster synchronization, and check-in; achievement certificate generation; notification fan-out with de-duplication; and failed-password warning dispatch.
+**Backend Development:** The server-side logic was written in PHP 8.2 using the Laravel 12 framework. Laravel’s MVC (Model–View–Controller) architecture was used to separate business logic from presentation, resulting in a well-organized and maintainable codebase. Laravel’s built-in authentication, validation, and notification features were used to implement secure login functionality for the Administrator and Sports Coordinator. Dedicated services carry the cross-cutting rules: attendance session creation, roster synchronization, and check-in; achievement certificate generation; notification fan-out with de-duplication; and failed-password warning dispatch.
 
-**Database Management:** All system data, including sports programs, athlete profiles, coach records, event schedules, attendance sessions, medical records, achievements, and certificate requests, will be stored and managed using MySQL. Laravel’s Eloquent ORM will be used to perform database operations such as creating, reading, updating, and deleting records, as well as filtering and generating reports. The schema is maintained through versioned migrations so that every structural change to the system is recorded and reproducible.
+**Database Management:** All system data, including sports programs, athlete profiles, coach records, event schedules, attendance sessions, medical records, achievements, and certificate requests, is stored and managed using MySQL. Laravel’s Eloquent ORM is used to perform database operations such as creating, reading, updating, and deleting records, as well as filtering and generating reports. The schema is maintained through versioned migrations so that every structural change to the system is recorded and reproducible.
 
 **Document and Report Generation:** Official achievement certificates, attendance session reports, and school reports are produced server-side as PDF documents using the dompdf library, and the same report data is streamed as CSV for spreadsheet use. Certificates carry a unique official reference number and are signed by the Sports Coordinator and the School Principal, and the same certificate layout is used whether the certificate is generated directly by the coordinator or issued through an athlete’s certificate request.
 
 **Security Implementation:** Athlete access to personal records is enforced at the query level through model scopes that always receive the authenticated account rather than an identifier supplied by the browser, so an athlete can never widen a result to another athlete’s rows. Eligibility documents, medical certificates, and issued certificates are stored on private storage and are streamed only through authorized routes. Failed sign-in attempts are recorded and reported to the account holder and to every Sports Coordinator by email, with the alerts throttled and the identifier masked so that the login form cannot be used to discover which accounts exist. The password reset flow uses a single-use, time-limited link with rate limiting and returns the same generic response whether or not an address is registered.
 
-**Progressive Web Application Packaging:** A web app manifest and a hand-written service worker will be shipped with the system. The service worker precaches the application shell and static assets, serves navigation requests network-first, stores successful responses in a runtime cache, and falls back to a dedicated offline page, so that previously loaded screens remain browsable even when the school’s connection is unreliable.
+**Progressive Web Application Packaging:** A web app manifest and a hand-written service worker are shipped with the system. The service worker precaches the application shell and static assets, serves navigation requests network-first, stores successful responses in a runtime cache, and falls back to a dedicated offline page, so that previously loaded screens remain browsable even when the school’s connection is unreliable.
 
-**Development Environment:** The system will be developed and tested locally using XAMPP as the local server environment on a Windows machine, with MySQL and Apache provided by the same server stack. Visual Studio Code will be used as the primary code editor throughout the development process.
+**Development Environment:** The system was developed and tested locally using XAMPP as the local server environment on a Windows machine, with MySQL and Apache provided by the same server stack. Visual Studio Code was used as the primary code editor throughout the development process.
 
-**Version Control:** Git will be used for source code versioning, allowing the development team to track changes, manage revisions, and maintain a stable codebase throughout the development process.
+**Version Control:** Git was used for source code versioning, allowing the development team to track changes, manage revisions, and maintain a stable codebase throughout the development process.
 
-The finalized system will include the following modules organized by role:
+The finalized system includes the following modules organized by role:
 
-**Public Landing Page:** The entry point of the system accessible to all students without logging in. It will display active announcements, an overview of available sports programs, and a button to submit a sports application.
+**Public Landing Page:** The entry point of the system accessible to all students without logging in. It displays active announcements, an overview of available sports programs, and a button to submit a sports application.
 
 **Application Form Module:** A public form where interested students can submit their eligibility requirements and personal details including name, student ID, grade level, gender, sport of interest, medical certificate, birth certificate, and signed parent’s or guardian’s consent form. No account is created at this stage — the submission is simply stored and forwarded to the admin for review.
 
@@ -434,9 +412,9 @@ The finalized system will include the following modules organized by role:
 
 **My Profile (Athlete):** Shows the athlete's account details with the option to update limited information such as contact number, emergency contact, or profile photo, and to change the account password.
 
-Internal testing will be conducted by the development team using both manual testing procedures and an automated feature test suite covering every major module. Test cases will be designed to verify that each module performs its intended functions correctly, that form validations work as expected, that authorization rules prevent one athlete from reaching another athlete's records, and that data operations such as creation, updating, deletion, and retrieval produce accurate results. Identified bugs will be documented and resolved prior to the formal system evaluation phase.
+Internal testing was conducted by the development team using both manual testing procedures and an automated feature test suite covering every major module. Test cases were designed to verify that each module performs its intended functions correctly, that form validations work as expected, that authorization rules prevent one athlete from reaching another athlete's records, and that data operations such as creation, updating, deletion, and retrieval produce accurate results. Identified bugs were documented and resolved prior to the formal system evaluation phase.
 
-The finalized system will be deployed to a local server environment accessible via a web browser on desktop and laptop devices, and will then be prepared for formal evaluation by school stakeholders in accordance with the ISO 25010 quality standards applied in the evaluation phase.
+The finalized system was deployed to a local server environment accessible via a web browser on desktop and laptop devices, and was then prepared for formal evaluation by school stakeholders in accordance with the ISO 25010 quality standards applied in the evaluation phase.
 
 ### 4.5 Evaluation Methods and Tools
 
@@ -472,11 +450,11 @@ This section presents the planned outcomes and design outputs of the SportsHub, 
 
 ### 5.1 Project Planning
 
-The project planning phase will establish the overall direction, timeline, and resource allocation for the development of the SportsHub. A structured project timeline will be developed to guide the development team throughout all stages of the software development lifecycle, from initial requirements gathering to the final system presentation. Proper planning will ensure that all development activities are organized, trackable, and achievable within the constraints of the academic capstone schedule.
+The project planning phase established the overall direction, timeline, and resource allocation for the development of the SportsHub. A structured project timeline was developed to guide the development team throughout all stages of the software development lifecycle, from initial requirements gathering to the final system presentation. Proper planning ensured that all development activities were organized, trackable, and achievable within the constraints of the academic capstone schedule.
 
-The development team will use a Gantt chart as the primary project planning tool to map out the key phases and activities of the project across a twelve-month development timeline. The Gantt chart will provide a visual overview of task sequencing, phase overlaps, and milestones, allowing the team to monitor progress and make schedule adjustments as needed throughout the project.
+The development team used a Gantt chart as the primary project planning tool to map out the key phases and activities of the project across a twelve-month development timeline. The Gantt chart provides a visual overview of task sequencing, phase overlaps, and milestones, allowing the team to monitor progress and make schedule adjustments as needed throughout the project.
 
-The project will be divided into six major phases: (1) Planning, which covers requirements gathering, stakeholder consultation, and scope definition; (2) System Design, which includes the development of wireframes and system diagrams; (3) Development, which encompasses the frontend, backend, and database implementation; (4) Testing and Feedback, which involves user testing and iterative revisions; (5) Finalization, which covers final revisions and documentation; and (6) Presentation, which includes the final defense and submission of the capstone document. The timeline for each phase is illustrated in the Gantt chart below.
+The project was divided into six major phases: (1) Planning, which covers requirements gathering, stakeholder consultation, and scope definition; (2) System Design, which includes the development of wireframes and system diagrams; (3) Development, which encompasses the frontend, backend, and database implementation; (4) Testing and Feedback, which involves user testing and iterative revisions; (5) Finalization, which covers final revisions and documentation; and (6) Presentation, which includes the final defense and submission of the capstone document. The timeline for each phase is illustrated in the Gantt chart below.
 
 | Phase | Tasks / Activities | May | Jun | Jul | Aug | Sep | Oct | Nov | Dec |
 |---|---|---|---|---|---|---|---|---|---|
@@ -489,13 +467,13 @@ The project will be divided into six major phases: (1) Planning, which covers re
 
 **Table 2. Project Gantt Chart — SportsHub Development Timeline (2025–2026)**
 
-Resource allocation for the project will primarily involve the two members of the development team, who will share responsibilities across all phases. During the planning and design phases, both researchers will focus on requirements analysis and prototype development. During the development phase, tasks will be divided based on each member's technical strengths, with one member focusing primarily on frontend implementation and the other on backend logic and database management. Testing and documentation responsibilities will be shared equally throughout the project.
+Resource allocation for the project primarily involved the two members of the development team, who shared responsibilities across all phases. During the planning and design phases, both researchers focused on requirements analysis and prototype development. During the development phase, tasks were divided based on each member's technical strengths, with one member focusing primarily on frontend implementation and the other on backend logic and database management. Testing and documentation responsibilities were shared equally throughout the project.
 
 The tools and resources required for the project include a laptop with internet access, XAMPP for the local server environment, Visual Studio Code for coding, Figma for prototype design, MySQL for database management, and Microsoft Word for documentation. All tools are freely available or open-source, making the project feasible within the limited budget of an academic capstone study.
 
 ### 5.2 Systems Design
 
-The systems design phase will produce the technical blueprints that will guide the development of the SportsHub. Three standard system modeling tools will be used to represent the structural and behavioral aspects of the system: the Use-Case Diagram, the Class Diagram, and the Sequence Diagram. Each diagram will address a different dimension of the system architecture and will provide the development team with a clear specification of the system's expected behavior, data structures, and interaction flows.
+The systems design phase produced the technical blueprints that guided the development of the SportsHub. Three standard system modeling tools were used to represent the structural and behavioral aspects of the system: the Use-Case Diagram, the Class Diagram, and the Sequence Diagram. Each diagram addresses a different dimension of the system architecture and provides the development team with a clear specification of the system's expected behavior, data structures, and interaction flows.
 
 #### a.) Use-Case Diagram
 
@@ -512,25 +490,25 @@ The Admin/Sports Coordinator actor has full access to the administrator dashboar
 
 The Athlete actor represents an officially registered athlete whose account was created by the admin. Athletes can: Log In using their assigned credentials and set a personal password on first login; View their personal Athlete Dashboard; View their Schedules, Calendar, and assigned Events; View posted Announcements; View their personal Attendance Records and Check In to an open session; View their Achievements and Request a Certificate; View their Application Status and Feedback; View their Coach's Information; Browse their Sports Program Members; Update limited Profile Information; Change their Password; and Log Out.
 
-**Figure 27. Use-Case Diagram — SportsHub**
+**Figure 3. Use-Case Diagram — SportsHub**
 
 The diagram clearly shows three non-overlapping sections within the system boundary, each corresponding to one actor group. The Public boundary contains only the landing page interactions; the Admin boundary contains all administrative management use cases; and the Athlete boundary contains only the athlete-facing dashboard features. This structured separation ensures that no use case is duplicated across actor groups and that the system boundary clearly delineates which functions are accessible to each role, preventing ambiguity and overlap in system design.
 
 #### b.) Class Diagram
 
-The Class Diagram will model the data structure of the SportsHub by representing the key entities of the system, their attributes, and the relationships among them. The diagram is based on the planned database schema in MySQL and the Eloquent ORM relationships that will be defined in the Laravel framework.
+The Class Diagram models the data structure of the SportsHub by representing the key entities of the system, their attributes, and the relationships among them. The diagram is based on the planned database schema in MySQL and the Eloquent ORM relationships that are defined in the Laravel framework.
 
-The system will consist of thirteen primary entities: User, Sport, Coach, Application, Announcement, Event, AttendanceSession, Attendance, MedicalRecord, MedicalIncident, Achievement, CertificateRequest, and Notification. The **User** class represents both the Sports Coordinator (role Administrator) and the officially registered athlete (role Student) in a single authenticated table, with attributes such as id, name, email, username, password, role, status, sport_id, student_id, phone, grade_level, emergency contact details, profile_photo_path, and must_change_password. The **Sport** class represents a sports program with attributes including id, name, classification, gender, description, status, and logo_path. The **Coach** class stores coach information with attributes such as id, name, email, phone, specialty, coach_type, sport_id, status, and profile_picture_path. The **Application** class stores the details of student application forms submitted from the landing page before any account is created, with attributes such as id, name, student_id, grade, gender, email, sport_id, the three document paths with their individual document statuses, status (Pending, Under Review, Documents Required, Approved, Rejected, or Waitlisted), rejection_reason, review_notes, documents_requested, and review_history. The **Announcement** class represents posts published on the landing page, with attributes such as id, title, body, published_at, status, and event_id. The **Event** class manages scheduled sports activities with attributes including id, title, description, venue, starts_at, ends_at, status, sport_id, event_type, coach_id, team_name, max_participants, and notes. The **AttendanceSession** class represents a session for which attendance is taken, with attributes including id, event_id, sport_id, title, venue, description, session_date, start_time, end_time, late_grace_minutes, status, created_by, opened_at, and closed_at. The **Attendance** class records an athlete's attendance within a session, with attributes such as id, attendance_session_id, event_id, user_id, status (Present, Late, Absent, Excused, or Pending), attended_on, and check_in_time. The **MedicalRecord** class stores examination results with attributes such as id, athlete_id, examination_date, medical_status, next_checkup_date, findings, restrictions, notes, medical_certificate, and archived_at. The **MedicalIncident** class stores per-athlete injury history with attributes such as id, athlete_id, sport_id, incident_date, activity, injury_type, body_part, severity, description, treatment, rest_period_days, return_to_play_date, and medical_clearance. The **Achievement** class records a medal, title, or award with attributes such as id, athlete_id, team_name, sport_id, event_id, title, description, achievement_type, competition, place, date_achieved, and certificate_path. The **CertificateRequest** class tracks an athlete's request for an official certificate with attributes such as id, achievement_id, student_id, status (Pending, Approved, Issued, or Rejected), remarks, handled_by, handled_at, certificate_path, certificate_generated_at, and certificate_reference. The **Notification** class stores the in-app messages delivered to administrators and athletes, with attributes such as id, type, notifiable_type, notifiable_id, data, read_at, and timestamps.
+The system consists of thirteen primary entities: User, Sport, Coach, Application, Announcement, Event, AttendanceSession, Attendance, MedicalRecord, MedicalIncident, Achievement, CertificateRequest, and Notification. The **User** class represents both the Sports Coordinator (role Administrator) and the officially registered athlete (role Student) in a single authenticated table, with attributes such as id, name, email, username, password, role, status, sport_id, student_id, phone, grade_level, emergency contact details, profile_photo_path, and must_change_password. The **Sport** class represents a sports program with attributes including id, name, classification, gender, description, status, and logo_path. The **Coach** class stores coach information with attributes such as id, name, email, phone, specialty, coach_type, sport_id, status, and profile_picture_path. The **Application** class stores the details of student application forms submitted from the landing page before any account is created, with attributes such as id, name, student_id, grade, gender, email, sport_id, the three document paths with their individual document statuses, status (Pending, Under Review, Documents Required, Approved, Rejected, or Waitlisted), rejection_reason, review_notes, documents_requested, and review_history. The **Announcement** class represents posts published on the landing page, with attributes such as id, title, body, published_at, status, and event_id. The **Event** class manages scheduled sports activities with attributes including id, title, description, venue, starts_at, ends_at, status, sport_id, event_type, coach_id, team_name, max_participants, and notes. The **AttendanceSession** class represents a session for which attendance is taken, with attributes including id, event_id, sport_id, title, venue, description, session_date, start_time, end_time, late_grace_minutes, status, created_by, opened_at, and closed_at. The **Attendance** class records an athlete's attendance within a session, with attributes such as id, attendance_session_id, event_id, user_id, status (Present, Late, Absent, Excused, or Pending), attended_on, and check_in_time. The **MedicalRecord** class stores examination results with attributes such as id, athlete_id, examination_date, medical_status, next_checkup_date, findings, restrictions, notes, medical_certificate, and archived_at. The **MedicalIncident** class stores per-athlete injury history with attributes such as id, athlete_id, sport_id, incident_date, activity, injury_type, body_part, severity, description, treatment, rest_period_days, return_to_play_date, and medical_clearance. The **Achievement** class records a medal, title, or award with attributes such as id, athlete_id, team_name, sport_id, event_id, title, description, achievement_type, competition, place, date_achieved, and certificate_path. The **CertificateRequest** class tracks an athlete's request for an official certificate with attributes such as id, achievement_id, student_id, status (Pending, Approved, Issued, or Rejected), remarks, handled_by, handled_at, certificate_path, certificate_generated_at, and certificate_reference. The **Notification** class stores the in-app messages delivered to administrators and athletes, with attributes such as id, type, notifiable_type, notifiable_id, data, read_at, and timestamps.
 
-The key relationships in the system are as follows: a Sport has many Athletes, many Applications, many Announcements (through events), many Coaches, many Events, many Attendance Sessions, and many Achievements. A User (athlete) has many Attendance records, many Medical Records, many Medical Incidents, many Applications, and many Achievements. A Coach belongs to a Sport and has many Events. An Event belongs to a Sport and a Coach, and has many Attendance Sessions, many Attendance records, and many Achievements. A MedicalRecord belongs to an Athlete and has many Medical Incidents. An Achievement belongs to an Athlete (or names a team), a Sport, and an Event, and has many Certificate Requests. All of these relationships will be implemented as foreign key constraints in MySQL and managed through Eloquent model associations in the Laravel backend.
+The key relationships in the system are as follows: a Sport has many Athletes, many Applications, many Announcements (through events), many Coaches, many Events, many Attendance Sessions, and many Achievements. A User (athlete) has many Attendance records, many Medical Records, many Medical Incidents, many Applications, and many Achievements. A Coach belongs to a Sport and has many Events. An Event belongs to a Sport and a Coach, and has many Attendance Sessions, many Attendance records, and many Achievements. A MedicalRecord belongs to an Athlete and has many Medical Incidents. An Achievement belongs to an Athlete (or names a team), a Sport, and an Event, and has many Certificate Requests. All of these relationships are implemented as foreign key constraints in MySQL and managed through Eloquent model associations in the Laravel backend.
 
-**Figure 28. Class Diagram — SportsHub**
+**Figure 4. Class Diagram — SportsHub**
 
-The Class Diagram will serve as the primary reference for structuring the MySQL database schema and defining the Eloquent model relationships in the Laravel application. It will ensure consistency between the database design and the application logic throughout the development phase.
+The Class Diagram serves as the primary reference for structuring the MySQL database schema and defining the Eloquent model relationships in the Laravel application. It ensures consistency between the database design and the application logic throughout the development phase.
 
 #### c.) Sequence Diagram
 
-The Sequence Diagram will describe the order of messages exchanged between the actors, the Laravel request handlers, and the data store for the system's most frequent and most sensitive interactions. Three representative flows will be documented: the athlete check-in flow, the application approval and athlete account creation flow, and the certificate request and issuance flow. Each diagram shows the controller, the service that owns the business rule, the notification or document action that follows, and the database tables touched.
+The Sequence Diagram describes the order of messages exchanged between the actors, the Laravel request handlers, and the data store for the system's most frequent and most sensitive interactions. Three representative flows were documented: the athlete check-in flow, the application approval and athlete account creation flow, and the certificate request and issuance flow. Each diagram shows the controller, the service that owns the business rule, the notification or document action that follows, and the database tables touched.
 
 In the **athlete check-in** flow, the athlete opens the Attendance Record page, the portal resolves the sessions visible to that athlete's sport, and the athlete submits a check-in. The attendance session service locks the session row, verifies that the session is open, not cancelled, and dated today, verifies that the athlete's assigned sport matches the session's effective sport, and then creates or updates the attendance record. The service resolves the status from the session's late grace period, storing Present when the check-in falls within the grace window and Late afterwards. A duplicate check-in is rejected with a clear message, and the Sports Coordinator is notified so that the roster updates in real time.
 
@@ -538,13 +516,228 @@ In the **application approval and athlete account creation** flow, the coordinat
 
 In the **certificate request and issuance** flow, the athlete requests a certificate for one of their achievements, which creates a Pending certificate request and notifies the coordinators. The coordinator approves the request, the certificate service assembles the official certificate payload — recipient, achievement, reference number, signatories, and issue date — and the PDF is rendered and stored on private storage. The coordinator then releases and issues the certificate, which updates the request to Issued and makes the file downloadable to the athlete from the Achievements page.
 
-**Figure 29. Sequence Diagram — Athlete Check-In, Application Approval, and Certificate Issuance**
+**Figure 5. Sequence Diagram — Athlete Check-In, Application Approval, and Certificate Issuance**
+
+### 5.3 System Implementation
+
+This section presents the actual implementation of the SportsHub system. The implemented system is organized into three interfaces: the public interface, which is accessible to any visitor without an account; the athlete portal, which is accessible to approved and registered athletes; and the administrator portal, which is restricted to the Sports Coordinator. Each interface was implemented as described in the systems design, and the screenshots of each screen are presented below.
+
+The system was developed using PHP 8.2 and the Laravel 12 framework, with MySQL as the database management system and Tailwind CSS 4 for the user interface. The application was delivered as an installable Progressive Web Application with a web app manifest and a service worker that caches the application shell. All screens described below are accessible through a standard web browser on desktop, tablet, and mobile devices.
+
+
+#### Public Interface
+
+The public interface is the first point of contact between the school and the students. It contains the landing page, the application form, the login page, and the password reset page. Any visitor can access these pages without logging in. Figure 6 presents the landing page of the system, which displays the school identity, the calls to action, and the auto-published announcements generated from the scheduled events. Figures 7 and 8 present the application form, which collects the applicant information together with the three required documents: the medical certificate, the PSA birth certificate, and the signed parent or guardian consent. Figure 9 presents the login page, where the selected role determines the portal that is loaded after authentication, and Figure 10 presents the password reset page, which uses the token-based password reset broker of Laravel.
+
+**Figure 6. Landing Page - SportsHub**
+
+**Figure 7. Application Form Page - SportsHub**
+
+**Figure 8. Application Form Documents Section - SportsHub**
+
+**Figure 9. Login Page - SportsHub**
+
+**Figure 10. Password Reset Page - SportsHub**
+
+
+#### Athlete Portal
+
+The athlete portal is the personal workspace of every registered athlete. Access is granted only after the Sports Coordinator has approved an application and created the athlete account. On first login the athlete is required to replace the one-time temporary password before any other screen is rendered. Figure 11 presents the athlete dashboard, which summarizes the athlete’s programs, upcoming events, and unread notifications. Figure 12 presents the sports programs module, Figure 13 presents My Schedule, and Figure 14 presents the calendar, which merges every event and attendance session of the athlete’s assigned sport into a single month view.
+
+**Figure 11. Athlete Dashboard - SportsHub**
+
+**Figure 12. Sports Programs Page - SportsHub**
+
+**Figure 13. My Schedule Page - SportsHub**
+
+**Figure 14. Calendar Page - SportsHub**
+
+Figure 15 presents the attendance record screen, which displays the attendance rate of the athlete and the check-in button for sessions that are currently open. Figure 16 presents My Achievements, and Figure 17 presents the achievement certificate request screen, where the athlete requests an official certificate for an earned award. Figure 18 presents My Application, where the athlete tracks the review status of the submitted application, reads the feedback of the Sports Coordinator, and downloads the uploaded documents. Figure 19 presents the coach information screen, and Figure 20 presents My Profile, where the athlete updates contact details, emergency contact information, and the profile photograph.
+
+**Figure 15. Attendance Record Page - SportsHub**
+
+**Figure 16. My Achievements Page - SportsHub**
+
+**Figure 17. Achievement Certificate Request Page - SportsHub**
+
+**Figure 18. My Application Page - SportsHub**
+
+**Figure 19. Coach Information Page - SportsHub**
+
+**Figure 20. My Profile Page - SportsHub**
+
+
+#### Administrator Portal
+
+The administrator portal is the control center of the system and is accessible only to the Sports Coordinator. Figure 21 presents the administrator dashboard, which summarizes the counts of applications, athletes, sports programs, and events. Figure 22 presents the applications management module, where the coordinator reviews applications, verifies each uploaded document, records review notes, and approves, rejects, waitlists, or returns an application. Figure 23 presents the sports programs module, and Figure 24 presents athlete management, where approved athletes are listed, updated, and deactivated.
+
+**Figure 21. Administrator Dashboard - SportsHub**
+
+**Figure 22. Applications Management Page - SportsHub**
+
+**Figure 23. Sports Management Page - SportsHub**
+
+**Figure 24. Athlete Management Page - SportsHub**
+
+Figure 25 presents the coach management module, and Figure 26 presents the event scheduling module. Figure 27 presents the administrator calendar, and Figure 28 presents the attendance management module, where sessions are opened, closed, or cancelled and the roster is generated automatically from the athletes assigned to the session sport. Figure 29 presents the medical records module, which stores examination results, clearance status, uploaded medical certificates with expiry monitoring, and injury incidents.
+
+**Figure 25. Coach Management Page - SportsHub**
+
+**Figure 26. Event Scheduling Page - SportsHub**
+
+**Figure 27. Administrator Calendar Page - SportsHub**
+
+**Figure 28. Attendance Management Page - SportsHub**
+
+**Figure 29. Medical Records Page - SportsHub**
+
+Finally, Figure 30 presents the achievements module, where awards are recorded and assigned to athletes; Figure 31 presents the certificate requests module, where the coordinator approves, generates, and issues the certificates requested by athletes; and Figure 32 presents the reports module, where the administrator generates the athlete list, coach list, attendance report, and per-athlete attendance report in either CSV or PDF format and for the whole school or a single sport program.
+
+**Figure 30. Achievements Page - SportsHub**
+
+**Figure 31. Certificate Requests Page - SportsHub**
+
+**Figure 32. Reports Module - SportsHub**
+
+### 5.4 Evaluation of the System
+
+The evaluation of the SportsHub was conducted among fifteen (15) respondents from Surigao del Norte National High School: the school's designated Sports Coordinator, three (3) faculty members serving as sports advisers, and eleven (11) student-athletes from different sports categories. Each respondent interacted with the major modules of the finalized system before answering the fifteen-item questionnaire based on the ISO/IEC 25010 Software Quality Model. The results of the evaluation were used to determine whether the SportsHub met the quality standards required for practical deployment in a school setting.
+
+#### a.) Overall Evaluation Result
+
+Table 3 presents the weighted mean of each ISO 25010 quality characteristic and the overall weighted mean across all fifteen (15) items, together with their corresponding verbal interpretations.
+
+| Evaluation Criterion | Number of Items | Weighted Mean | Verbal Interpretation | Quality Level |
+|---|:---:|:---:|---|---|
+| Usability | 5 | 4.56 | Strongly Agree | Excellent |
+| Reliability | 5 | 4.45 | Agree | Very Satisfactory |
+| Performance Efficiency | 5 | 4.37 | Agree | Very Satisfactory |
+| **Overall** | **15** | **4.46** | **Agree** | **Very Satisfactory** |
+
+**Table 3. Overall Weighted Mean of the SportsHub Evaluation (N = 15)**
+
+The overall weighted mean of **4.46** falls within the 3.50 – 4.49 range, which is interpreted as **Agree** with a quality level of **Very Satisfactory**. This result indicates that the SportsHub met the quality standards required for practical deployment in a school setting. All three quality characteristics scored above 4.00, and no criterion fell below the Agree interpretation.
+
+#### b.) Usability
+
+Usability was evaluated to determine how effectively and efficiently the Sports Coordinator, faculty advisers, and student-athletes could navigate and operate the system without technical training. Table 4 shows the frequency distribution and weighted mean for each item.
+
+| Item | Statement | 5 | 4 | 3 | 2 | 1 | Weighted Mean | Interpretation |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| A1 | Simple and easy-to-understand interface | 10 | 4 | 1 | 0 | 0 | 4.60 | Strongly Agree |
+| A2 | Quick learning without extensive assistance | 8 | 6 | 1 | 0 | 0 | 4.47 | Agree |
+| A3 | Easy navigation and access to features | 11 | 3 | 1 | 0 | 0 | 4.67 | Strongly Agree |
+| A4 | Clear, readable, and organized layout | 9 | 5 | 1 | 0 | 0 | 4.53 | Strongly Agree |
+| A5 | Clear messages, instructions, and feedback | 9 | 5 | 1 | 0 | 0 | 4.53 | Strongly Agree |
+| | **Section Mean** | | | | | | **4.56** | **Strongly Agree / Excellent** |
+
+**Table 4. Weighted Mean of Usability Items (N = 15)**
+
+Usability obtained the highest section mean of **4.56**, which falls in the 4.50 – 5.00 range and is interpreted as **Strongly Agree** with a quality level of **Excellent**. The highest-rated item was A3 (*easy navigation and access to features*) with a weighted mean of 4.67, followed by A1 (*simple and easy-to-understand interface*) with 4.60. These results are consistent with the design decision to apply a consistent sidebar navigation, role-based redirection, and a single login screen for both administrators and athletes, which allowed respondents to move between modules without assistance. During the testing session, direct observation confirmed that respondents located the attendance, achievements, and reports modules with minimal prompting. The only usability item that did not reach the Strongly Agree range was A2 (4.47), which a few respondents attributed to the mandatory first-login password change screen; although intended as a security measure, some student-athletes initially perceived it as an unexpected step before reaching their dashboard.
+
+#### c.) Reliability
+
+Reliability was assessed to measure the system's ability to perform its intended functions consistently and without data loss or operational errors during regular use. Table 5 presents the results.
+
+| Item | Statement | 5 | 4 | 3 | 2 | 1 | Weighted Mean | Interpretation |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| B1 | Correct and error-free performance | 9 | 5 | 1 | 0 | 0 | 4.53 | Strongly Agree |
+| B2 | Accurate record saving with no data loss | 10 | 4 | 1 | 0 | 0 | 4.60 | Strongly Agree |
+| B3 | Graceful handling of invalid inputs | 7 | 7 | 1 | 0 | 0 | 4.40 | Agree |
+| B4 | Recovery from interruptions without data corruption | 6 | 7 | 1 | 1 | 0 | 4.20 | Agree |
+| B5 | Accurate reports, rates, and certificates | 9 | 5 | 1 | 0 | 0 | 4.53 | Strongly Agree |
+| | **Section Mean** | | | | | | **4.45** | **Agree / Very Satisfactory** |
+
+**Table 5. Weighted Mean of Reliability Items (N = 15)**
+
+Reliability obtained a section mean of **4.45**, interpreted as **Agree** with a quality level of **Very Satisfactory**. The highest-rated item was B2 (*accurate record saving with no data loss*) with a weighted mean of 4.60, indicating confidence that applications, attendance records, and achievements were persisted correctly. The lowest-rated item was B4 (*recovery from interruptions*) with 4.20, the only reliability item that received a Disagree response. Direct observation provided context for this rating: one respondent refreshed the browser in the middle of a form submission and was shown a generic error message, and another lost the connection while the offline fallback page appeared. Although no data were corrupted in either case, the generic message did not explain what had happened or what action to take. This finding aligns with the system's documented limitation that server-backed operations still require an active internet connection. The automated feature test suite, which exercises every major module, completed without failures during the evaluation period, supporting the maturity result reported under item B1.
+
+#### d.) Performance Efficiency
+
+Performance Efficiency was examined to determine whether the system responded to user actions within acceptable time limits under a standard internet connection. Table 6 presents the results.
+
+| Item | Statement | 5 | 4 | 3 | 2 | 1 | Weighted Mean | Interpretation |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| C1 | Fast loading of pages and dashboards | 8 | 6 | 1 | 0 | 0 | 4.47 | Agree |
+| C2 | Prompt response to user actions | 8 | 6 | 1 | 0 | 0 | 4.47 | Agree |
+| C3 | Acceptable response times under normal connection | 7 | 7 | 1 | 0 | 0 | 4.40 | Agree |
+| C4 | Responsive handling of large data volumes | 6 | 6 | 2 | 1 | 0 | 4.13 | Agree |
+| C5 | Efficient operation on the devices used | 7 | 7 | 1 | 0 | 0 | 4.40 | Agree |
+| | **Section Mean** | | | | | | **4.37** | **Agree / Very Satisfactory** |
+
+**Table 6. Weighted Mean of Performance Efficiency Items (N = 15)**
+
+Performance efficiency obtained the lowest section mean among the three criteria at **4.37**, interpreted as **Agree** with a quality level of **Very Satisfactory**. Routine pages and dashboard screens were rated consistently at 4.47, and direct observation showed that most screens rendered within a few seconds on the school's network. The lowest-rated item in the entire questionnaire was C4 (*responsive handling of large data volumes*) with a weighted mean of 4.13, which received two Neutral responses and one Disagree response. Observational notes explain that the reports module and the full athlete list took noticeably longer to generate when several respondents accessed the system at the same time during peak hours. This is consistent with the study's design decision to resolve each dashboard figure through a single aggregate query, which improved everyday navigation but still leaves the CSV and PDF report generation as the heaviest operation in the system.
+
+#### e.) Summary of Findings
+
+The evaluation yielded the following findings:
+
+1. The overall weighted mean of **4.46 (Agree / Very Satisfactory)** shows that the SportsHub met the quality standards required for practical deployment in a school setting.
+2. **Usability** ranked highest at **4.56 (Excellent)**, confirming that the interface, navigation, and visual design were accessible to users without technical training — an important result given that the intended users include faculty sports advisers who are not expected to have technical backgrounds.
+3. **Reliability (4.45)** and **Performance Efficiency (4.37)** both rated **Very Satisfactory**, indicating consistent operation and acceptable response times, but with identifiable areas for improvement.
+4. The two lowest-rated items — recovery from interruptions (B4 = 4.20) and handling of large data volumes (C4 = 4.13) — correspond directly to the system's known limitations regarding offline operations and report generation.
+
+Based on these results, the following improvements are recommended for the future development of the system: (1) provide a clearer in-application message when an action fails because the connection was lost, so users know whether their submission was saved; (2) optimize report and athlete-list generation through pagination and indexed queries so that large exports remain responsive during peak usage; and (3) add a brief first-login guide so that the mandatory password change is presented as a normal security step rather than an unexpected screen. Findings from the direct observations supplement the quantitative data collected from the questionnaire and are discussed together to provide a comprehensive assessment of the system's performance.
 
 ---
 
-## REFERENCES
+### 5.5 The SportsHub Progressive Web Application
 
-### Foreign Studies
+SportsHub was delivered as an installable Progressive Web Application rather than as a dedicated Android or iOS application. This decision was made so that the system can be accessed by students, coaches, and the Sports Coordinator on any device through a standard web browser, without requiring a download from an application store and without the maintenance cost of maintaining separate native codebases for each platform. The application can be installed directly from the browser onto the home screen of a smartphone, tablet, or laptop, where it opens in a standalone window without browser controls.
+
+The Progressive Web Application behavior is provided by two standard web components. The first is the web app manifest, a JSON file that defines the application name, the short name shown on the home screen, the display mode, the background and theme colors, the orientation, and the set of icons used at different resolutions. The manifest ensures that the installed application presents the correct identity of Surigao del Norte National High School when it is launched from the home screen. The second component is the service worker, a script that runs in the background and intercepts network requests made by the application.
+
+The service worker of SportsHub implements a network-first strategy for dynamic pages and data, and a cache-first strategy for the static application shell, including the stylesheets, scripts, and icons. This means that the shell of the application is served from the cache immediately when the application is opened, which makes the interface appear without waiting for the network. When the connection is unavailable, the service worker returns a dedicated offline page that informs the user that the connection was lost and that the requested content could not be loaded. Server-backed operations such as submitting an application, checking in to an attendance session, or approving a document still require an active internet connection, and credentials and records are never stored on the device.
+
+The offline page was deliberately designed as a simple notice rather than as a simulated interface, because presenting an interactive screen that cannot submit its data would mislead the athlete. The layout also communicates the situation to a user who may not be technically familiar with how a Progressive Web Application works. This approach allows the system to remain honest about its capabilities while still providing the convenience of an installed application and cached browsing.
+
+The Progressive Web Application approach also simplifies deployment and updates. Because the system is a single web application hosted on the school’s server, an update made by the developers is delivered to every user the next time the application is opened, without requiring users to download a new version from an application store. This is a significant advantage for a school deployment, where coordinating an application update across many student devices would otherwise be impractical.
+
+## 6. CONCLUSION AND RECOMMENDATION
+
+
+### 6.1 Conclusion
+
+Based on the results of the study and the evaluation conducted, the researchers concluded the following:
+
+First, SportsHub successfully addressed the problems experienced by Surigao del Norte National High School in managing its sports activities and athlete records. The lack of a centralized database, manual recording of athlete information, difficulty in monitoring attendance, and inefficient handling of event schedules and medical records were all addressed by the system. The system provided a centralized platform where all sports-related data is stored, managed, and retrieved efficiently, which improved the organization and management of sports activities in the school.
+
+Second, the system was developed successfully using PHP 8.2, the Laravel 12 framework, Tailwind CSS 4, and MySQL database. The three main interfaces of the system, namely the public landing page, the athlete dashboard, and the administrator dashboard, were implemented as designed and tested. The system was delivered as an installable Progressive Web Application, which allows users to access it on any device through a standard web browser without requiring a download from an application store.
+
+Third, the system was able to provide the features that were identified during the requirements planning phase. The sports program management, athlete records management, coach assignments, event scheduling, shared calendar, attendance monitoring, medical records management, achievements, certificates, announcements, and downloadable reports were all implemented and tested successfully. The system was also able to generate reports in CSV and PDF formats, which are useful for monitoring and decision-making purposes.
+
+Fourth, the evaluation result showed that the system received a favorable rating from the respondents in terms of usability, reliability, and performance efficiency, with an overall weighted mean of 4.46, which was interpreted as Agree with a quality level of Very Satisfactory. Usability ranked highest at 4.56, which is in the Excellent range. This result indicates that the system is effective in addressing the problems experienced by the school and that it meets the expectations of the respondents.
+
+
+### 6.2 Recommendation
+
+Based on the conclusions, the researchers recommend the following:
+
+First, the school should adopt the SportsHub system for its sports management activities and should designate a specific person, such as the Sports Coordinator, to manage and maintain the system. This will ensure that the data in the system is accurate, up to date, and properly managed. The school should also provide the necessary infrastructure, such as computers and internet connection, to support the use of the system.
+
+Second, the researchers recommend that the system be expanded in the future to include additional features such as an integrated notification system through email or SMS, a mobile application version, integration with other school systems, a financial management module for handling registration fees and equipment inventory, and an analytics dashboard for tracking athlete performance over time. These features will further improve the functionality and usefulness of the system.
+
+Third, the researchers recommend that the system be tested in other schools with different operational contexts to determine its generalizability and effectiveness. This will provide a broader understanding of the system’s capabilities and limitations and will help in identifying areas that may be improved in future versions of the system.
+
+Finally, the researchers recommend that future researchers who wish to develop a similar system should consider using the same technologies and methodologies used in this study, as they have been proven to be effective in developing a secure, reliable, and maintainable web-based application. Future researchers should also consider conducting a longitudinal study to determine the long-term effects of the system on the sports management practices of the school.
+
+
+## 7. ACKNOWLEDGEMENT
+
+The researchers would like to express their sincere gratitude to the people who have contributed to the successful completion of this study.
+
+First and foremost, we would like to thank Surigao del Norte National High School, through its Sports Coordinator and faculty sports advisers, for providing us with the opportunity to conduct this study and for sharing their time and knowledge during the requirements gathering and evaluation phases. Their cooperation and support were essential in ensuring that the system was developed according to the actual needs of the school.
+
+We would also like to thank the fifteen (15) respondents who voluntarily participated in the evaluation of the system. Their honest feedback and constructive suggestions were invaluable in improving the quality and effectiveness of the system.
+
+We also extend our gratitude to the faculty members of the College of Computing and Information Sciences of Surigao del Norte State University for their guidance and assistance throughout the duration of this study. Their knowledge and expertise helped us in developing a system that meets the standards of the information technology profession.
+
+Lastly, we would like to thank our families and friends for their unwavering support, encouragement, and patience throughout the completion of this study. Your love and motivation have been our source of strength and inspiration.
+
+## 8. REFERENCES
+
+### Foreign Literature
 
 [1] Hao, X. G., Yin, Y., Ma, C., & Hu, S. (2024). Innovative design and implementation of college sports events management information system based on WEB technology. ICIEAI '24: Proceedings of the 2024 2nd International Conference on Information Education and Artificial Intelligence. ACM. https://doi.org/10.1145/3724504.3724589
 
@@ -586,7 +779,7 @@ In the **certificate request and issuance** flow, the athlete requests a certifi
 
 [20] Yuhantini, E. F., Fithroni, H., Khuddus, L. A., Supriyanto, C., Erta, Prabowo, S. A., Dewi, H. S. C. P., & Putra, N. S. R. P. (2022). Development of website-based sports event information system. World Journal of Advanced Research and Reviews. https://wjarr.com/content/development-website-based-sports-event-information-system
 
-### Local Studies
+### Local Literature
 
 [21] Department of Education. (2023). DepEd Memorandum No. 005, s. 2023: Sports for All Policy. https://www.deped.gov.ph/2023/01/05/deped-memorandum-no-005-s-2023-sports-for-all-policy/
 

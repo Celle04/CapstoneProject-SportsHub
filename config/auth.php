@@ -22,6 +22,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Remember Me Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | How long a "remember me" cookie stays valid, in minutes. The framework
+    | default is five years, which is far too long for a shared school
+    | computer. Two weeks is the default here.
+    |
+    */
+
+    'remember' => env('AUTH_REMEMBER_COOKIE_LIFETIME', 20160),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |

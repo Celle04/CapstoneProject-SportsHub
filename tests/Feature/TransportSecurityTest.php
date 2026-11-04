@@ -16,9 +16,10 @@ class TransportSecurityTest extends TestCase
         $this->assertArrayHasKey('secure', config('session'));
     }
 
-    public function test_urls_are_forced_to_https_in_production(): void
+    public function test_urls_use_https_when_production_app_url_is_https(): void
     {
         $this->app['env'] = 'production';
+        config(['app.url' => 'https://localhost']);
 
         // Re-run the provider boot with the production environment in place.
         (new \App\Providers\AppServiceProvider($this->app))->boot();
@@ -26,5 +27,15 @@ class TransportSecurityTest extends TestCase
         $this->assertStringStartsWith('https://', URL::to('/student/attendance'));
 
         URL::forceScheme('http');
+    }
+
+    public function test_production_mode_keeps_http_urls_for_http_app_url(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.url' => 'http://localhost']);
+
+        (new \App\Providers\AppServiceProvider($this->app))->boot();
+
+        $this->assertStringStartsWith('http://', URL::to('/student/attendance'));
     }
 }

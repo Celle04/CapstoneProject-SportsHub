@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{{ $title ?? 'SNNHS SportsHub' }}</title>
+    <meta name="theme-color" content="#10069F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SportsHub">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/pwa.css') }}?v={{ filemtime(public_path('css/pwa.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/portal.css') }}?v={{ filemtime(public_path('css/portal.css')) }}">
     <script>
         (function () {
@@ -146,6 +153,10 @@
                     </nav>
                 </div>
                 <div class="portal-topbar-actions">
+                    <button type="button" class="pwa-install-button" data-pwa-install aria-label="Install SportsHub" title="Install SportsHub">
+                        <svg aria-hidden="true"><use href="#icon-download"></use></svg>
+                        <span>Install App</span>
+                    </button>
                     <button type="button" class="portal-icon-button" id="theme-toggle" aria-label="Dark Mode" aria-pressed="false" data-tooltip="Dark Mode">
                         <svg class="theme-icon theme-icon-sun" aria-hidden="true"><use href="#icon-sun"></use></svg>
                         <svg class="theme-icon theme-icon-moon" aria-hidden="true"><use href="#icon-moon"></use></svg>
@@ -232,7 +243,9 @@
         </main>
     </div>
     @include('partials.confirm-dialog')
+    @include('partials.pwa-install-dialog')
     <script src="{{ asset('js/offline.js') }}" defer></script>
+    <script src="{{ asset('js/pwa-install.js') }}" defer></script>
     <script src="{{ asset('js/filters.js') }}" defer></script>
     <script src="{{ asset('js/profile.js') }}" defer></script>
     <script src="{{ asset('js/relative-time.js') }}" defer></script>

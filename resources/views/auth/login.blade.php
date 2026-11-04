@@ -12,7 +12,7 @@
         @csrf
 
         <div class="auth-field">
-            <label for="role">Login as</label>
+            <label for="role">Sign in as</label>
             <select id="role" name="role" required>
                 <option value="Administrator" @selected(old('role', 'Administrator') === 'Administrator')>Administrator / Sports Coordinator</option>
                 <option value="Student" @selected(old('role') === 'Student')>Athlete / Student</option>
@@ -41,14 +41,14 @@
             @error('password')<p class="auth-error">{{ $message }}</p>@enderror
         </div>
 
-        <div class="auth-row">
+        <div class="auth-row" id="remember-row">
             <label class="auth-check">
                 <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
                 <span>Remember me</span>
             </label>
         </div>
 
-        <button class="button auth-submit" type="submit">SIGN IN</button>
+        <button class="button auth-submit" type="submit">Sign In</button>
 
         <p class="auth-hint">Forgot your password? Please contact the Sports Coordinator or Admin for assistance.</p>
 
