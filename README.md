@@ -21,6 +21,34 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Deploying on Vercel
+
+This is a server-rendered Laravel application, not a static Vite site. The
+`Dockerfile.vercel` image runs Laravel with FrankenPHP and builds the Vite
+assets as part of the image. In Vercel, use the **Container** framework preset;
+do not configure `dist` or `public/build` as a static output directory.
+
+Configure these production environment variables in Vercel:
+
+- `APP_KEY`: generate with `php artisan key:generate --show`; add the result as
+  a secret and do not commit it.
+- `APP_ENV=production`, `APP_DEBUG=false`, and `APP_URL` set to the canonical
+  HTTPS deployment URL.
+- `DB_CONNECTION=mysql` and the `DB_HOST`, `DB_PORT`, `DB_DATABASE`,
+  `DB_USERNAME`, and `DB_PASSWORD` values for an externally hosted MySQL
+  database. The database must accept connections from the deployment.
+- `SESSION_DRIVER=database`, `CACHE_STORE=database`, and
+  `SESSION_SECURE_COOKIE=true`.
+- `LOG_CHANNEL=stderr` so application logs are available in Vercel runtime
+  logs.
+- Configure the `MAIL_*` variables if password-reset email is required.
+
+Run `php artisan migrate --force` against the production database before
+serving traffic. Do not rely on the container filesystem for uploaded files:
+it is ephemeral across redeployments and instances. Before enabling
+production uploads, configure durable object storage, install its required
+Flysystem adapter, and set `FILESYSTEM_DISK` to that storage driver.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
