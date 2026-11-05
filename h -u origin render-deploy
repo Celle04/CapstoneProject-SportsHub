@@ -1,0 +1,358 @@
+[1mdiff --git a/.dockerignore b/.dockerignore[m
+[1mindex 7672858..bde8e8a 100644[m
+[1m--- a/.dockerignore[m
+[1m+++ b/.dockerignore[m
+[36m@@ -1,13 +1,21 @@[m
+ .env[m
+ .env.*[m
+[32m+[m[32m!.env.example[m
+ .git[m
+[32m+[m[32m.github[m
+ .gitignore[m
+ .phpunit.result.cache[m
+ .vercel[m
+ node_modules[m
+[32m+[m[32mtests[m
+ public/build[m
+ public/hot[m
+ public/storage[m
+ storage/logs/*[m
+[32m+[m[32mstorage/framework/cache/*[m
+[32m+[m[32mstorage/framework/sessions/*[m
+[32m+[m[32mstorage/framework/views/*[m
+[32m+[m[32mstorage/app/private[m
+[32m+[m[32mstorage/app/public[m
+ vendor[m
+[31m-database/database.sqlite[m
+[32m+[m[32mdatabase/*.sqlite[m
+[1mdiff --git a/.env.example b/.env.example[m
+[1mindex c5e9a7b..9b38144 100644[m
+[1m--- a/.env.example[m
+[1m+++ b/.env.example[m
+[36m@@ -2,10 +2,8 @@[m
+ APP_ENV=production[m
+ APP_KEY=[m
+ APP_DEBUG=false[m
+[31m-# Must match how the app is actually reached from the browser, including any[m
+[31m-# subfolder. Uploaded profile photos are served from APP_URL/storage, so a[m
+[31m-# wrong value here makes every avatar a broken image.[m
+[31m-APP_URL=http://localhost/SportsHub/public[m
+[32m+[m[32m# Set this to the public HTTPS URL of the Render web service.[m
+[32m+[m[32mAPP_URL=https://your-service.onrender.com[m
+ [m
+ APP_LOCALE=en[m
+ APP_FALLBACK_LOCALE=en[m
+[36m@@ -18,31 +16,28 @@[m [mAPP_MAINTENANCE_DRIVER=file[m
+ [m
+ BCRYPT_ROUNDS=12[m
+ [m
+[31m-LOG_CHANNEL=stack[m
+[32m+[m[32mLOG_CHANNEL=stderr[m
+ LOG_STACK=single[m
+ LOG_DEPRECATIONS_CHANNEL=null[m
+ LOG_LEVEL=warning[m
+ [m
+ DB_CONNECTION=mysql[m
+[31m-DB_HOST=127.0.0.1[m
+[32m+[m[32mDB_HOST=your-mysql-host[m
+ DB_PORT=3306[m
+[31m-DB_DATABASE=sportshub[m
+[31m-DB_USERNAME=root[m
+[31m-# Leave empty for the default XAMPP install. Never commit a real password here.[m
+[31m-DB_PASSWORD=[m
+[32m+[m[32mDB_DATABASE=your_database[m
+[32m+[m[32mDB_USERNAME=your_username[m
+[32m+[m[32mDB_PASSWORD=your_password[m
+[32m+[m[32m# Optional CA file path for a hosted MySQL provider that requires TLS.[m
+[32m+[m[32mMYSQL_ATTR_SSL_CA=[m
+ [m
+ SESSION_DRIVER=database[m
+ SESSION_LIFETIME=120[m
+[31m-# Encrypting the session payload is recommended, but switching it on logs[m
+[31m-# everyone out once (existing session rows become unreadable). Enable it for[m
+[31m-# a fresh production deployment; leave it as-is when upgrading a live one.[m
+[31m-SESSION_ENCRYPT=false[m
+[32m+[m[32m# Enable encryption for new production deployments; changing this on a live[m
+[32m+[m[32m# service invalidates existing sessions.[m
+[32m+[m[32mSESSION_ENCRYPT=true[m
+ SESSION_PATH=/[m
+ SESSION_DOMAIN=null[m
+[31m-# Only send the session cookie over HTTPS. Set to true in production once the[m
+[31m-# site is served over HTTPS; on a plain http:// local XAMPP install it must[m
+[31m-# stay false or sign-in will silently fail to keep the session.[m
+[31m-SESSION_SECURE_COOKIE=false[m
+[32m+[m[32mSESSION_SECURE_COOKIE=true[m
+ # SameSite policy. "lax" keeps the CSRF protection while allowing normal[m
+ # navigation; "strict" is stricter but can break links from other sites.[m
+ SESSION_SAME_SITE=lax[m
+[36m@@ -88,6 +83,7 @@[m [mMAIL_SCHEME=smtp[m
+ MAIL_ENCRYPTION=tls[m
+ MAIL_HOST=smtp.gmail.com[m
+ MAIL_PORT=587[m
+[32m+[m[32mMAIL_AUTO_TLS=true[m
+ MAIL_USERNAME=[m
+ MAIL_PASSWORD=[m
+ MAIL_FROM_ADDRESS=[m
+[36m@@ -127,3 +123,6 @@[m [mAWS_USE_PATH_STYLE_ENDPOINT=false[m
+ VITE_APP_NAME="${APP_NAME}"[m
+ [m
+ APP_TIMEZONE=Asia/Manila[m
+[32m+[m
+[32m+[m[32m# Set to false to skip automatic migrations during container startup.[m
+[32m+[m[32mRUN_MIGRATIONS=true[m
+[1mdiff --git a/.gitattributes b/.gitattributes[m
+[1mindex fcb21d3..162e3fb 100644[m
+[1m--- a/.gitattributes[m
+[1m+++ b/.gitattributes[m
+[36m@@ -1,4 +1,5 @@[m
+ * text=auto eol=lf[m
+[32m+[m[32m*.sh text eol=lf[m
+ [m
+ *.blade.php diff=html[m
+ *.css diff=css[m
+[1mdiff --git a/DEPLOY_NOTES.md b/DEPLOY_NOTES.md[m
+[1mnew file mode 100644[m
+[1mindex 0000000..a3934d8[m
+[1m--- /dev/null[m
+[1m+++ b/DEPLOY_NOTES.md[m
+[36m@@ -0,0 +1,76 @@[m
+[32m+[m[32m# Render deployment notes[m
+[32m+[m
+[32m+[m[32m## Changes on this branch[m
+[32m+[m
+[32m+[m[32m- `b9284ce deploy: add Render Docker runtime` — adds a multi-stage Docker build, Apache entrypoint, and Docker context exclusions.[m
+[32m+[m[32m- `1a72859 deploy: deduplicate Docker ignore rules` — removes a duplicate ignore pattern.[m
+[32m+[m[32m- `f0200a7 deploy: trust Render proxy headers` — trusts forwarded protocol/client-IP headers and generates HTTPS URLs in production.[m
+[32m+[m[32m- `deploy: document Render settings` — adds safe production environment placeholders and these deployment notes.[m
+[32m+[m
+[32m+[m[32mThe Docker entrypoint fails on storage-link errors instead of hiding them. Docker was not available locally, so the image and container smoke test could not be run.[m
+[32m+[m
+[32m+[m[32m`php artisan test` completed with 363 passing tests and one unrelated existing failure: `EventCalendarTest::test_a_multi_day_event_is_visible_in_both_months_it_spans` expects October-specific day counts while deriving its dates from the current month. The new proxy test passes.[m
+[32m+[m
+[32m+[m[32m## Render environment variables[m
+[32m+[m
+[32m+[m[32mSet these on the Render Docker web service. Replace every placeholder with the actual production value.[m
+[32m+[m
+[32m+[m[32m| Variable | Value | Secret? |[m
+[32m+[m[32m|---|---|---|[m
+[32m+[m[32m| `APP_KEY` | Generate with `php artisan key:generate --show` | Yes |[m
+[32m+[m[32m| `APP_ENV` | `production` | No |[m
+[32m+[m[32m| `APP_DEBUG` | `false` | No |[m
+[32m+[m[32m| `APP_URL` | `https://<your-service>.onrender.com` (or your custom HTTPS domain) | No |[m
+[32m+[m[32m| `LOG_CHANNEL` | `stderr` | No |[m
+[32m+[m[32m| `LOG_LEVEL` | `warning` | No |[m
+[32m+[m[32m| `CACHE_STORE` | `database` | No |[m
+[32m+[m[32m| `DB_CONNECTION` | `mysql` | No |[m
+[32m+[m[32m| `DB_HOST` | Your hosted MySQL hostname | No |[m
+[32m+[m[32m| `DB_PORT` | Provider port (usually `3306`) | No |[m
+[32m+[m[32m| `DB_DATABASE` | Your database name | No |[m
+[32m+[m[32m| `DB_USERNAME` | Your database user | Treat as sensitive |[m
+[32m+[m[32m| `DB_PASSWORD` | Your database password | Yes |[m
+[32m+[m[32m| `MYSQL_ATTR_SSL_CA` | CA certificate path in the container; leave empty if TLS CA is not required | No (certificate file must be available to the container) |[m
+[32m+[m[32m| `SESSION_DRIVER` | `database` | No |[m
+[32m+[m[32m| `SESSION_SECURE_COOKIE` | `true` | No |[m
+[32m+[m[32m| `SESSION_ENCRYPT` | `true` for a fresh deployment | No |[m
+[32m+[m[32m| `FILESYSTEM_DISK` | `local` | No |[m
+[32m+[m[32m| `QUEUE_CONNECTION` | `database` (or `sync`; see queue note below) | No |[m
+[32m+[m[32m| `MAIL_MAILER` | `smtp` (or the configured Laravel mail transport) | No |[m
+[32m+[m[32m| `MAIL_SCHEME` | `smtp` for STARTTLS or `smtps` for implicit TLS | No |[m
+[32m+[m[32m| `MAIL_ENCRYPTION` | `tls` for the supplied SMTP example | No |[m
+[32m+[m[32m| `MAIL_HOST` | Your SMTP hostname | No |[m
+[32m+[m[32m| `MAIL_PORT` | Your SMTP port | No |[m
+[32m+[m[32m| `MAIL_AUTO_TLS` | `true` when supported by the SMTP provider | No |[m
+[32m+[m[32m| `MAIL_USERNAME` | SMTP account username | Treat as sensitive |[m
+[32m+[m[32m| `MAIL_PASSWORD` | SMTP password or provider app password | Yes |[m
+[32m+[m[32m| `MAIL_FROM_ADDRESS` | Verified sender address | No |[m
+[32m+[m[32m| `MAIL_FROM_NAME` | `SNNHS SportsHub` | No |[m
+[32m+[m[32m| `RUN_MIGRATIONS` | `true` to run `php artisan migrate --force` at container startup | No |[m
+[32m+[m
+[32m+[m[32mRender supplies `PORT`; the container defaults to `10000` when it is absent. Do not set `APP_DEBUG=true` or reuse a development `APP_KEY` in production.[m
+[32m+[m
+[32m+[m[32mThe sample also retains `QUEUE_CONNECTION=database`. No application notification, mail, or job class implements `ShouldQueue`; current notifications send synchronously, so existing email is not dependent on a queue worker. If future code dispatches queued jobs, add a Render worker or choose `QUEUE_CONNECTION=sync` to avoid jobs waiting unprocessed.[m
+[32m+[m
+[32m+[m[32m## Deployment findings and remaining decisions[m
+[32m+[m
+[32m+[m[32m- No application runtime references to `/SportsHub`, `/public/`, `/storage/`, or `/build/` need rewriting for a domain-root deployment. The sample `APP_URL` now uses a root-domain placeholder.[m
+[32m+[m[32m- `public/css/landing.css:561` uses `/images/sports-banner.jpg`, which is root-relative and therefore resolves correctly at the Render domain root. That file is absent from `public/images`, so the landing banner image will not load; decide whether to add the intended image or remove/replace that background.[m
+[32m+[m[32m- `public/js/offline.js:14-20` derives the worker URL and scope from the script path; `public/sw.js:9-19` resolves the app shell from the worker URL. `public/manifest.webmanifest:5-6` uses `./` for `start_url` and `scope`. These are root-safe and also support subfolders.[m
+[32m+[m[32m- `resources/css/app.css:4` and `vite.config.js:15` refer to the local compiled-view directory for Tailwind/Vite, not browser URLs.[m
+[32m+[m[32m- `config/filesystems.php` stores both private and public files under `storage/app/private` and `storage/app/public`. Application documents, medical certificates, and generated certificate PDFs use the private disk; profile photos and sports/coach images use the public disk. Mount the persistent disk at `/var/www/html/storage/app`.[m
+[32m+[m[32m- `config/logging.php` defines the `stderr` channel. `config/database.php` reads `MYSQL_ATTR_SSL_CA` for MySQL/MariaDB TLS.[m
+[32m+[m[32m- Migrations create the `sessions`, `cache`, and `jobs` tables. No `env()` calls were found outside `config/`.[m
+[32m+[m[32m- No notification, mail, or job class implements `ShouldQueue`; no queue worker is needed for current synchronous notifications. Decide whether to retain the sample database queue driver or set `QUEUE_CONNECTION=sync` before adding queued work.[m
+[32m+[m[32m- `SESSION_ENCRYPT=true` is suitable for a new service. Changing it on a live service makes existing encrypted session data unreadable.[m
+[32m+[m
+[32m+[m[32m## Manual checklist[m
+[32m+[m
+[32m+[m[32m- [ ] Review the commits on `render-deploy`; do not merge it into another branch yet.[m
+[32m+[m[32m- [ ] Push `render-deploy` and create a new Render Web Service using the **Docker** runtime and this branch.[m
+[32m+[m[32m- [ ] Add a persistent disk mounted at `/var/www/html/storage/app`.[m
+[32m+[m[32m- [ ] Set the environment variables above, including a new production `APP_KEY`, database credentials, and mail credentials.[m
+[32m+[m[32m- [ ] Confirm the production database is reachable from Render before enabling `RUN_MIGRATIONS=true`; the entrypoint runs migrations at startup.[m
+[32m+[m[32m- [ ] Deploy and check the landing page and Render logs.[m
+[32m+[m[32m- [ ] Create the real coordinator account; rotate any shared or previously distributed credentials.[m
+[32m+[m[32m- [ ] Complete Batch 1 of the security fixes (default admin account, login throttle, and package updates) before storing real student data.[m
+[1mdiff --git a/Dockerfile b/Dockerfile[m
+[1mnew file mode 100644[m
+[1mindex 0000000..a9e6b85[m
+[1m--- /dev/null[m
+[1m+++ b/Dockerfile[m
+[36m@@ -0,0 +1,34 @@[m
+[32m+[m[32m# ---------- Stage 1: build front-end assets (Vite + Tailwind) ----------[m
+[32m+[m[32mFROM node:22-alpine AS assets[m
+[32m+[m[32mWORKDIR /app[m
+[32m+[m[32mCOPY package.json ./[m
+[32m+[m[32mRUN npm install --no-audit --no-fund[m
+[32m+[m[32mCOPY . .[m
+[32m+[m[32mRUN npm run build[m
+[32m+[m
+[32m+[m[32m# ---------- Stage 2: PHP + Apache runtime ----------[m
+[32m+[m[32mFROM php:8.3-apache[m
+[32m+[m[32mRUN apt-get update && apt-get install -y --no-install-recommends \[m
+[32m+[m[32m        git unzip libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \[m
+[32m+[m[32m    && docker-php-ext-configure gd --with-freetype --with-jpeg \[m
+[32m+[m[32m    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath zip gd opcache \[m
+[32m+[m[32m    && a2enmod rewrite headers \[m
+[32m+[m[32m    && echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf \[m
+[32m+[m[32m    && a2enconf servername \[m
+[32m+[m[32m    && rm -rf /var/lib/apt/lists/*[m
+[32m+[m[32mENV APACHE_DOCUMENT_ROOT=/var/www/html/public[m
+[32m+[m[32mRUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \[m
+[32m+[m[32m    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \[m
+[32m+[m[32m    && sed -ri -e 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf[m
+[32m+[m[32mCOPY --from=composer:2 /usr/bin/composer /usr/bin/composer[m
+[32m+[m[32mWORKDIR /var/www/html[m
+[32m+[m[32mCOPY composer.json composer.lock ./[m
+[32m+[m[32mRUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction[m
+[32m+[m[32mCOPY . .[m
+[32m+[m[32mCOPY --from=assets /app/public/build ./public/build[m
+[32m+[m[32mRUN composer dump-autoload --optimize --no-dev --no-interaction \[m
+[32m+[m[32m    && php artisan package:discover --ansi[m
+[32m+[m[32mCOPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh[m
+[32m+[m[32mRUN chmod +x /usr/local/bin/entrypoint.sh[m
+[32m+[m[32mEXPOSE 10000[m
+[32m+[m[32mENTRYPOINT ["entrypoint.sh"][m
+[1mdiff --git a/app/Providers/AppServiceProvider.php b/app/Providers/AppServiceProvider.php[m
+[1mindex 635248b..0f9562b 100644[m
+[1m--- a/app/Providers/AppServiceProvider.php[m
+[1m+++ b/app/Providers/AppServiceProvider.php[m
+[36m@@ -50,15 +50,7 @@[m [mpublic function boot(): void[m
+             ];[m
+         });[m
+ [m
+[31m-        /*[m
+[31m-         * Use HTTPS for generated links in production only when HTTPS is the[m
+[31m-         * configured canonical URL. This also supports production-mode local[m
+[31m-         * installs that are served over plain HTTP.[m
+[31m-         */[m
+[31m-        if ([m
+[31m-            $this->app->environment('production')[m
+[31m-            && parse_url((string) config('app.url'), PHP_URL_SCHEME) === 'https'[m
+[31m-        ) {[m
+[32m+[m[32m        if ($this->app->environment('production')) {[m
+             URL::forceScheme('https');[m
+         }[m
+     }[m
+[1mdiff --git a/bootstrap/app.php b/bootstrap/app.php[m
+[1mindex 06e31de..05d4427 100644[m
+[1m--- a/bootstrap/app.php[m
+[1m+++ b/bootstrap/app.php[m
+[36m@@ -11,6 +11,8 @@[m
+         health: '/up',[m
+     )[m
+     ->withMiddleware(function (Middleware $middleware): void {[m
+[32m+[m[32m        $middleware->trustProxies(at: '*');[m
+[32m+[m
+         $middleware->alias([[m
+             'force.password.change' => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,[m
+             'administrator' => \App\Http\Middleware\EnsureAdministrator::class,[m
+[1mdiff --git a/docker/entrypoint.sh b/docker/entrypoint.sh[m
+[1mnew file mode 100644[m
+[1mindex 0000000..60e7005[m
+[1m--- /dev/null[m
+[1m+++ b/docker/entrypoint.sh[m
+[36m@@ -0,0 +1,16 @@[m
+[32m+[m[32m#!/bin/sh[m
+[32m+[m[32mset -e[m
+[32m+[m[32mPORT="${PORT:-10000}"[m
+[32m+[m[32msed -ri "s/^Listen [0-9]+/Listen ${PORT}/" /etc/apache2/ports.conf[m
+[32m+[m[32msed -ri "s/<VirtualHost \*:[0-9]+>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf[m
+[32m+[m[32mmkdir -p storage/app/private storage/app/public \[m
+[32m+[m[32m         storage/framework/cache/data storage/framework/sessions storage/framework/views \[m
+[32m+[m[32m         storage/logs bootstrap/cache[m
+[32m+[m[32mphp artisan storage:link --force[m
+[32m+[m[32m# route:cache is NOT used: routes/web.php contains closures. config:cache skipped for safety.[m
+[32m+[m[32mphp artisan view:cache[m
+[32m+[m[32mif [ "${RUN_MIGRATIONS:-true}" = "true" ]; then[m
+[32m+[m[32m    php artisan migrate --force[m
+[32m+[m[32mfi[m
+[32m+[m[32mchown -R www-data:www-data storage bootstrap/cache[m
+[32m+[m[32mexec apache2-foreground[m
+[1mdiff --git a/phpunit.xml b/phpunit.xml[m
+[1mindex f231e62..081df18 100644[m
+[1m--- a/phpunit.xml[m
+[1m+++ b/phpunit.xml[m
+[36m@@ -19,9 +19,7 @@[m
+     </source>[m
+     <php>[m
+         <env name="APP_ENV" value="testing"/>[m
+[31m-        <!-- The app is served from a subfolder, so APP_URL in .env carries that[m
+[31m-             prefix. Tests generate their own URLs, so pin a bare base here to[m
+[31m-             keep route() output matching the registered route paths. -->[m
+[32m+[m[32m        <!-- Pin a bare base URL so generated route() paths match registered routes. -->[m
+         <env name="APP_URL" value="http://localhost"/>[m
+         <!-- A cached config/route file bakes in the browser APP_URL and then[m
+              overrides the APP_URL above, 404-ing every route() in the suite.[m
+[1mdiff --git a/tests/Feature/TransportSecurityTest.php b/tests/Feature/TransportSecurityTest.php[m
+[1mindex 8231024..6dabc57 100644[m
+[1m--- a/tests/Feature/TransportSecurityTest.php[m
+[1m+++ b/tests/Feature/TransportSecurityTest.php[m
+[36m@@ -29,13 +29,15 @@[m [mpublic function test_urls_use_https_when_production_app_url_is_https(): void[m
+         URL::forceScheme('http');[m
+     }[m
+ [m
+[31m-    public function test_production_mode_keeps_http_urls_for_http_app_url(): void[m
+[32m+[m[32m    public function test_production_mode_forces_https_even_when_app_url_is_http(): void[m
+     {[m
+         $this->app['env'] = 'production';[m
+         config(['app.url' => 'http://localhost']);[m
+ [m
+         (new \App\Providers\AppServiceProvider($this->app))->boot();[m
+ [m
+[31m-        $this->assertStringStartsWith('http://', URL::to('/student/attendance'));[m
+[32m+[m[32m        $this->assertStringStartsWith('https://', URL::to('/student/attendance'));[m
+[32m+[m
+[32m+[m[32m        URL::forceScheme('http');[m
+     }[m
+ }[m
+[1mdiff --git a/tests/Feature/TrustedProxyTest.php b/tests/Feature/TrustedProxyTest.php[m
+[1mnew file mode 100644[m
+[1mindex 0000000..1db1790[m
+[1m--- /dev/null[m
+[1m+++ b/tests/Feature/TrustedProxyTest.php[m
+[36m@@ -0,0 +1,25 @@[m
+[32m+[m[32m<?php[m
+[32m+[m
+[32m+[m[32mnamespace Tests\Feature;[m
+[32m+[m
+[32m+[m[32muse Illuminate\Support\Facades\Route;[m
+[32m+[m[32muse Illuminate\Support\Facades\URL;[m
+[32m+[m[32muse Tests\TestCase;[m
+[32m+[m
+[32m+[m[32mclass TrustedProxyTest extends TestCase[m
+[32m+[m[32m{[m
+[32m+[m[32m    public function test_forwarded_https_and_client_ip_are_trusted(): void[m
+[32m+[m[32m    {[m
+[32m+[m[32m        Route::get('/proxy-check', fn () => response()->json([[m
+[32m+[m[32m            'ip' => request()->ip(),[m
+[32m+[m[32m            'url' => URL::to('/'),[m
+[32m+[m[32m        ]));[m
+[32m+[m
+[32m+[m[32m        $this->get('/proxy-check', [[m
+[32m+[m[32m            'X-Forwarded-Proto' => 'https',[m
+[32m+[m[32m            'X-Forwarded-For' => '203.0.113.42',[m
+[32m+[m[32m        ])->assertOk()[m
+[32m+[m[32m            ->assertJsonPath('ip', '203.0.113.42')[m
+[32m+[m[32m            ->assertJsonPath('url', 'https://localhost');[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
