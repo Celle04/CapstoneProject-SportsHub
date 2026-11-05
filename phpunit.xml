@@ -19,9 +19,7 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <!-- The app is served from a subfolder, so APP_URL in .env carries that
-             prefix. Tests generate their own URLs, so pin a bare base here to
-             keep route() output matching the registered route paths. -->
+        <!-- Pin a bare base URL so generated route() paths match registered routes. -->
         <env name="APP_URL" value="http://localhost"/>
         <!-- A cached config/route file bakes in the browser APP_URL and then
              overrides the APP_URL above, 404-ing every route() in the suite.
