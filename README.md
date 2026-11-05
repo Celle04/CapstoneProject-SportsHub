@@ -71,6 +71,13 @@ One existing migration backfills legacy medical-record fields; review that
 mapping before running migrations against a populated database. Migrations are
 not run during the Docker build.
 
+The demo `admin@example.com` account is only seeded in local and testing
+environments. To create a production administrator, open the Railway web
+service console after this code is deployed and run `php artisan admin:create`.
+The command prompts for a name, email, username, and a hidden password; it
+creates an active administrator without printing or storing a default password
+in the repository.
+
 To deploy this branch to the configured GitHub remote:
 
 ```powershell
