@@ -50,15 +50,7 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
-        /*
-         * Use HTTPS for generated links in production only when HTTPS is the
-         * configured canonical URL. This also supports production-mode local
-         * installs that are served over plain HTTP.
-         */
-        if (
-            $this->app->environment('production')
-            && parse_url((string) config('app.url'), PHP_URL_SCHEME) === 'https'
-        ) {
+        if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
     }

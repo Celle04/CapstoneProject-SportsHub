@@ -29,13 +29,15 @@ class TransportSecurityTest extends TestCase
         URL::forceScheme('http');
     }
 
-    public function test_production_mode_keeps_http_urls_for_http_app_url(): void
+    public function test_production_mode_forces_https_even_when_app_url_is_http(): void
     {
         $this->app['env'] = 'production';
         config(['app.url' => 'http://localhost']);
 
         (new \App\Providers\AppServiceProvider($this->app))->boot();
 
-        $this->assertStringStartsWith('http://', URL::to('/student/attendance'));
+        $this->assertStringStartsWith('https://', URL::to('/student/attendance'));
+
+        URL::forceScheme('http');
     }
 }
