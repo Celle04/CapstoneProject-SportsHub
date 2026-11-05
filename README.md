@@ -21,6 +21,68 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Deploying on Railway
+
+Railway builds the root `Dockerfile` with PHP 8.3, Apache 2.4, and Node.js 22.
+The Apache entrypoint listens on Railway's assigned `PORT`; `railway.json`
+configures `/up` as the health check. No local `.env` file is copied into the
+image. The repository has no root `package-lock.json`, so the asset stage uses
+`npm install` rather than `npm ci`.
+
+Create a Railway MySQL service and link it to the web service. Set these
+variables on the web service (replace `MySQL` with the exact database service
+name shown in Railway):
+
+| Variable | Value |
+| --- | --- |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_KEY` | A fresh key generated with `php artisan key:generate --show`; save it only in Railway |
+| `APP_URL` | `https://${{RAILWAY_PUBLIC_DOMAIN}}` |
+| `APP_TIMEZONE` | `Asia/Manila` |
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
+| `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
+| `DB_DATABASE` | `${{MySQL.MYSQLDATABASE}}` |
+| `DB_USERNAME` | `${{MySQL.MYSQLUSER}}` |
+| `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
+| `RUN_MIGRATIONS` | `true` to run `php artisan migrate --force` at container startup |
+| `LOG_CHANNEL` | `stderr` |
+| `LOG_LEVEL` | `warning` |
+| `SESSION_DRIVER` | `database` |
+| `SESSION_SECURE_COOKIE` | `true` |
+| `SESSION_ENCRYPT` | `true` |
+| `CACHE_STORE` | `database` |
+| `QUEUE_CONNECTION` | `database` |
+| `FILESYSTEM_DISK` | `local` |
+
+Keep the MySQL password and `APP_KEY` in Railway variables only. The key
+previously used in local configuration was exposed; generate a new production
+key. Changing an existing production key invalidates encrypted sessions and
+other values encrypted with the old key.
+
+Railway's container filesystem is ephemeral. Before relying on uploaded
+documents or images, attach a Railway volume mounted at
+`/var/www/html/storage/app`. The entrypoint creates the required Laravel
+directories and storage link. The entrypoint runs migrations at startup when
+`RUN_MIGRATIONS=true` (the default); set it to `false` to defer them. Confirm
+the production database target and backups before enabling migrations.
+One existing migration backfills legacy medical-record fields; review that
+mapping before running migrations against a populated database. Migrations are
+not run during the Docker build.
+
+To deploy this branch to the configured GitHub remote:
+
+```powershell
+git add Dockerfile .dockerignore docker/entrypoint.sh docker/apache-vhost.conf railway.json README.md
+git commit -m "fix: deploy Laravel on Railway with Apache"
+git push new-origin render-deploy
+```
+
+In Railway, connect the GitHub repository and select the `render-deploy`
+branch, or trigger a redeploy after pushing. Confirm the MySQL variables are
+available, then deploy and check the build/runtime logs and `/up` health check.
+
 ## Deploying on Vercel
 
 This is a server-rendered Laravel application, not a static Vite site. The

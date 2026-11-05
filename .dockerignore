@@ -7,6 +7,7 @@
 .phpunit.result.cache
 .vercel
 node_modules
+vendor
 tests
 public/build
 public/hot
@@ -17,5 +18,8 @@ storage/framework/sessions/*
 storage/framework/views/*
 storage/app/private
 storage/app/public
-vendor
 database/*.sqlite
+Dockerfile.apache
+Dockerfile.vercel
+Caddyfile
+/h -u origin render-deploy
