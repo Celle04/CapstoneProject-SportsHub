@@ -21,6 +21,16 @@ case "$RUN_MIGRATIONS" in
         ;;
 esac
 
+# Enforce a single MPM at start: drop any other enabled MPM, keep prefork.
+for f in /etc/apache2/mods-enabled/mpm_*; do
+    case "$f" in
+        */mpm_prefork.load|*/mpm_prefork.conf) ;;
+        *) rm -f "$f" ;;
+    esac
+done
+[ -e /etc/apache2/mods-enabled/mpm_prefork.load ] || a2enmod -q mpm_prefork
+ls /etc/apache2/mods-enabled | grep mpm_ || true
+
 sed -ri "s/^Listen [0-9]+$/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -ri "s/<VirtualHost \*:[0-9]+>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 grep -Fqx "Listen ${PORT}" /etc/apache2/ports.conf
