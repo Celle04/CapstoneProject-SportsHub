@@ -2238,6 +2238,8 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .password-reset-secret label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); margin-bottom: 8px; }
 .password-reset-secret-field { display: flex; gap: 8px; align-items: center; }
 .password-reset-secret-field input[type="text"] { flex: 1; min-width: 0; }
+.password-reset-confirm-field { display: grid; gap: 6px; margin: 0 0 14px; }
+.password-reset-confirm-field label { color: var(--color-text); font-size: 12px; font-weight: 700; }
 .password-reset-warning { font-size: 11px; color: var(--color-success); font-weight: 700; margin-top: 8px; }
 .capacity-warning { margin: 14px 0 0; color: var(--color-danger); font-size: 11px; font-weight: 700; }
 .event-status-scheduled { color: var(--color-primary); background: var(--color-primary-soft); }

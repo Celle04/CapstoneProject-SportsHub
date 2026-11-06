@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +27,7 @@ class ConfirmPasswordController extends Controller
         return view('auth.confirm-password');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         abort_unless($request->user()?->role === 'Administrator', 403);
 
@@ -41,6 +42,10 @@ class ConfirmPasswordController extends Controller
         }
 
         $request->session()->put('auth.password_confirmed_at', now()->unix());
+
+        if ($request->expectsJson()) {
+            return response()->json(['confirmed' => true]);
+        }
 
         return redirect()->intended(route('dashboard'));
     }

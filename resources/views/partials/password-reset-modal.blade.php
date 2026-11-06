@@ -1,6 +1,6 @@
 {{-- Admin-assisted athlete password reset modals. --}}
 {{-- Confirm modal: opened before generating a temporary password. --}}
-<dialog class="app-modal" id="password-reset-confirm-modal" data-app-modal data-app-modal-fetch-excluded aria-labelledby="password-reset-confirm-title" aria-describedby="password-reset-confirm-desc" aria-busy="false">
+<dialog class="app-modal" id="password-reset-confirm-modal" data-app-modal data-app-modal-fetch-excluded data-password-confirm-url="{{ route('password.confirm.store', [], false) }}" aria-labelledby="password-reset-confirm-title" aria-describedby="password-reset-confirm-desc" aria-busy="false">
     <form class="app-modal-form" method="POST" action="#" data-app-modal-form>
         @csrf
         <div class="app-modal-box">
@@ -16,11 +16,15 @@
             </header>
             <div class="app-modal-body">
                 <p class="app-modal-intro"></p>
+                <div class="password-reset-confirm-field">
+                    <label for="password-reset-admin-password">Confirm your administrator password</label>
+                    <input class="form-control" id="password-reset-admin-password" name="password" type="password" autocomplete="current-password" required data-app-modal-autofocus>
+                </div>
                 <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to reset password</strong><span data-app-modal-error-message></span></p>
             </div>
             <footer class="app-modal-foot">
                 <button class="button button-muted" type="button" data-app-modal-close>Cancel</button>
-                <button class="button button-warning" type="submit" data-app-modal-confirm data-busy-label="Resetting..." data-app-modal-autofocus>Reset Password</button>
+                <button class="button button-warning" type="submit" data-app-modal-confirm data-busy-label="Resetting...">Reset Password</button>
             </footer>
         </div>
     </form>

@@ -2,10 +2,8 @@
  * Admin-assisted athlete password reset.
  *
  * Wires up the "Reset Password" action in Athlete Management:
- *   1. Opens a confirmation modal explaining a temporary password will be
- *      generated (no email is involved).
- *   2. Submits the reset request to the server via fetch (JSON), showing a
- *      loading state and preventing duplicate submissions while it runs.
+ *   1. Opens a confirmation modal asking for the administrator's password.
+ *   2. Confirms the administrator and submits the reset request via fetch.
  *   3. On success, opens a one-time modal showing the generated temporary
  *      password with a Copy Password button. The password is never stored
  *      in the page, session, or logs - it lives only in this response.
@@ -20,6 +18,8 @@
     var confirmDialog = document.getElementById(CONFIRM_DIALOG_ID);
     var successDialog = document.getElementById(SUCCESS_DIALOG_ID);
     var confirmForm = confirmDialog && confirmDialog.querySelector('form');
+    var adminPasswordInput = confirmDialog && confirmDialog.querySelector('#password-reset-admin-password');
+    var passwordConfirmUrl = sameOriginUrl(confirmDialog && confirmDialog.getAttribute('data-password-confirm-url') || '');
     var secretInput = document.getElementById('password-reset-secret-value');
     var copyButton = document.querySelector('[data-copy-password]');
     var warningText = document.getElementById('password-reset-warning');
@@ -129,6 +129,9 @@
         currentUrl = sameOriginUrl(opener.getAttribute('data-confirm-url') || '');
         if (!currentUrl) {
             openDialog(confirmDialog);
+            if (adminPasswordInput) {
+                adminPasswordInput.value = '';
+            }
             showConfirmError('The password reset address is invalid. Refresh the page and try again.');
             return;
         }
@@ -162,21 +165,23 @@
         }
         event.preventDefault();
 
-        if (busy || !currentUrl) {
+        if (busy || !currentUrl || !passwordConfirmUrl || !adminPasswordInput) {
             return;
         }
 
         var tokenInput = confirmForm.querySelector('input[name="_token"]');
         var token = tokenInput ? tokenInput.value : '';
+        var adminPassword = adminPasswordInput.value;
 
-        var body = new FormData();
-        body.append('_token', token);
+        var confirmationBody = new FormData();
+        confirmationBody.append('_token', token);
+        confirmationBody.append('password', adminPassword);
 
         setBusy(true);
 
-        fetch(currentUrl, {
+        fetch(passwordConfirmUrl, {
             method: 'POST',
-            body: body,
+            body: confirmationBody,
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -189,8 +194,44 @@
                 return { ok: response.ok, data: data };
             });
         }).then(function (result) {
-            setBusy(false);
+            if (!result.ok || !result.data || result.data.confirmed !== true) {
+                setBusy(false);
+                adminPasswordInput.value = '';
+                var confirmationMessage = 'Unable to confirm your password. Please try again.';
+                if (result.data && result.data.message) {
+                    confirmationMessage = result.data.message;
+                } else if (result.data && result.data.errors) {
+                    var firstConfirmationError = result.data.errors[Object.keys(result.data.errors)[0]];
+                    confirmationMessage = Array.isArray(firstConfirmationError) ? firstConfirmationError[0] : String(firstConfirmationError);
+                }
+                showConfirmError(confirmationMessage);
+                adminPasswordInput.focus();
+                return null;
+            }
 
+            adminPasswordInput.value = '';
+            var resetBody = new FormData();
+            resetBody.append('_token', token);
+            return fetch(currentUrl, {
+                method: 'POST',
+                body: resetBody,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return null;
+                }).then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            });
+        }).then(function (result) {
+            if (!result) {
+                return;
+            }
+            setBusy(false);
             if (result.ok && result.data && result.data.temporary_password) {
                 closeDialog(confirmDialog);
                 currentUrl = '';
@@ -218,10 +259,22 @@
             showConfirmError(message);
         }).catch(function (error) {
             setBusy(false);
+            if (adminPasswordInput) {
+                adminPasswordInput.value = '';
+            }
             console.error('Athlete password reset request failed:', error);
             showConfirmError('Unable to reach the server. Please check your connection and try again.');
         });
     });
+
+    if (confirmDialog) {
+        confirmDialog.addEventListener('close', function () {
+            if (adminPasswordInput) {
+                adminPasswordInput.value = '';
+            }
+            currentUrl = '';
+        });
+    }
 
     // Copy the temporary password to the clipboard.
     document.addEventListener('click', function (event) {

@@ -193,6 +193,48 @@ class AdminAssistedPasswordResetTest extends TestCase
         $this->assertFalse($student->fresh()->needsPasswordChange());
     }
 
+    public function test_password_confirmation_can_be_submitted_from_the_reset_modal(): void
+    {
+        $admin = $this->createAdmin();
+        $this->withSession(['auth.password_confirmed_at' => null]);
+
+        $this->actingAs($admin)
+            ->postJson(route('password.confirm.store'), ['password' => 'password'])
+            ->assertOk()
+            ->assertExactJson(['confirmed' => true]);
+
+        $this->assertNotNull(session('auth.password_confirmed_at'));
+    }
+
+    public function test_reset_modal_password_confirmation_rejects_an_incorrect_password(): void
+    {
+        $admin = $this->createAdmin();
+        $this->withSession(['auth.password_confirmed_at' => null]);
+
+        $this->actingAs($admin)
+            ->postJson(route('password.confirm.store'), ['password' => 'incorrect'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('password');
+    }
+
+    public function test_password_confirmation_from_the_reset_modal_allows_the_reset(): void
+    {
+        $admin = $this->createAdmin();
+        $student = $this->createStudent();
+        $this->withSession(['auth.password_confirmed_at' => null]);
+
+        $this->actingAs($admin)
+            ->postJson(route('password.confirm.store'), ['password' => 'password'])
+            ->assertOk()
+            ->assertExactJson(['confirmed' => true]);
+
+        $this->postJson(route('athletes.password.reset', $student))
+            ->assertOk()
+            ->assertJsonStructure(['temporary_password', 'athlete_name']);
+
+        $this->assertTrue($student->fresh()->needsPasswordChange());
+    }
+
     public function test_a_forced_change_athlete_is_redirected_from_every_other_route(): void
     {
         $student = $this->createStudent();
@@ -297,6 +339,8 @@ class AdminAssistedPasswordResetTest extends TestCase
             ->get(route('athletes.index'))
             ->assertOk()
             ->assertSee('data-app-modal-fetch-excluded', false)
+            ->assertSee('data-password-confirm-url="/confirm-password"', false)
+            ->assertSee('id="password-reset-admin-password"', false)
             ->assertSee('Reset Password');
     }
 }
