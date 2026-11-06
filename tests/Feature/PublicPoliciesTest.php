@@ -16,7 +16,7 @@ class PublicPoliciesTest extends TestCase
             ->assertSee('Privacy Policy')
             ->assertSee('Information We Collect')
             ->assertSee('Contact Information')
-            ->assertSee('data-legal-theme-toggle', false)
+            ->assertDontSee('data-legal-theme-toggle', false)
             ->assertSee('Back to Home');
     }
 

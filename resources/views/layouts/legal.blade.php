@@ -22,6 +22,7 @@
 </head>
 <body class="legal-page">
     <header class="site-header legal-header">
+        <a class="login-button legal-home-link" href="{{ route('landing') }}">Back to Home</a>
         <a class="site-brand" href="{{ route('landing') }}" aria-label="SNNHS SportsHub home">
             <img class="site-logo" src="{{ asset('images/snnhs logo.png') }}" alt="SNNHS logo">
             <span class="brand-text">
@@ -29,10 +30,6 @@
                 <span class="site-school">Surigao del Norte National High School</span>
             </span>
         </a>
-        <div class="legal-header-actions">
-            <button type="button" class="legal-theme-toggle" data-legal-theme-toggle aria-pressed="false">Dark mode</button>
-            <a class="login-button" href="{{ route('landing') }}">Back to Home</a>
-        </div>
     </header>
 
     <main class="legal-main">
@@ -58,33 +55,5 @@
         </div>
     </footer>
 
-    <script>
-        (function () {
-            var button = document.querySelector('[data-legal-theme-toggle]');
-            var root = document.documentElement;
-            if (!button) { return; }
-
-            function updateButton() {
-                var dark = root.getAttribute('data-theme') === 'dark';
-                button.textContent = dark ? 'Light mode' : 'Dark mode';
-                button.setAttribute('aria-pressed', String(dark));
-            }
-
-            button.addEventListener('click', function () {
-                var dark = root.getAttribute('data-theme') !== 'dark';
-                if (dark) {
-                    root.setAttribute('data-theme', 'dark');
-                } else {
-                    root.removeAttribute('data-theme');
-                }
-                try {
-                    localStorage.setItem('sports_hub_theme', dark ? 'dark' : 'light');
-                } catch (e) {}
-                updateButton();
-            });
-
-            updateButton();
-        })();
-    </script>
 </body>
 </html>
