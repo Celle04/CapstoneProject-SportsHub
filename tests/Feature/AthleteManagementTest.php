@@ -355,6 +355,8 @@ class AthleteManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('athletes.index'))->assertOk();
 
+        $response->assertSeeInOrder(['View', 'Edit', 'Delete', 'Reset Password']);
+
         // Two initials from the first and last name, not the first two letters.
         $this->assertStringContainsString('>JC</span>', $response->getContent());
         $this->assertStringNotContainsString('athlete-avatar-sm" src', $response->getContent());
