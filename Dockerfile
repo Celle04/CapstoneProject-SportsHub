@@ -36,15 +36,12 @@ RUN set -eux; \
         zip; \
     rm -rf /var/lib/apt/lists/*
 
-# Keep Apache's PHP-compatible prefork MPM as the only enabled MPM.
+# The official PHP Apache image selects mpm_prefork for mod_php. Keep that
+# image default; only enable the Laravel-required non-MPM modules here.
 RUN set -eux; \
-    a2dismod mpm_event mpm_worker || true; \
-    rm -f /etc/apache2/mods-enabled/mpm_*.load \
-          /etc/apache2/mods-enabled/mpm_*.conf; \
-    a2enmod mpm_prefork rewrite headers; \
+    a2enmod rewrite headers; \
     printf '%s\n' 'ServerName localhost' > /etc/apache2/conf-available/servername.conf; \
     a2enconf servername; \
-    test "$(apache2ctl -M 2>/dev/null | grep -Ec 'mpm_(event|worker|prefork)_module')" -eq 1; \
     apache2ctl configtest
 
 # Build vendor dependencies with the PHP runtime's platform requirements.
@@ -91,6 +88,15 @@ RUN set -eux; \
     chmod -R 775 storage bootstrap/cache; \
     sed -i 's/\r$//' /usr/local/bin/entrypoint; \
     chmod +x /usr/local/bin/entrypoint; \
+    apache2ctl -M || true; \
+    ls -la /etc/apache2/mods-enabled/; \
+    ls -la /etc/apache2/mods-available/; \
+    grep -R "LoadModule mpm_" /etc/apache2/ || true; \
+    cat /etc/apache2/apache2.conf; \
+    cat /etc/apache2/envvars; \
+    MPM_MODULES="$(apache2ctl -M 2>&1 | grep -Eo 'mpm_(event|worker|prefork)_module' || true)"; \
+    printf 'Loaded MPM modules: %s\n' "$MPM_MODULES"; \
+    test "$MPM_MODULES" = "mpm_prefork_module"; \
     apache2ctl configtest
 
 EXPOSE 80
