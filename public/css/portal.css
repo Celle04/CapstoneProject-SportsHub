@@ -4563,3 +4563,245 @@ html[data-theme="dark"] .portal-notification-badge { color: var(--color-primary-
 
 /* The inline action form inside the achievement row actions. */
 .achievement-action-form { display: inline; margin: 0; }
+
+/* ---- Shared portal polish ---------------------------------------------- */
+:root {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body,
+html[data-theme="dark"] body {
+    background: var(--color-background);
+    background-attachment: initial;
+}
+
+.portal-topbar,
+html[data-theme="dark"] .portal-topbar {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.portal-breadcrumb-context,
+.portal-breadcrumb-separator,
+.portal-breadcrumb-current {
+    color: var(--color-text);
+}
+
+.portal-breadcrumb-context,
+.portal-breadcrumb-separator {
+    color: var(--color-muted);
+}
+
+.portal-topbar .portal-icon-button,
+.portal-topbar .portal-notification-trigger {
+    border-color: var(--color-border);
+    background: var(--color-surface-muted);
+    color: var(--color-text);
+}
+
+.portal-topbar .portal-icon-button:hover,
+.portal-topbar .portal-notification-trigger:hover {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.portal-sidebar {
+    border-radius: var(--hub-radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.portal-nav a {
+    min-height: 42px;
+    border-radius: var(--hub-radius-sm);
+}
+
+.portal-nav a.active {
+    background: rgba(255, 138, 61, .14);
+    box-shadow: inset 3px 0 0 var(--hub-accent);
+}
+
+.portal-nav a.active .nav-icon {
+    color: var(--hub-accent);
+}
+
+.portal-main h1,
+.attendance-page-title {
+    line-height: 1.3;
+}
+
+.page-subtitle {
+    max-width: 76ch;
+    font-size: 13px;
+}
+
+.card {
+    border-color: var(--color-border);
+    border-radius: var(--hub-radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xs);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.table-wrap,
+.hub-table-wrap {
+    border-color: var(--color-border);
+    border-radius: var(--hub-radius-md);
+    background: var(--color-surface);
+}
+
+.data-table,
+.hub-table {
+    font-size: 13px;
+}
+
+.data-table th,
+.hub-table th {
+    color: var(--color-muted-strong);
+    background: var(--color-surface-raised);
+}
+
+.data-table td,
+.hub-table td {
+    line-height: 1.45;
+}
+
+.attendance-table .attendance-action {
+    min-height: 32px;
+}
+
+.data-table tbody tr:hover,
+.hub-table tbody tr:hover {
+    background: var(--color-surface-muted);
+}
+
+.form-control,
+.filters input,
+.filters select,
+.filters textarea {
+    min-height: 42px;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.form-control:focus,
+.filters input:focus,
+.filters select:focus,
+.filters textarea:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: var(--focus-ring);
+}
+
+.button {
+    min-height: 40px;
+    border-radius: var(--radius-md);
+    line-height: 1.25;
+}
+
+.portal-sidebar-collapse:focus-visible,
+.portal-sidebar-close:focus-visible,
+.portal-nav a:focus-visible,
+.portal-logout:focus-visible,
+.portal-icon-button:focus-visible,
+.portal-notification-trigger:focus-visible,
+.button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--color-primary-border);
+    outline-offset: 2px;
+}
+
+:where(button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-primary-border);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1080px) {
+    .portal {
+        gap: 14px;
+        padding: 14px;
+    }
+
+    .portal-sidebar {
+        top: 14px;
+        height: calc(100vh - 28px);
+        max-height: calc(100vh - 28px);
+    }
+}
+
+@media (max-width: 760px) {
+    .portal-main {
+        padding: calc(12px + env(safe-area-inset-top, 0px)) 14px 24px;
+    }
+
+    .portal-topbar {
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 12px;
+    }
+
+    .portal-topbar-actions {
+        gap: 8px;
+    }
+
+    .portal-breadcrumb {
+        flex-wrap: wrap;
+        row-gap: 2px;
+    }
+
+    .module-header {
+        flex-wrap: wrap;
+    }
+
+    .module-header .button {
+        white-space: normal;
+    }
+
+    .filters {
+        flex-wrap: wrap;
+    }
+
+    .filters > * {
+        max-width: none;
+        min-width: min(100%, 220px);
+        flex: 1 1 180px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .portal-main {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .portal-topbar {
+        align-items: center;
+    }
+
+    .portal-topbar-actions {
+        flex: 0 0 auto;
+    }
+
+    .portal-topbar .portal-notification-trigger {
+        padding: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
