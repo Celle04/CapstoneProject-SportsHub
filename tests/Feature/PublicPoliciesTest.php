@@ -41,6 +41,9 @@ class PublicPoliciesTest extends TestCase
     {
         $this->get(route('application.create'))
             ->assertOk()
+            ->assertSee('<select name="grade" required>', false)
+            ->assertSee('value="Grade 7"', false)
+            ->assertSee('value="Grade 12"', false)
             ->assertSee('name="policy_accepted"', false)
             ->assertSee('required', false)
             ->assertSee(route('privacy-policy'))

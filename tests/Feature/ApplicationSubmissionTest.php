@@ -68,6 +68,16 @@ class ApplicationSubmissionTest extends TestCase
         $this->assertSame(0, Application::count());
     }
 
+    public function test_grade_level_must_be_one_of_the_school_grade_options(): void
+    {
+        $this->from(route('application.create'))
+            ->post(route('application.store'), $this->applicationPayload(['grade' => 'Grade 13']))
+            ->assertRedirect(route('application.create'))
+            ->assertSessionHasErrors('grade');
+
+        $this->assertSame(0, Application::count());
+    }
+
     public function test_application_requires_privacy_and_terms_agreement(): void
     {
         $this->from(route('application.create'))

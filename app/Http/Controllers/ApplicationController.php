@@ -126,7 +126,7 @@ class ApplicationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'student_id' => ['required', 'string', 'max:100'],
-            'grade' => ['required', 'string', 'max:50'],
+            'grade' => ['required', 'in:Grade 7,Grade 8,Grade 9,Grade 10,Grade 11,Grade 12'],
             'gender' => ['required', 'in:Male,Female,Prefer not to say'],
             'email' => ['required', 'email', 'max:255'],
             'sport_id' => ['required', 'exists:sports,id'],

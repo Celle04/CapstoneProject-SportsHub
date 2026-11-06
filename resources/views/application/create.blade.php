@@ -243,13 +243,14 @@
                                 Grade Level <b>*</b>
                             </span>
 
-                            <input
-                                type="text"
-                                name="grade"
-                                value="{{ old('grade') }}"
-                                placeholder="e.g., Grade 11"
-                                required
-                            >
+                            <select name="grade" required>
+                                <option value="">Choose grade level</option>
+                                @foreach (range(7, 12) as $gradeLevel)
+                                    <option value="Grade {{ $gradeLevel }}" @selected(old('grade') === 'Grade '.$gradeLevel)>
+                                        Grade {{ $gradeLevel }}
+                                    </option>
+                                @endforeach
+                            </select>
 
                         </label>
 
