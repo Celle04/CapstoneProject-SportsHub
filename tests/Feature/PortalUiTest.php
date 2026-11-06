@@ -68,6 +68,7 @@ class PortalUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('portal-breadcrumb', false);
         $response->assertSee('Admin Portal');
+        $response->assertDontSee('portal-breadcrumb-current', false);
         $response->assertSee('Rina Admin');
         $response->assertSee('id="portal-notification-trigger"', false);
     }

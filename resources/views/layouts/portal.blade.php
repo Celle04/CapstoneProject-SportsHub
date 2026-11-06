@@ -74,7 +74,6 @@
             $portalUser = auth()->user();
             $portalHome = $homeUrl ?? ($portalUser?->role === 'Student' ? route('student.dashboard') : route('dashboard'));
             $portalProfileUrl = $portalUser?->role === 'Student' ? route('student.profile') : null;
-            $portalTopbarTitle = $topbarTitle ?? (isset($page) ? \Illuminate\Support\Str::headline($page) : ($title ?? 'SportsHub'));
         @endphp
         <aside class="portal-sidebar" id="portal-sidebar">
             <button type="button" class="portal-sidebar-close" data-sidebar-close aria-label="Close navigation">
@@ -148,8 +147,6 @@
                     </button>
                     <nav class="portal-breadcrumb" aria-label="Breadcrumb">
                         <span class="portal-breadcrumb-context">{{ $roleLabel ?? 'SportsHub' }}</span>
-                        <span class="portal-breadcrumb-separator" aria-hidden="true">/</span>
-                        <strong class="portal-breadcrumb-current">{{ $portalTopbarTitle }}</strong>
                     </nav>
                 </div>
                 <div class="portal-topbar-actions">
