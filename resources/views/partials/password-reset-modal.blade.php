@@ -1,6 +1,6 @@
 {{-- Admin-assisted athlete password reset modals. --}}
 {{-- Confirm modal: opened before generating a temporary password. --}}
-<dialog class="app-modal" id="password-reset-confirm-modal" data-app-modal aria-labelledby="password-reset-confirm-title" aria-describedby="password-reset-confirm-desc" aria-busy="false">
+<dialog class="app-modal" id="password-reset-confirm-modal" data-app-modal data-app-modal-fetch-excluded aria-labelledby="password-reset-confirm-title" aria-describedby="password-reset-confirm-desc" aria-busy="false">
     <form class="app-modal-form" method="POST" action="#" data-app-modal-form>
         @csrf
         <div class="app-modal-box">

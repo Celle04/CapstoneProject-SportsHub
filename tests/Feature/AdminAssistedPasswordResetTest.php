@@ -296,6 +296,7 @@ class AdminAssistedPasswordResetTest extends TestCase
         $this->actingAs($admin)
             ->get(route('athletes.index'))
             ->assertOk()
+            ->assertSee('data-app-modal-fetch-excluded', false)
             ->assertSee('Reset Password');
     }
 }

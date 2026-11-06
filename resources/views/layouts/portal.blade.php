@@ -249,7 +249,7 @@
     <script src="{{ asset('js/filters.js') }}" defer></script>
     <script src="{{ asset('js/profile.js') }}" defer></script>
     <script src="{{ asset('js/relative-time.js') }}" defer></script>
-    <script src="{{ asset('js/app-review.js') }}" defer></script>
+    <script src="{{ asset('js/app-review.js') }}?v={{ filemtime(public_path('js/app-review.js')) }}" defer></script>
     <script src="{{ asset('js/confirm-delete.js') }}" defer></script>
     <script src="{{ asset('js/password-reset.js') }}?v={{ filemtime(public_path('js/password-reset.js')) }}" defer></script>
     <script src="{{ asset('js/achievement-form.js') }}" defer></script>

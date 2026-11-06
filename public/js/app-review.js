@@ -223,7 +223,7 @@
         var form = event.target;
         if (!(form instanceof HTMLFormElement)) { return; }
         var dialog = closest(form, 'dialog.app-modal[data-app-modal]');
-        if (!dialog || !dialog.open) { return; }
+        if (!dialog || !dialog.open || dialog.hasAttribute('data-app-modal-fetch-excluded')) { return; }
         event.preventDefault();
 
         // Resolve a custom "Other" rejection reason before reading the form.
