@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AdminAssistedPasswordResetTest extends TestCase
@@ -60,6 +61,29 @@ class AdminAssistedPasswordResetTest extends TestCase
         $this->assertNotNull($response->json('temporary_password'));
         $this->assertNotSame('password', $student->fresh()->password);
         $this->assertTrue($student->fresh()->needsPasswordChange());
+    }
+
+    public function test_athlete_password_reset_actions_use_same_origin_paths(): void
+    {
+        $admin = $this->createAdmin();
+        $student = $this->createStudent();
+        URL::forceRootUrl('https://stale-host.example');
+
+        try {
+            $this->actingAs($admin)
+                ->get(route('athletes.index'))
+                ->assertOk()
+                ->assertSee('data-confirm-url="/athletes/'.$student->id.'/password-reset"', false)
+                ->assertDontSee('data-confirm-url="https://stale-host.example/athletes/'.$student->id.'/password-reset"', false);
+
+            $this->actingAs($admin)
+                ->get(route('athletes.show', $student))
+                ->assertOk()
+                ->assertSee('data-confirm-url="/athletes/'.$student->id.'/password-reset"', false)
+                ->assertDontSee('data-confirm-url="https://stale-host.example/athletes/'.$student->id.'/password-reset"', false);
+        } finally {
+            URL::forceRootUrl(null);
+        }
     }
 
     public function test_temporary_password_is_stored_only_as_a_hash(): void

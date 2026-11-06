@@ -29,7 +29,7 @@
                 <svg class="button-icon" aria-hidden="true"><use href="#icon-activity"></use></svg>
                 Edit Athlete
             </a>
-            <button class="button button-secondary" type="button" data-confirm-dialog data-confirm-title="Assist with Password Reset?" data-confirm-message="Send a secure password reset link to this athlete's registered email address?" data-confirm-label="Send Reset Link" data-confirm-busy-label="Sending..." data-confirm-icon="mail" data-confirm-variant="info" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete) }}">Assist with Password Reset</button>
+            <button class="button button-secondary" type="button" data-confirm-dialog data-confirm-title="Assist with Password Reset?" data-confirm-message="Send a secure password reset link to this athlete's registered email address?" data-confirm-label="Send Reset Link" data-confirm-busy-label="Sending..." data-confirm-icon="mail" data-confirm-variant="info" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete, false) }}">Assist with Password Reset</button>
         </div>
     </div>
 

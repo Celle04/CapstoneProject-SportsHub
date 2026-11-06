@@ -27,6 +27,17 @@
     var currentUrl = '';
     var busy = false;
 
+    function sameOriginUrl(value) {
+        try {
+            var url = new URL(value, window.location.href);
+            return url.origin === window.location.origin
+                ? url.href
+                : url.pathname + url.search + url.hash;
+        } catch (error) {
+            return '';
+        }
+    }
+
     function escapeHtml(text) {
         var div = document.createElement('div');
         div.textContent = text;
@@ -115,7 +126,12 @@
             return;
         }
 
-        currentUrl = opener.getAttribute('data-confirm-url') || '';
+        currentUrl = sameOriginUrl(opener.getAttribute('data-confirm-url') || '');
+        if (!currentUrl) {
+            openDialog(confirmDialog);
+            showConfirmError('The password reset address is invalid. Refresh the page and try again.');
+            return;
+        }
 
         var title = opener.getAttribute('data-confirm-title') || 'Reset Athlete Password';
         var message = opener.getAttribute('data-confirm-message') || '';
@@ -200,8 +216,9 @@
                 message = Array.isArray(first) ? first[0] : String(first);
             }
             showConfirmError(message);
-        }).catch(function () {
+        }).catch(function (error) {
             setBusy(false);
+            console.error('Athlete password reset request failed:', error);
             showConfirmError('Unable to reach the server. Please check your connection and try again.');
         });
     });

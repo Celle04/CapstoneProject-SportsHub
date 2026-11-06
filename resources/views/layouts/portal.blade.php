@@ -251,7 +251,7 @@
     <script src="{{ asset('js/relative-time.js') }}" defer></script>
     <script src="{{ asset('js/app-review.js') }}" defer></script>
     <script src="{{ asset('js/confirm-delete.js') }}" defer></script>
-    <script src="{{ asset('js/password-reset.js') }}" defer></script>
+    <script src="{{ asset('js/password-reset.js') }}?v={{ filemtime(public_path('js/password-reset.js')) }}" defer></script>
     <script src="{{ asset('js/achievement-form.js') }}" defer></script>
     <script src="{{ asset('js/portal-ui.js') }}" defer></script>
 </body>

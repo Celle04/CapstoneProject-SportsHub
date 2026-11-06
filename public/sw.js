@@ -4,7 +4,7 @@
  * Bump this version when the app-shell asset list or offline behavior changes.
  * User pages and API responses are never written to Cache Storage.
  */
-const SW_VERSION = 'v5';
+const SW_VERSION = 'v6';
 const CACHE_PREFIX = 'snnhs-sportshub';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${SW_VERSION}`;
 const APP_BASE = new URL('./', self.location);
