@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
+    public const GRADE_LEVELS = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+
+    public const OTHER_GRADE_FILTER = '__other';
+
     use HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'username', 'role', 'status', 'sport_id', 'student_id', 'phone', 'grade_level', 'emergency_contact_name', 'emergency_contact_relationship', 'emergency_contact_phone', 'profile_photo_path', 'password', 'must_change_password'];
@@ -129,6 +133,7 @@ class User extends Authenticatable
     public function scopeAthleteFilters(Builder $query, array $filters): Builder
     {
         $search = trim((string) ($filters['search'] ?? ''));
+        $grade = trim((string) ($filters['grade'] ?? ''));
 
         return $query
             ->when($search !== '', fn (Builder $nested) => $nested->where(function (Builder $athleteQuery) use ($search) {
@@ -138,7 +143,22 @@ class User extends Authenticatable
                     ->orWhere('email', 'like', "%{$search}%");
             }))
             ->when(! empty($filters['sport_id']), fn (Builder $nested) => $nested->where('sport_id', (int) $filters['sport_id']))
-            ->when(! empty($filters['grade']), fn (Builder $nested) => $nested->whereHas('applications', fn (Builder $applications) => $applications->where('grade', (string) $filters['grade'])))
+            ->when($grade !== '', function (Builder $nested) use ($grade) {
+                if ($grade === self::OTHER_GRADE_FILTER) {
+                    $otherGradeValues = array_merge(self::GRADE_LEVELS, ['7', '8', '9', '10', '11', '12']);
+
+                    return $nested->whereHas('applications', fn (Builder $applications) => $applications
+                        ->whereNotNull('grade')
+                        ->whereNotIn('grade', $otherGradeValues));
+                }
+
+                $canonicalGrade = self::canonicalGradeLevel($grade);
+                $gradeValues = $canonicalGrade
+                    ? [$canonicalGrade, substr($canonicalGrade, strlen('Grade '))]
+                    : [$grade];
+
+                return $nested->whereHas('applications', fn (Builder $applications) => $applications->whereIn('grade', $gradeValues));
+            })
             ->when(! empty($filters['gender']), fn (Builder $nested) => $nested->whereHas('applications', fn (Builder $applications) => $applications->where('gender', (string) $filters['gender'])))
             ->when(! empty($filters['status']), fn (Builder $nested) => $nested->where('status', (string) $filters['status']))
             ->when(! empty($filters['eligibility']), fn (Builder $nested) => $this->applyEligibilityFilter($nested, (string) $filters['eligibility']));
@@ -260,6 +280,17 @@ class User extends Authenticatable
         }
 
         return $this->applications->sortByDesc('created_at')->first()?->grade;
+    }
+
+    public static function canonicalGradeLevel(?string $grade): ?string
+    {
+        $grade = trim((string) $grade);
+
+        if (preg_match('/^(?:Grade\s*)?(7|8|9|10|11|12)$/i', $grade, $matches) !== 1) {
+            return null;
+        }
+
+        return 'Grade '.$matches[1];
     }
 
     /**

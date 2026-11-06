@@ -202,6 +202,51 @@ class ReportsManagementTest extends TestCase
             ->assertDontSee('Roster John');
     }
 
+    public function test_athlete_report_normalizes_legacy_grade_values_and_groups_other_levels(): void
+    {
+        $admin = $this->admin();
+        $sport = $this->sport();
+        $legacyGradeAthlete = User::factory()->create(['role' => 'Student', 'name' => 'Legacy Grade Athlete', 'sport_id' => $sport->id]);
+        $canonicalGradeAthlete = User::factory()->create(['role' => 'Student', 'name' => 'Canonical Grade Athlete', 'sport_id' => $sport->id]);
+        $collegeAthlete = User::factory()->create(['role' => 'Student', 'name' => 'College Grade Athlete', 'sport_id' => $sport->id]);
+
+        foreach ([
+            [$legacyGradeAthlete, '7'],
+            [$canonicalGradeAthlete, 'Grade 7'],
+            [$collegeAthlete, '1st Year College'],
+        ] as [$athlete, $grade]) {
+            Application::create([
+                'name' => $athlete->name,
+                'athlete_id' => $athlete->id,
+                'grade' => $grade,
+                'gender' => 'Female',
+                'email' => $athlete->email,
+                'sport' => $sport->name,
+                'sport_id' => $sport->id,
+                'status' => 'Approved',
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('reports.index', ['report' => 'athletes']))
+            ->assertOk()
+            ->assertSee('<option value="Grade 7"', false)
+            ->assertSee('Other recorded levels')
+            ->assertDontSee('<option value="7"', false)
+            ->assertDontSee('<option value="1st Year College"', false);
+
+        $this->get(route('reports.index', ['report' => 'athletes', 'grade' => 'Grade 7']))
+            ->assertOk()
+            ->assertSee('Legacy Grade Athlete')
+            ->assertSee('Canonical Grade Athlete')
+            ->assertDontSee('College Grade Athlete');
+
+        $this->get(route('reports.index', ['report' => 'athletes', 'grade' => User::OTHER_GRADE_FILTER]))
+            ->assertOk()
+            ->assertSee('College Grade Athlete')
+            ->assertDontSee('Legacy Grade Athlete');
+    }
+
     public function test_athlete_attendance_summary_report_shows_rates_and_handles_zero_records(): void
     {
         $admin = $this->admin();
@@ -526,6 +571,45 @@ class ReportsManagementTest extends TestCase
         $this->assertStringContainsString('VOLLEYBALL', $csv);
         $this->assertStringContainsString('Scope Player One', $csv);
         $this->assertStringContainsString('Scope Player Two', $csv);
+    }
+
+    public function test_athlete_report_can_be_grouped_by_sport_classification(): void
+    {
+        $admin = $this->admin();
+        $teamSport = Sport::create([
+            'name' => 'Basketball',
+            'classification' => 'Team Sport',
+            'description' => 'Court sport',
+            'status' => 'Active',
+        ]);
+        $individualSport = Sport::create([
+            'name' => 'Chess',
+            'classification' => 'Mind Sport',
+            'description' => 'Board sport',
+            'status' => 'Active',
+        ]);
+        $teamAthlete = User::factory()->create(['role' => 'Student', 'name' => 'Team Athlete', 'sport_id' => $teamSport->id]);
+        $individualAthlete = User::factory()->create(['role' => 'Student', 'name' => 'Mind Athlete', 'sport_id' => $individualSport->id]);
+
+        $page = $this->actingAs($admin)
+            ->get(route('reports.index', ['report' => 'athletes', 'category' => 'type']))
+            ->assertOk()
+            ->assertSee('<option value="type"', false)
+            ->assertSee('By Sport Type')
+            ->assertSeeInOrder(['Mind Sport', 'Mind Athlete', 'Team Sport', 'Team Athlete']);
+
+        $this->assertStringContainsString('Category: By Sport Type', $page->getContent());
+
+        $csv = $this->get(route('reports.export', [
+            'format' => 'csv',
+            'report' => 'athletes',
+            'category' => 'type',
+        ]))->assertOk()->streamedContent();
+
+        $this->assertStringContainsString('MIND SPORT', $csv);
+        $this->assertStringContainsString('TEAM SPORT', $csv);
+        $this->assertStringContainsString('Mind Athlete', $csv);
+        $this->assertStringContainsString('Team Athlete', $csv);
     }
 
     public function test_the_athlete_list_export_scope_is_validated(): void

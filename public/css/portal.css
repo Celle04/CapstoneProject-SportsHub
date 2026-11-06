@@ -1919,7 +1919,8 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .student-profile-achievement .meta { font-size: 9px; line-height: 1.5; }
 .report-summary-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 18px; }
 .report-filter-panel, .report-type-panel, .report-data-panel, .report-low-attendance, .report-application-summary { margin-top: 18px; }
-.report-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.report-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.report-filters > .form-group { min-width: 0; }
 .report-filter-actions { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
 .report-type-links, .report-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .report-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }

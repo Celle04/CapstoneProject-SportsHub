@@ -37,11 +37,12 @@ class ReportController extends Controller
      * The ways the official athlete list can be categorized. The download
      * always follows the same category as the preview.
      */
-    public const ATHLETE_CATEGORIES = ['all', 'sport', 'boys', 'girls'];
+    public const ATHLETE_CATEGORIES = ['all', 'sport', 'type', 'boys', 'girls'];
 
     public const ATHLETE_CATEGORY_LABELS = [
         'all' => 'All Athletes',
         'sport' => 'By Sport',
+        'type' => 'By Sport Type',
         'boys' => 'Boys',
         'girls' => 'Girls',
     ];
@@ -235,7 +236,7 @@ class ReportController extends Controller
             'emptyMessage' => $emptyMessage,
             // Rows are filed under a heading when the report is categorized,
             // so the download can repeat that heading for every group.
-            'grouped' => $report === 'athletes' && $this->athleteCategory($filters) === 'sport',
+            'grouped' => $report === 'athletes' && in_array($this->athleteCategory($filters), ['sport', 'type'], true),
             // The sports of the list, so a download can be split sport by sport.
             'groups' => $report === 'athletes'
                 ? $rows->groupBy('sport_id')->map(fn (Collection $sportRows, $sportId) => [
@@ -251,9 +252,8 @@ class ReportController extends Controller
      * Complete athlete list: every Student account matching the filters, with
      * the sport and coach relationships Athlete Management displays.
      *
-     * The list can be categorized: all athletes, grouped by sport, or split
-     * into boys and girls. The download uses the very same rows, so a file
-     * always matches the preview.
+     * The list can be categorized by sport, sport type, or gender. The
+     * download uses the very same rows, so a file always matches the preview.
      */
     private function athleteReport(array $filters): array
     {
@@ -285,13 +285,13 @@ class ReportController extends Controller
                     'coach' => $athlete->sport?->coaches->pluck('name')->join(', ') ?: 'Unassigned',
                     'email' => $athlete->email ?: 'Not provided',
                     'sex' => $application?->gender ?: 'Not provided',
-                    'grade_level' => $athlete->gradeLevel() ?: 'Not provided',
+                    'grade_level' => User::canonicalGradeLevel($athlete->gradeLevel()) ?? ($athlete->gradeLevel() ?: 'Not provided'),
                     'phone' => $athlete->phone ?: 'Not provided',
                     'registered' => $athlete->created_at?->format('M j, Y') ?? '—',
                     'status' => $athlete->status ?? 'Active',
                 ];
             })
-            ->when($category === 'sport', fn ($rows) => $rows->sortBy('group')->values())
+            ->when(in_array($category, ['sport', 'type'], true), fn ($rows) => $rows->sortBy('group')->values())
             ->values()
             ->map(fn (array $row, int $index) => ['no' => $index + 1] + $row);
 
@@ -307,9 +307,9 @@ class ReportController extends Controller
             $summary[] = ['label' => 'Girls', 'value' => $athletes->filter(fn (User $athlete) => $this->athleteSex($athlete) === 'Female')->count()];
         }
 
-        if ($category === 'sport') {
-            foreach ($rows->groupBy('group')->sortKeys() as $sport => $sportRows) {
-                $summary[] = ['label' => $sport, 'value' => $sportRows->count()];
+        if (in_array($category, ['sport', 'type'], true)) {
+            foreach ($rows->groupBy('group')->sortKeys() as $group => $groupRows) {
+                $summary[] = ['label' => $group, 'value' => $groupRows->count()];
             }
         }
 
@@ -338,6 +338,7 @@ class ReportController extends Controller
     {
         return match ($category) {
             'sport' => $athlete->sport?->name ?? 'Unassigned Sport',
+            'type' => $athlete->sport?->classification ?: 'Unclassified Sport Type',
             'boys' => 'Boys',
             'girls' => 'Girls',
             default => 'All Athletes',
@@ -762,7 +763,11 @@ class ReportController extends Controller
         $options = ['sports' => Sport::orderBy('name')->get()];
 
         if ($report === 'athletes') {
-            $options['grades'] = Application::whereNotNull('grade')->distinct()->orderBy('grade')->pluck('grade');
+            $recordedGrades = Application::whereNotNull('grade')->distinct()->pluck('grade');
+            $options['grades'] = User::GRADE_LEVELS;
+            $options['hasOtherGrades'] = $recordedGrades->contains(
+                fn (string $grade) => User::canonicalGradeLevel($grade) === null,
+            );
             $options['genders'] = Application::whereNotNull('gender')->distinct()->orderBy('gender')->pluck('gender');
             $options['statuses'] = ['Active', 'Inactive'];
         }

@@ -102,9 +102,12 @@
 					<label for="report-grade">Year Level</label>
 					<select class="form-control" id="report-grade" name="grade">
 						<option value="">All Year Levels</option>
-						@foreach (($options['grades'] ?? collect()) as $grade)
-							<option value="{{ $grade }}" @selected(($filters['grade'] ?? null) === (string) $grade)>{{ $grade }}</option>
+						@foreach (($options['grades'] ?? []) as $grade)
+							<option value="{{ $grade }}" @selected(\App\Models\User::canonicalGradeLevel($filters['grade'] ?? null) === $grade)>{{ $grade }}</option>
 						@endforeach
+						@if ($options['hasOtherGrades'] ?? false)
+							<option value="{{ \App\Models\User::OTHER_GRADE_FILTER }}" @selected(($filters['grade'] ?? null) === \App\Models\User::OTHER_GRADE_FILTER)>Other recorded levels</option>
+						@endif
 					</select>
 				</div>
 				<div class="form-group">
