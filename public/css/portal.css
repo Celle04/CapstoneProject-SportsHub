@@ -1417,6 +1417,8 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
 .student-sport-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .student-sport-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 8px; color: var(--color-primary); background: var(--color-primary-soft); }
 .student-sport-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.student-sport-icon--logo { overflow: hidden; background: var(--color-surface); }
+.student-sport-icon--logo img { display: block; width: 100%; height: 100%; padding: 3px; object-fit: contain; }
 .student-sport-card:nth-child(3n + 2) .student-sport-icon { color: var(--color-success); background: var(--color-success-soft); }
 .student-sport-card:nth-child(3n) .student-sport-icon { color: var(--color-warning); background: var(--color-warning-soft); }
 .student-sport-classification { max-width: 70%; overflow: hidden; padding: 5px 8px; border-radius: 4px; color: var(--color-muted-strong); background: #f1f2f3; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
@@ -2558,8 +2560,59 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .athlete-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .athlete-list-count { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 13px; background: var(--color-primary-soft); color: var(--color-primary); font-size: 11px; font-weight: 700; }
 .athlete-table { min-width: 980px; }
-.athlete-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.athlete-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    min-width: 225px;
+    max-width: 270px;
+}
 .athlete-actions form { margin: 0; }
+.athlete-actions > * {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 36px;
+    margin: 0;
+    padding: 7px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.athlete-actions .text-link {
+    color: var(--color-primary);
+    background: var(--color-surface);
+}
+.athlete-actions .text-link:hover {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+    text-decoration: none;
+}
+.athlete-actions .button-secondary {
+    grid-column: 1 / -1;
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+.athlete-actions .button-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary-contrast);
+    background: var(--color-primary);
+}
+.athlete-actions .row-action-danger {
+    border-color: var(--color-danger-border);
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
+.athlete-actions .row-action-danger:hover {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
 .athlete-cell { display: flex; align-items: center; gap: 12px; }
 .athlete-cell-text { display: grid; gap: 2px; min-width: 0; }
 .athlete-cell-text small { color: var(--color-muted); font-size: 10px; }

@@ -20,7 +20,13 @@
                 aria-label="View enrolled members in {{ $sport->name }}"
             >
                 <div class="student-sport-card-top">
-                    <span class="student-sport-icon" aria-hidden="true"><svg><use href="#icon-trophy"></use></svg></span>
+                    @if ($sport->logo_path)
+                        <span class="student-sport-icon student-sport-icon--logo">
+                            <img src="{{ Storage::disk('public')->url($sport->logo_path) }}" alt="{{ $sport->name }} logo">
+                        </span>
+                    @else
+                        <span class="student-sport-icon" aria-hidden="true"><svg><use href="#icon-trophy"></use></svg></span>
+                    @endif
                     <span class="student-sport-classification">{{ $sport->classification ?? 'Sports program' }}</span>
                 </div>
                 <h3>{{ $sport->name }}</h3>

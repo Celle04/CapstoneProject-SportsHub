@@ -18,7 +18,7 @@ class StudentSynchronizationTest extends TestCase
 
     public function test_student_sees_current_admin_managed_sports_events_and_application(): void
     {
-        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'Court sport', 'status' => 'Active']);
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'Court sport', 'status' => 'Active', 'logo_path' => 'sports/basketball.png']);
         $athlete = User::factory()->create(['role' => 'Student', 'sport_id' => $sport->id, 'student_id' => '2026-7001']);
         Event::create([
             'title' => 'Basketball Training',
@@ -60,7 +60,9 @@ class StudentSynchronizationTest extends TestCase
         $this->get(route('student.sports'))
             ->assertOk()
             ->assertSee('Basketball')
-            ->assertSee('Court sport');
+            ->assertSee('Court sport')
+            ->assertSee('sports/basketball.png')
+            ->assertSee('alt="Basketball logo"', false);
 
         $this->get(route('student.application'))
             ->assertOk()
