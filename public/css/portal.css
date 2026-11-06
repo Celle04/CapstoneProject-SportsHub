@@ -2665,12 +2665,46 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .coach-specialty-col, .coach-sport-col, .coach-type-col { min-width: 120px; }
 .coach-count-col { width: 9%; min-width: 90px; text-align: center; }
 .coach-status-col { width: 9%; min-width: 96px; text-align: center; }
-.coach-actions-col { width: 12%; min-width: 140px; }
+.coach-actions-col { width: 17%; min-width: 190px; }
 .coach-status-active { color: var(--color-success); background: var(--color-success-soft); }
 .coach-status-inactive { color: var(--color-muted); background: #edf0f3; }
-.coach-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.coach-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 7px; min-width: 170px; }
 .coach-actions form { margin: 0; }
-.coach-actions .text-link { white-space: nowrap; }
+.coach-actions > * {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 34px;
+    margin: 0;
+    padding: 6px 8px;
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.coach-actions .text-link {
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
+    background: var(--color-surface);
+}
+.coach-actions .text-link:hover {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+    text-decoration: none;
+}
+.coach-actions .row-action-danger {
+    border-color: var(--color-danger-border);
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
+.coach-actions .row-action-danger:hover {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
 .coach-table .num { text-align: center; }
 .coach-status-active { color: var(--color-success); background: var(--color-success-soft); }
 .coach-status-inactive { color: var(--color-muted); background: #edf0f3; }

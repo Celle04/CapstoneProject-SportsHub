@@ -30,7 +30,10 @@ class CoachManagementTest extends TestCase
         $coach = Coach::firstOrFail();
         Event::create(['title' => 'Basketball Practice', 'sport_id' => $sport->id, 'coach_id' => $coach->id, 'starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addHour(), 'venue' => 'Main Court', 'status' => 'Scheduled']);
 
-        $this->actingAs($admin)->get(route('coaches.index', ['search' => 'Santos', 'status' => 'Active']))->assertOk()->assertSee('Coach Santos');
+        $this->actingAs($admin)->get(route('coaches.index', ['search' => 'Santos', 'status' => 'Active']))
+            ->assertOk()
+            ->assertSee('Coach Santos')
+            ->assertSeeInOrder(['View', 'Edit', 'Delete']);
         $this->actingAs($admin)->get(route('coaches.show', $coach))->assertOk()->assertSee('Basketball Practice')->assertSee($athlete->name);
     }
 
