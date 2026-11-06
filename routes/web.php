@@ -12,6 +12,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\MedicalController;
 use App\Http\Controllers\MedicalIncidentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPolicyController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SportController;
 use App\Models\Achievement;
@@ -47,6 +48,9 @@ Route::get('/', function () {
             ->get(),
     ]);
 })->name('landing');
+
+Route::get('/privacy-policy', [PublicPolicyController::class, 'privacyPolicy'])->name('privacy-policy');
+Route::get('/terms-and-conditions', [PublicPolicyController::class, 'termsAndConditions'])->name('terms-and-conditions');
 
 Route::get('/login', function () {
     return view('auth.login');

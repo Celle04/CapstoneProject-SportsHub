@@ -130,15 +130,23 @@ class ApplicationController extends Controller
             'gender' => ['required', 'in:Male,Female,Prefer not to say'],
             'email' => ['required', 'email', 'max:255'],
             'sport_id' => ['required', 'exists:sports,id'],
+            'policy_accepted' => ['accepted'],
             'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'birth_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'parent_consent' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ], [
+            'policy_accepted.accepted' => 'You must agree to the Privacy Policy and Terms & Conditions before submitting.',
         ]);
 
         $sport = Sport::findOrFail($validated['sport_id']);
+        unset($validated['policy_accepted']);
+
         Application::create([
             ...$validated,
             'sport' => $sport->name,
+            'privacy_accepted' => true,
+            'terms_accepted' => true,
+            'policy_accepted_at' => now(),
             'medical_certificate_path' => $request->file('medical_certificate')->store('application-documents/medical', 'private'),
             'birth_certificate_path' => $request->file('birth_certificate')->store('application-documents/birth', 'private'),
             'parent_consent_path' => $request->file('parent_consent')->store('application-documents/consent', 'private'),

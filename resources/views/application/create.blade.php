@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/legal.css') }}?v={{ filemtime(public_path('css/legal.css')) }}">
 </head>
 
 <body>
@@ -497,6 +498,27 @@
 
                 <div class="application-submit">
 
+                    <label class="application-policy-agreement" for="policy_accepted">
+                        <input
+                            id="policy_accepted"
+                            type="checkbox"
+                            name="policy_accepted"
+                            value="1"
+                            required
+                            @checked(old('policy_accepted') === '1')
+                            aria-describedby="policy-accepted-error"
+                        >
+                        <span>
+                            I have read and agree to the
+                            <a href="{{ route('privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>
+                            and
+                            <a href="{{ route('terms-and-conditions') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a>.
+                        </span>
+                        @error('policy_accepted')
+                            <span class="application-policy-agreement-error" id="policy-accepted-error">{{ $message }}</span>
+                        @enderror
+                    </label>
+
                     <p>
                         By submitting this application, you confirm that
                         the information and documents provided are accurate
@@ -558,6 +580,10 @@
                 <br>
 
                 SportsHub - Empowering Athletes, Building Champions
+                <nav class="public-policy-links" aria-label="Legal information">
+                    <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                    <a href="{{ route('terms-and-conditions') }}">Terms &amp; Conditions</a>
+                </nav>
 
             </div>
 

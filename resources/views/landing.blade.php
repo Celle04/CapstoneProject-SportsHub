@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/pwa.css') }}?v={{ filemtime(public_path('css/pwa.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/legal.css') }}?v={{ filemtime(public_path('css/legal.css')) }}">
 </head>
 
 <body>
@@ -431,6 +432,10 @@
                 <br>
 
                 SportsHub - Empowering Athletes, Building Champions
+                <nav class="public-policy-links" aria-label="Legal information">
+                    <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                    <a href="{{ route('terms-and-conditions') }}">Terms &amp; Conditions</a>
+                </nav>
 
             </div>
 

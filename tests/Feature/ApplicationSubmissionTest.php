@@ -31,6 +31,7 @@ class ApplicationSubmissionTest extends TestCase
             'gender' => 'Male',
             'email' => 'juan@example.com',
             'sport_id' => Sport::firstOrFail()->id,
+            'policy_accepted' => '1',
             'medical_certificate' => UploadedFile::fake()->create('medical.pdf', 20, 'application/pdf'),
             'birth_certificate' => UploadedFile::fake()->create('birth.pdf', 20, 'application/pdf'),
             'parent_consent' => UploadedFile::fake()->create('consent.pdf', 20, 'application/pdf'),
@@ -46,7 +47,11 @@ class ApplicationSubmissionTest extends TestCase
         $this->assertDatabaseHas('applications', [
             'name' => 'Juan Dela Cruz', 'student_id' => '2026-0001', 'email' => 'juan@example.com',
             'sport' => 'Basketball', 'status' => 'Pending',
+            'privacy_accepted' => 1, 'terms_accepted' => 1,
         ]);
+        $this->assertNotNull($application->policy_accepted_at);
+        $this->assertTrue($application->privacy_accepted);
+        $this->assertTrue($application->terms_accepted);
         Storage::disk('private')->assertExists($application->medical_certificate_path);
         Storage::disk('private')->assertExists($application->birth_certificate_path);
         Storage::disk('private')->assertExists($application->parent_consent_path);
@@ -60,6 +65,18 @@ class ApplicationSubmissionTest extends TestCase
 
         $response->assertRedirect(route('application.create'));
         $response->assertSessionHasErrors(['email', 'sport_id', 'parent_consent']);
+        $this->assertSame(0, Application::count());
+    }
+
+    public function test_application_requires_privacy_and_terms_agreement(): void
+    {
+        $this->from(route('application.create'))
+            ->post(route('application.store'), $this->applicationPayload(['policy_accepted' => null]))
+            ->assertRedirect(route('application.create'))
+            ->assertSessionHasErrors([
+                'policy_accepted' => 'You must agree to the Privacy Policy and Terms & Conditions before submitting.',
+            ]);
+
         $this->assertSame(0, Application::count());
     }
 
