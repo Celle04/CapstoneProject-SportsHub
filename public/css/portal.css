@@ -4575,22 +4575,32 @@ html[data-theme="dark"] body {
     background-attachment: initial;
 }
 
-.portal-topbar,
+.portal-topbar {
+    border-color: rgba(16, 6, 159, .18);
+    background:
+        radial-gradient(120% 160% at 92% 0%, rgba(255, 105, 0, .30), transparent 55%),
+        linear-gradient(135deg, #10069F 0%, #080362 100%);
+    box-shadow: var(--shadow-primary);
+}
+
 html[data-theme="dark"] .portal-topbar {
-    border-color: var(--color-border);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-xs);
+    border-color: rgba(255, 255, 255, .10);
+    background:
+        radial-gradient(120% 160% at 92% 0%, rgba(255, 138, 61, .22), transparent 55%),
+        linear-gradient(135deg, #171443 0%, #10122b 100%);
+    box-shadow: var(--shadow-md);
 }
 
-.portal-breadcrumb-context,
-.portal-breadcrumb-separator,
-.portal-breadcrumb-current {
-    color: var(--color-text);
+.portal-breadcrumb-context {
+    color: rgba(255, 255, 255, .82);
 }
 
-.portal-breadcrumb-context,
 .portal-breadcrumb-separator {
-    color: var(--color-muted);
+    color: rgba(255, 255, 255, .58);
+}
+
+.portal-breadcrumb-current {
+    color: #fff;
 }
 
 .portal-topbar .portal-icon-button,
@@ -4602,8 +4612,8 @@ html[data-theme="dark"] .portal-topbar {
 
 .portal-topbar .portal-icon-button:hover,
 .portal-topbar .portal-notification-trigger:hover {
-    border-color: var(--color-primary-border);
-    background: var(--color-primary-soft);
+    border-color: var(--color-accent-border);
+    background: var(--color-accent-soft);
     color: var(--color-primary);
 }
 
