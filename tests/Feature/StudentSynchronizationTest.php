@@ -98,7 +98,7 @@ class StudentSynchronizationTest extends TestCase
             'email' => $student->email,
             'sport' => $sport->name,
             'sport_id' => $sport->id,
-            'status' => 'Documents Required',
+            'status' => 'Requires Revision',
             'athlete_id' => $student->id,
         ]);
         $event = Event::create([
@@ -134,7 +134,7 @@ class StudentSynchronizationTest extends TestCase
             ->assertSee('ATTENDANCE IS OPEN')
             ->assertSee('Open Basketball Check-in')
             ->assertSee('Check In')
-            ->assertSee('Incomplete')
+            ->assertSee('Requires Revision')
             ->assertSee('1 unread');
 
         $event->update(['status' => 'Cancelled']);

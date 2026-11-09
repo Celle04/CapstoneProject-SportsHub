@@ -7,11 +7,16 @@
         $statusTiles = [
             'Pending' => ['icon' => 'bell', 'tone' => 'tone-gold'],
             'Under Review' => ['icon' => 'eye', 'tone' => 'tone-blue'],
-            'Documents Required' => ['icon' => 'certificate', 'tone' => 'tone-amber'],
+            'Requires Revision' => ['icon' => 'certificate', 'tone' => 'tone-amber'],
             'Approved' => ['icon' => 'trophy', 'tone' => 'tone-green'],
             'Rejected' => ['icon' => 'trash', 'tone' => 'tone-danger'],
-            'Waitlisted' => ['icon' => 'users', 'tone' => 'tone-violet'],
         ];
+        $statusCounts = $statusCounts ?? collect();
+        foreach (['Documents Required' => 'Requires Revision', 'Waitlisted' => 'Pending'] as $legacy => $target) {
+            if ($statusCounts->has($legacy) && ! $statusCounts->has($target)) {
+                $statusCounts[$target] = $statusCounts[$legacy];
+            }
+        }
         $initials = static function (string $name): string {
             $pieces = preg_split('/\s+/', trim($name)) ?: [];
 

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\ApplicationStatusHistory;
 use App\Models\Sport;
 use App\Models\User;
 use App\Services\StudentUpdateNotifier;
 use App\Support\PortalNavigation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ApplicationController extends Controller
@@ -53,7 +55,30 @@ class ApplicationController extends Controller
     {
         $this->ensureAdministrator();
 
-        return view('applications.show', $this->portalData(['application' => $application->load(['sportCategory', 'athlete', 'reviewer'])]));
+        $application->load(['sportCategory', 'athlete', 'reviewer', 'statusHistories.changedBy']);
+        $matchingAthlete = $application->athlete
+            ?: ($application->student_id ? User::query()->where('role', 'Student')->where('student_id', $application->student_id)->first() : null);
+
+        return view('applications.show', $this->portalData([
+            'application' => $application,
+            'matchingAthlete' => $matchingAthlete,
+            'sports' => Sport::orderBy('name')->get(),
+            'statusDefinitions' => self::statusDefinitions(),
+        ]));
+    }
+
+    public function markUnderReview(Request $request, Application $application): RedirectResponse
+    {
+        $this->ensureAdministrator();
+
+        $validated = $request->validate([
+            'review_notes' => ['nullable', 'string', 'max:2000'],
+            'admin_instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $this->applyStatus($application, 'Under Review', $validated['review_notes'] ?? null, null, $validated['admin_instructions'] ?? null);
+
+        return back()->with('success', 'Application marked as under review.');
     }
 
     public function update(Request $request, Application $application): RedirectResponse
@@ -61,17 +86,28 @@ class ApplicationController extends Controller
         $this->ensureAdministrator();
 
         $validated = $this->reviewValidated($request);
-        $this->applyStatus($application, $validated['status'], $validated['review_notes'] ?? null, $validated['rejection_reason'] ?? null);
+        $this->applyStatus(
+            $application,
+            $validated['status'],
+            $validated['review_notes'] ?? null,
+            $validated['rejection_reason'] ?? null,
+            $validated['admin_instructions'] ?? null,
+        );
 
         return back()->with('success', 'Application updated successfully.');
     }
 
-    public function approve(Application $application): RedirectResponse
+    public function approve(Request $request, Application $application): RedirectResponse
     {
         $this->ensureAdministrator();
         abort_unless($this->documentsVerified($application), 422, 'Cannot approve application. Required eligibility documents are missing or have not been verified.');
 
-        $this->applyStatus($application, 'Approved', request('review_notes'));
+        $validated = $request->validate([
+            'review_notes' => ['nullable', 'string', 'max:2000'],
+            'admin_instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $this->applyStatus($application, 'Approved', $validated['review_notes'] ?? null, null, $validated['admin_instructions'] ?? null);
 
         return back()->with('success', 'Application approved successfully.');
     }
@@ -80,8 +116,12 @@ class ApplicationController extends Controller
     {
         $this->ensureAdministrator();
 
-        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:2000'], 'review_notes' => ['nullable', 'string', 'max:2000']]);
-        $this->applyStatus($application, 'Rejected', $validated['review_notes'] ?? null, $validated['rejection_reason']);
+        $validated = $request->validate([
+            'rejection_reason' => ['required', 'string', 'max:2000'],
+            'review_notes' => ['nullable', 'string', 'max:2000'],
+            'admin_instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $this->applyStatus($application, 'Rejected', $validated['review_notes'] ?? null, $validated['rejection_reason'], $validated['admin_instructions'] ?? null);
 
         return back()->with('success', 'Application rejected.');
     }
@@ -90,12 +130,19 @@ class ApplicationController extends Controller
     {
         $this->ensureAdministrator();
 
-        $validated = $request->validate(['documents' => ['required', 'array', 'min:1'], 'documents.*' => ['in:medical,birth,consent'], 'message' => ['required', 'string', 'max:2000']]);
-        $application->update(['status' => 'Documents Required', 'documents_requested' => $validated['documents'], 'review_notes' => $validated['message']]);
-        $this->recordHistory($application, 'Additional documents requested.');
-        $this->notifyApplicant($application, 'Additional documents are required for your application.');
+        $validated = $request->validate([
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['in:medical,birth,consent'],
+            'message' => ['required', 'string', 'max:2000'],
+            'admin_instructions' => ['nullable', 'string', 'max:2000'],
+        ]);
 
-        return back()->with('success', 'Additional documents requested.');
+        $documents = array_values(array_unique($validated['documents'] ?? []));
+        $this->applyStatus($application, 'Requires Revision', $validated['message'], null, $validated['admin_instructions'] ?? null);
+        $application->update(['documents_requested' => $documents ?: null]);
+        $this->recordHistory($application, $documents ? 'Revision requested for specific documents.' : 'Revision requested.');
+
+        return back()->with('success', 'Revision requested. The applicant can check their status using their reference number.');
     }
 
     public function verifyDocument(Application $application, string $document): RedirectResponse
@@ -175,7 +222,7 @@ class ApplicationController extends Controller
         $sport = Sport::findOrFail($validated['sport_id']);
         unset($validated['policy_accepted'], $validated['no_middle_name']);
 
-        Application::create([
+        $application = Application::create([
             ...$validated,
             'name' => $name,
             'first_name' => $firstName !== '' ? $firstName : null,
@@ -190,49 +237,93 @@ class ApplicationController extends Controller
             'parent_consent_path' => $request->file('parent_consent')->store('application-documents/consent', 'private'),
         ]);
 
-        return redirect()->route('application.create')->with('submitted', true);
+        ApplicationStatusHistory::create([
+            'application_id' => $application->id,
+            'status' => $application->status,
+            'notes' => 'Application submitted.',
+            'changed_by' => null,
+        ]);
+
+        return redirect()->route('application.create')->with([
+            'submitted' => true,
+            'application_reference' => $application->reference_number,
+            'application_status_url' => route('application.status'),
+        ]);
     }
 
     private function reviewValidated(Request $request): array
     {
-        $validated = $request->validate([
+        $status = Application::normalizeStatus($request->input('status'));
+        $request->merge(['status' => $status]);
+
+        return $request->validate([
             'status' => ['required', 'in:'.implode(',', self::statuses())],
             'rejection_reason' => ['required_if:status,Rejected', 'nullable', 'string', 'max:2000'],
-            'review_notes' => ['nullable', 'string', 'max:2000'],
+            'review_notes' => ['required_if:status,Requires Revision', 'nullable', 'string', 'max:2000'],
+            'admin_instructions' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'review_notes.required_if' => 'Please provide an explanation or instructions when requesting a revision.',
         ]);
-
-        return $validated;
     }
 
-    private function applyStatus(Application $application, string $status, ?string $reviewNotes = null, ?string $rejectionReason = null): void
+    private function applyStatus(Application $application, string $status, ?string $reviewNotes = null, ?string $rejectionReason = null, ?string $adminInstructions = null): void
     {
+        $status = Application::normalizeStatus($status) ?: $status;
+
         if ($status === 'Approved') {
             abort_unless($this->documentsVerified($application), 422, 'Cannot approve application. Required eligibility documents are missing or have not been verified.');
         }
+        if ($status === 'Requires Revision') {
+            $reviewNotes = $reviewNotes ?: $application->review_notes;
+            abort_if(blank($reviewNotes), 422, 'An explanation is required when requesting a revision.');
+        }
 
-        $application->update([
-            'status' => $status,
-            'review_notes' => $reviewNotes ?? $application->review_notes,
-            'rejection_reason' => $status === 'Rejected' ? $rejectionReason : null,
-            'reviewed_by' => auth()->id(),
-            'reviewed_at' => now(),
-        ]);
-        $this->recordHistory($application, 'Application moved to '.$status.'.');
-        $this->notifyApplicant($application, 'Your application status is now '.$status.'.');
+        DB::transaction(function () use ($application, $status, $reviewNotes, $rejectionReason, $adminInstructions) {
+            $application->forceFill([
+                'status' => $status,
+                'review_notes' => $reviewNotes ?? $application->review_notes,
+                'admin_instructions' => $adminInstructions ?? $application->admin_instructions,
+                'rejection_reason' => $status === 'Rejected' ? $rejectionReason : null,
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+            ])->save();
+
+            ApplicationStatusHistory::create([
+                'application_id' => $application->id,
+                'status' => $status,
+                'notes' => $reviewNotes ?? $rejectionReason,
+                'admin_instructions' => $adminInstructions ?? $application->admin_instructions,
+                'changed_by' => auth()->id(),
+            ]);
+
+            $this->recordHistory($application, 'Application moved to '.$status.'.');
+        });
+
+        $this->notifyApplicant($application, $status);
     }
 
-    private function notifyApplicant(Application $application, string $message): void
+    private function notifyApplicant(Application $application, string $status): void
     {
         $student = $application->athlete;
         if (! $student && $application->student_id) {
             $student = User::query()->where('role', 'Student')->where('student_id', $application->student_id)->first();
         }
 
+        $statusUrl = route('student.application');
+        $message = match ($status) {
+            'Approved' => 'Your sports application was approved. Check your application status for next steps.',
+            'Rejected' => 'Your sports application was not approved. Check your application status for details.',
+            'Requires Revision' => 'Your sports application needs revision. Check your application status for instructions.',
+            'Under Review' => 'Your sports application is now under review.',
+            default => 'Your sports application status was updated to '.$status.'.',
+        };
+
         app(StudentUpdateNotifier::class)->notifyStudent(
             $student,
             'Application update',
             $message,
-            route('student.application'),
+            $statusUrl,
+            ['dedupe_key' => 'application-status|'.$application->id.'|'.$status.'|'.$application->updated_at?->timestamp]
         );
     }
 
@@ -273,7 +364,44 @@ class ApplicationController extends Controller
 
     public static function statuses(): array
     {
-        return ['Pending', 'Under Review', 'Documents Required', 'Approved', 'Rejected', 'Waitlisted'];
+        return ['Pending', 'Under Review', 'Requires Revision', 'Approved', 'Rejected'];
+    }
+
+    public static function statusDefinitions(): array
+    {
+        return [
+            'Pending' => 'Your application has been submitted and is waiting for review.',
+            'Under Review' => 'A sports coordinator is currently reviewing your application.',
+            'Approved' => 'Your application has been approved. Follow the instructions below for next steps.',
+            'Rejected' => 'Your application was not approved. Please review the explanation and instructions below.',
+            'Requires Revision' => 'Your application needs corrections or missing information before it can be reviewed again.',
+        ];
+    }
+
+    public function showStatusForm(): View
+    {
+        return view('application.status', ['result' => null, 'statusDefinitions' => self::statusDefinitions()]);
+    }
+
+    public function checkStatus(Request $request): View
+    {
+        $validated = $request->validate([
+            'reference_number' => ['required', 'string', 'max:40'],
+            'email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $application = Application::query()
+            ->where('reference_number', trim($validated['reference_number']))
+            ->whereRaw('LOWER(email) = ?', [strtolower(trim($validated['email']))])
+            ->with('sportCategory')
+            ->first();
+
+        return view('application.status', [
+            'result' => $application,
+            'statusDefinitions' => self::statusDefinitions(),
+            'notFound' => $application === null,
+            'input' => $validated,
+        ]);
     }
 
     public static function documentDefinitions(): array

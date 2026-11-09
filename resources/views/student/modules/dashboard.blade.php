@@ -79,7 +79,7 @@
 		<section class="card student-dashboard-events">
 			<div class="student-dashboard-heading"><div><span class="student-dashboard-kicker">YOUR PROGRAM</span><h2>Application status</h2></div></div>
 			@if ($studentApplication)
-				@php($applicationStatus = $studentApplication->status === 'Documents Required' ? 'Incomplete' : $studentApplication->status)
+				@php($applicationStatus = in_array($studentApplication->status, ['Documents Required', 'Requires Revision'], true) ? 'Requires Revision' : $studentApplication->status)
 				<div class="student-application-status"><span class="badge">{{ $applicationStatus }}</span><span>{{ $studentApplication->sportCategory?->name ?? $studentApplication->sport ?? 'Sport not assigned' }}</span></div>
 				@if ($studentApplication->review_notes)<p class="student-review-notes">{{ $studentApplication->review_notes }}</p>@endif
 				<a class="text-link" href="{{ route('student.application') }}">View application</a>

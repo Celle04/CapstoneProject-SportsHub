@@ -47,7 +47,11 @@
                     <label class="app-modal-label" for="approve-notes">Approval notes <span class="app-modal-optional">(optional)</span></label>
                     <textarea class="form-control" id="approve-notes" name="review_notes" rows="3" placeholder="Notes about this approval" data-app-modal-autofocus></textarea>
                 </div>
-                <p class="app-modal-note">This action will approve the application and update the athlete's application status.</p>
+                <div class="app-modal-section">
+                    <label class="app-modal-label" for="approve-instructions">Instructions for applicant <span class="app-modal-optional">(optional)</span></label>
+                    <textarea class="form-control" id="approve-instructions" name="admin_instructions" rows="2" placeholder="Example: Please visit the SNNHS Sports Office for further instructions.">{{ $application->admin_instructions }}</textarea>
+                </div>
+                <p class="app-modal-note">This action will approve the application, record the reviewer/date, and show instructions on the applicant's status page.</p>
                 <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to approve application</strong><span data-app-modal-error-message></span></p>
             </div>
             <footer class="app-modal-foot">
@@ -84,7 +88,11 @@
                     <label class="app-modal-label" for="review-notes">Review notes <span class="app-modal-optional">(optional)</span></label>
                     <textarea class="form-control" id="review-notes" name="review_notes" rows="3" placeholder="Notes for the review record" data-app-modal-autofocus></textarea>
                 </div>
-                <p class="app-modal-note">The status will change to Under Review and the applicant will be notified.</p>
+                <div class="app-modal-section">
+                    <label class="app-modal-label" for="review-instructions">Instructions for applicant <span class="app-modal-optional">(optional)</span></label>
+                    <textarea class="form-control" id="review-instructions" name="admin_instructions" rows="2" placeholder="Optional instructions shown on the applicant status page">{{ $application->admin_instructions }}</textarea>
+                </div>
+                <p class="app-modal-note">The status will change to Under Review and the applicant can check progress on their status page.</p>
                 <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to update status</strong><span data-app-modal-error-message></span></p>
             </div>
             <footer class="app-modal-foot">
@@ -172,7 +180,11 @@
                     <label class="app-modal-label" for="reject-notes">Additional notes <span class="app-modal-optional">(optional)</span></label>
                     <textarea class="form-control" id="reject-notes" name="review_notes" rows="3" placeholder="Notes for the review record"></textarea>
                 </div>
-                <p class="app-modal-note">This action will reject the application and record the reason for the applicant.</p>
+                <div class="app-modal-section">
+                    <label class="app-modal-label" for="reject-instructions">Instructions for applicant <span class="app-modal-optional">(optional)</span></label>
+                    <textarea class="form-control" id="reject-instructions" name="admin_instructions" rows="2" placeholder="Example: Please visit the SNNHS Sports Office for further instructions.">{{ $application->admin_instructions }}</textarea>
+                </div>
+                <p class="app-modal-note">This action will reject the application, record the reviewer/date, and show the explanation on the applicant's status page.</p>
                 <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to reject application</strong><span data-app-modal-error-message></span></p>
             </div>
             <footer class="app-modal-foot">
@@ -183,7 +195,7 @@
     </form>
 </dialog>
 
-{{-- Request documents ------------------------------------------------------------- --}}
+{{-- Request revision ------------------------------------------------------------- --}}
 <dialog class="app-modal" id="app-modal-documents" data-app-modal aria-labelledby="app-modal-documents-title" aria-describedby="app-modal-documents-desc" aria-busy="false">
     <form class="app-modal-form" method="POST" action="{{ route('applications.request-documents', $application) }}" data-app-modal-form>
         @csrf
@@ -191,34 +203,38 @@
             <header class="app-modal-head">
                 <span class="app-modal-icon app-modal-icon--info"><svg aria-hidden="true"><use href="#icon-file"></use></svg></span>
                 <div class="app-modal-title">
-                    <h2 id="app-modal-documents-title">Request Documents</h2>
-                    <p>Ask the applicant to resubmit specific eligibility documents.</p>
+                    <h2 id="app-modal-documents-title">Request Revision</h2>
+                    <p>Ask the applicant to correct information or resubmit specific documents.</p>
                 </div>
                 <button class="app-modal-close" type="button" data-app-modal-close aria-label="Close dialog"><svg aria-hidden="true"><use href="#icon-x"></use></svg></button>
             </header>
             <div class="app-modal-body">
-                <p class="app-modal-intro" id="app-modal-documents-desc">Select the documents the applicant needs to resubmit, then add a short message.</p>
+                <p class="app-modal-intro" id="app-modal-documents-desc">Select any documents that need to be resubmitted, then provide a clear explanation for the applicant.</p>
                 <dl class="app-modal-facts">
                     <div><dt>Applicant</dt><dd>{{ $application->name }}</dd></div>
                     <div><dt>Sport</dt><dd>{{ $sportLabel }}</dd></div>
                     <div><dt>Application status</dt><dd>{{ $application->status }}</dd></div>
                 </dl>
                 <div class="app-modal-section">
-                    <strong class="app-modal-section-label">Select documents</strong>
+                    <strong class="app-modal-section-label">Documents to resubmit <span class="app-modal-optional">(select if applicable)</span></strong>
                     <label class="check-row"><input type="checkbox" name="documents[]" value="medical" data-app-modal-autofocus> Medical Certificate</label>
                     <label class="check-row"><input type="checkbox" name="documents[]" value="birth"> Birth Certificate</label>
                     <label class="check-row"><input type="checkbox" name="documents[]" value="consent"> Parent/Guardian Consent</label>
                 </div>
                 <div class="app-modal-section">
-                    <label class="app-modal-label" for="request-message">Message for the applicant <i class="app-modal-required">*</i></label>
-                    <textarea class="form-control" id="request-message" name="message" rows="3" placeholder="Tell the applicant what needs to be corrected" required></textarea>
+                    <label class="app-modal-label" for="request-message">Explanation / revision instructions <i class="app-modal-required">*</i></label>
+                    <textarea class="form-control" id="request-message" name="message" rows="3" placeholder="Tell the applicant what needs to be corrected or submitted" required></textarea>
                 </div>
-                <p class="app-modal-note">Submitting this request sets the application status to "Documents Required".</p>
-                <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to request documents</strong><span data-app-modal-error-message></span></p>
+                <div class="app-modal-section">
+                    <label class="app-modal-label" for="request-instructions">Office instructions <span class="app-modal-optional">(optional)</span></label>
+                    <textarea class="form-control" id="request-instructions" name="admin_instructions" rows="2" placeholder="Example: Please visit the SNNHS Sports Office for further instructions.">{{ $application->admin_instructions }}</textarea>
+                </div>
+                <p class="app-modal-note">Submitting this request sets the application status to "Requires Revision" and notifies the applicant through the in-app notification system when available.</p>
+                <p class="app-modal-error" data-app-modal-error hidden><strong data-app-modal-error-title>Unable to request revision</strong><span data-app-modal-error-message></span></p>
             </div>
             <footer class="app-modal-foot">
                 <button class="button button-secondary" type="button" data-app-modal-close>Cancel</button>
-                <button class="button app-modal-confirm" type="submit" data-app-modal-confirm data-busy-label="Sending...">Send Request</button>
+                <button class="button app-modal-confirm" type="submit" data-app-modal-confirm data-busy-label="Sending...">Send Revision Request</button>
             </footer>
         </div>
     </form>

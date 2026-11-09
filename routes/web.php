@@ -148,6 +148,13 @@ Route::get('/apply', function () {
     return view('application.create', ['sports' => Sport::orderBy('name')->get()]);
 })->name('application.create');
 
+Route::get('/application/status', [ApplicationController::class, 'showStatusForm'])
+    ->middleware('throttle:30,1')
+    ->name('application.status');
+Route::post('/application/status', [ApplicationController::class, 'checkStatus'])
+    ->middleware('throttle:10,1')
+    ->name('application.status.check');
+
 /*
  * Public applications carry three file uploads each, so the submission is
  * rate limited per network source. A genuine applicant submits once (twice if
@@ -922,6 +929,7 @@ Route::get('/applications/{application}', [ApplicationController::class, 'show']
 Route::patch('/applications/{application}', [ApplicationController::class, 'update'])->middleware('auth')->name('applications.update');
 Route::post('/applications/{application}/approve', [ApplicationController::class, 'approve'])->middleware('auth')->name('applications.approve');
 Route::post('/applications/{application}/reject', [ApplicationController::class, 'reject'])->middleware('auth')->name('applications.reject');
+Route::post('/applications/{application}/under-review', [ApplicationController::class, 'markUnderReview'])->middleware('auth')->name('applications.under-review');
 Route::post('/applications/{application}/request-documents', [ApplicationController::class, 'requestDocuments'])->middleware('auth')->name('applications.request-documents');
 Route::post('/applications/{application}/documents/{document}/verify', [ApplicationController::class, 'verifyDocument'])->middleware('auth')->name('applications.documents.verify');
 Route::post('/applications/{application}/documents/{document}/reject', [ApplicationController::class, 'rejectDocument'])->middleware('auth')->name('applications.documents.reject');

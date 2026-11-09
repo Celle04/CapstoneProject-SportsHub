@@ -119,9 +119,18 @@
                     </strong>
 
                     <p>
-                        Your complete application was submitted.
-                        The Sports Coordinator will review it before
-                        any athlete account is created.
+                        Your application has been submitted and is waiting for review.
+                        Save your reference number to check your status online.
+                    </p>
+                    @if (session('application_reference'))
+                        <p><strong>Reference Number:</strong> <code style="font-size:1.05em; letter-spacing:.03em;">{{ session('application_reference') }}</code></p>
+                    @endif
+                    <p>
+                        <a href="{{ route('application.status') }}" class="primary-button" style="display:inline-flex; margin-top:.35rem; text-decoration:none;">Check Application Status</a>
+                    </p>
+                    <p style="margin-top:.5rem; font-size:.95em;">
+                        You do not need to visit the SNNHS Sports Office just to find out your application status.
+                        If your application requires office follow-up, instructions will appear on your status page.
                     </p>
 
                 </div>

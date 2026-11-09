@@ -81,12 +81,14 @@
             <section>
                 <div class="medical-card-head"><div><span class="admin-dashboard-kicker">APPLICATION</span><h2>Application Information</h2><p>What the athlete applied for and where it stands.</p></div></div>
                 <div class="medical-fact-grid application-facts">
+                    <div class="medical-fact"><span>Reference number</span><strong><code>{{ $application->reference_number ?: 'Not assigned' }}</code></strong></div>
                     <div class="medical-fact"><span>Sport</span><strong>{{ $sportLabel }}</strong></div>
-                    <div class="medical-fact"><span>Date applied</span><strong>{{ $application->created_at?->format('F j, Y') ?: 'Not provided' }}</strong></div>
+                    <div class="medical-fact"><span>Date applied</span><strong>{{ $application->created_at?->format('F j, Y g:i A') ?: 'Not provided' }}</strong></div>
                     <div class="medical-fact"><span>Current status</span><strong>{{ $application->status }}</strong></div>
+                    <div class="medical-fact"><span>Last updated</span><strong>{{ ($application->reviewed_at ?? $application->updated_at)?->format('F j, Y g:i A') ?: 'Not provided' }}</strong></div>
                     <div class="medical-fact"><span>Application ID</span><strong>#{{ $application->id }}</strong></div>
-                    <div class="medical-fact"><span>Documents requested</span><strong>{{ $requestedDocuments ?: 'None' }}</strong></div>
-                    <div class="medical-fact"><span>Athlete profile</span><strong>{{ $application->athlete?->name ?? 'Not created yet' }}</strong></div>
+                    <div class="medical-fact"><span>Revision/documents requested</span><strong>{{ $requestedDocuments ?: 'None' }}</strong></div>
+                    <div class="medical-fact"><span>Athlete profile</span><strong>{{ $application->athlete?->name ?? ($matchingAthlete?->name ?? 'Not created yet') }}</strong></div>
                 </div>
             </section>
 
@@ -98,12 +100,15 @@
                     <div class="medical-fact"><span>Reviewer</span><strong>{{ $application->reviewer?->name ?? 'Not assigned yet' }}</strong></div>
                 </div>
                 @if (filled($application->review_notes))
-                    <div class="review-note"><strong>Admin remarks</strong><p>{{ $application->review_notes }}</p></div>
+                    <div class="review-note"><strong>Review notes / revision explanation</strong><p>{{ $application->review_notes }}</p></div>
                 @else
-                    <div class="review-note"><strong>Admin remarks</strong><p class="meta">No admin remarks recorded yet.</p></div>
+                    <div class="review-note"><strong>Review notes</strong><p class="meta">No review notes recorded yet.</p></div>
                 @endif
                 @if (filled($application->rejection_reason))
                     <div class="review-note"><strong>Rejection reason</strong><p>{{ $application->rejection_reason }}</p></div>
+                @endif
+                @if (filled($application->admin_instructions))
+                    <div class="review-note"><strong>Instructions shown to applicant</strong><p>{{ $application->admin_instructions }}</p></div>
                 @endif
             </section>
 
@@ -157,16 +162,18 @@
                             @endunless
                         @endif
                         <button class="button button-secondary" type="button" data-app-modal-open="app-modal-review">Mark as Under Review</button>
-                        <button class="button button-secondary" type="button" data-app-modal-open="app-modal-waitlist">Place on Waitlist</button>
                         <button class="button button-danger" type="button" data-app-modal-open="app-modal-reject">Reject Application</button>
-                        <form method="POST" action="{{ route('applications.update', $application) }}" class="application-action-form" data-app-status-form>@csrf @method('PATCH')<select class="form-control" name="status" aria-label="Application status">@foreach ($appController::statuses() as $status)<option value="{{ $status }}" @selected($application->status === $status)>{{ $status }}</option>@endforeach</select><textarea class="form-control" name="review_notes" placeholder="Review notes" rows="3">{{ $application->review_notes }}</textarea><button class="button button-secondary" type="submit">Update Status</button></form>
+                        <form method="POST" action="{{ route('applications.update', $application) }}" class="application-action-form" data-app-status-form>@csrf @method('PATCH')<select class="form-control" name="status" aria-label="Application status">@foreach ($appController::statuses() as $status)<option value="{{ $status }}" @selected($application->status === $status)>{{ $status }}</option>@endforeach</select><textarea class="form-control" name="review_notes" placeholder="Review notes / explanation (required for rejection or revision)" rows="3">{{ $application->review_notes }}</textarea><textarea class="form-control" name="admin_instructions" placeholder="Instructions shown to applicant (optional, e.g. visit SNNHS Sports Office)" rows="2">{{ $application->admin_instructions }}</textarea><button class="button button-secondary" type="submit">Update Status</button></form>
                     </div>
                 </div>
                 <div>
-                    <div class="medical-card-head"><div><span class="admin-dashboard-kicker">REQUESTS</span><h2>Request Documents</h2><p>Ask the applicant to resubmit specific documents.</p></div></div>
+                    <div class="medical-card-head"><div><span class="admin-dashboard-kicker">REQUESTS</span><h2>Request Revision</h2><p>Ask the applicant to correct information or submit missing documents.</p></div></div>
                     <div class="review-action-stack">
-                        <button class="button button-secondary" type="button" data-app-modal-open="app-modal-documents">Request Documents</button>
-                        <span class="form-hint">Asking for documents sets the application back to "Documents Required".</span>
+                        <button class="button button-secondary" type="button" data-app-modal-open="app-modal-documents">Request Revision</button>
+                        <span class="form-hint">Requesting revision sets the application to "Requires Revision" and requires an explanation.</span>
+                        @if (($matchingAthlete ?? null) && ! $application->athlete)
+                            <span class="form-hint">A matching student account exists for this student ID. Create or link the athlete account only after approval.</span>
+                        @endif
                     </div>
                 </div>
             </section>
@@ -174,22 +181,38 @@
     </section>
 
     <section class="card application-history">
-        <div class="medical-card-head"><div><span class="admin-dashboard-kicker">TIMELINE</span><h2>Application History</h2><p>Every decision and document change recorded.</p></div></div>
-        @php($historyEntries = array_reverse($application->review_history ?? []))
-        @if ($historyEntries)
+        <div class="medical-card-head"><div><span class="admin-dashboard-kicker">TIMELINE</span><h2>Application Status History</h2><p>Status decisions, reviewer, and accountability trail.</p></div></div>
+        @if ($application->statusHistories->isNotEmpty())
             <div class="application-timeline">
-                @foreach ($historyEntries as $history)
+                @foreach ($application->statusHistories as $history)
                     <div class="application-timeline-row">
                         <span class="application-timeline-dot" aria-hidden="true"></span>
                         <div class="application-timeline-copy">
-                            <strong>{{ $history['label'] }}</strong>
-                            <time>{{ \Carbon\Carbon::parse($history['at'])->format('M j, Y g:i A') }}</time>
+                            <strong>{{ $history->status }}</strong>
+                            <time>{{ $history->created_at?->format('M j, Y g:i A') }}@if($history->changedBy) · {{ $history->changedBy->name }}@endif</time>
+                            @if (filled($history->notes))<p class="meta" style="margin:.2rem 0 0; white-space:pre-wrap;">{{ $history->notes }}</p>@endif
+                            @if (filled($history->admin_instructions))<p class="meta" style="margin:.2rem 0 0; white-space:pre-wrap;"><strong>Instructions:</strong> {{ $history->admin_instructions }}</p>@endif
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <p class="empty-state">No review history recorded yet.</p>
+            @php($historyEntries = array_reverse($application->review_history ?? []))
+            @if ($historyEntries)
+                <div class="application-timeline">
+                    @foreach ($historyEntries as $history)
+                        <div class="application-timeline-row">
+                            <span class="application-timeline-dot" aria-hidden="true"></span>
+                            <div class="application-timeline-copy">
+                                <strong>{{ $history['label'] }}</strong>
+                                <time>{{ \Carbon\Carbon::parse($history['at'])->format('M j, Y g:i A') }}</time>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="empty-state">No review history recorded yet.</p>
+            @endif
         @endif
     </section>
 
