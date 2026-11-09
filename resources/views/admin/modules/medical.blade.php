@@ -410,7 +410,11 @@
                 <legend>A. Athlete Information</legend>
                 <div class="form-group">
                     <label for="medical-athlete-search">Find athlete by name or Student ID</label>
-                    <input class="form-control" id="medical-athlete-search" type="search" placeholder="Type a name or Student ID">
+                    <div class="medical-athlete-picker">
+                        <input class="form-control" id="medical-athlete-search" type="search" placeholder="Start typing an athlete name or Student ID" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="medical-athlete-results">
+                        <div class="medical-athlete-results" id="medical-athlete-results" role="listbox" aria-label="Matching athletes" hidden></div>
+                    </div>
+                    <small class="medical-athlete-hint">Choose an athlete from the matching results or use the dropdown below.</small>
                 </div>
                 <div class="grid grid-3">
                 <div class="form-group">

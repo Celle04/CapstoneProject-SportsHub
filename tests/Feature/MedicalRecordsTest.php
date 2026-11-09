@@ -165,6 +165,21 @@ class MedicalRecordsTest extends TestCase
             ->assertSee(route('admin.medical.show', $record));
     }
 
+    public function test_the_medical_form_provides_searchable_athlete_results(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+
+        $this->actingAs($admin)
+            ->get(route('admin.medical.create'))
+            ->assertOk()
+            ->assertSee('Find athlete by name or Student ID')
+            ->assertSee('medical-athlete-search')
+            ->assertSee('medical-athlete-results')
+            ->assertSee('role="listbox"', false)
+            ->assertSee('Juan Dela Cruz')
+            ->assertSee('S-2048');
+    }
+
     public function test_the_summary_cards_are_rendered(): void
     {
         [$admin, $sport, $athlete] = $this->context();
