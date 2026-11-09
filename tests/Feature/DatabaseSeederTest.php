@@ -25,12 +25,19 @@ class DatabaseSeederTest extends TestCase
         ]);
     }
 
-    public function test_the_seeder_creates_no_demo_accounts_in_production(): void
+    public function test_the_seeder_refuses_to_run_in_production(): void
     {
+        $previous = $this->app['env'];
         $this->app['env'] = 'production';
 
-        // db:seed asks for confirmation in production; --force answers it.
-        $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
+        try {
+            $this->artisan('db:seed', ['--force' => true]);
+            $this->fail('Expected DatabaseSeeder to refuse running in production.');
+        } catch (\Throwable $e) {
+            $this->assertStringContainsString('DatabaseSeeder is disabled outside local/testing', $e->getMessage());
+        } finally {
+            $this->app['env'] = $previous;
+        }
 
         $this->assertSame(0, User::count());
         $this->assertDatabaseMissing('users', ['email' => 'admin@example.com']);
