@@ -713,15 +713,23 @@ Route::get('/dashboard', function () use ($adminPage) {
         ->whereNotNull('attendance_session_id')
         ->count();
 
-    $medicalStatusCounts = MedicalRecord::query()
-        ->selectRaw('medical_status, COUNT(*) as total')
-        ->groupBy('medical_status')
-        ->pluck('total', 'medical_status');
+    $medicalLatestRecords = MedicalRecord::query()->active()
+        ->get(['id', 'athlete_id', 'medical_status', 'expiration_date', 'next_checkup_date', 'examination_date'])
+        ->groupBy('athlete_id')
+        ->map(fn ($records) => $records->sortByDesc(fn (MedicalRecord $record) => [
+            $record->examination_date?->format('Y-m-d') ?? '',
+            $record->id,
+        ])->first())
+        ->filter();
+    $medicalStatusCounts = collect(MedicalRecord::STATUSES)
+        ->mapWithKeys(fn (string $status) => [$status => $medicalLatestRecords->filter(fn (MedicalRecord $record) => $record->effectiveStatus() === $status)->count()]);
     $clearedAthletes = (int) ($medicalStatusCounts->get('Cleared') ?? 0);
 
-    $athletesMissingMedical = User::where('role', 'Student')->whereDoesntHave('medicalRecords')->count();
-    $checkupsDue = MedicalRecord::whereNotNull('next_checkup_date')
-        ->whereBetween('next_checkup_date', [$today, $today->copy()->addDays(30)])
+    $athletesMissingMedical = User::where('role', 'Student')
+        ->whereDoesntHave('medicalRecords', fn ($query) => $query->whereNull('archived_at'))
+        ->count();
+    $checkupsDue = MedicalRecord::query()->active()
+        ->whereRaw('COALESCE(next_checkup_date, expiration_date) between ? and ?', [$today->toDateString(), $today->copy()->addDays(30)->toDateString()])
         ->count();
     $pendingCertificateRequests = CertificateRequest::where('status', CertificateRequest::STATUS_PENDING)->count();
 
@@ -834,9 +842,9 @@ Route::get('/dashboard', function () use ($adminPage) {
         'athletesBySport' => Sport::withCount(['athletes' => fn ($query) => $query->where('role', 'Student')])->orderBy('name')->get(),
         'medicalStatusCounts' => [
             'Cleared' => (int) ($medicalStatusCounts->get('Cleared') ?? 0),
-            'Pending' => (int) ($medicalStatusCounts->get('Pending') ?? 0),
-            'Not Cleared' => (int) ($medicalStatusCounts->get('Not Cleared') ?? 0),
-            'Restricted' => (int) ($medicalStatusCounts->get('Restricted') ?? 0),
+            'For Evaluation' => (int) ($medicalStatusCounts->get('For Evaluation') ?? 0),
+            'Restricted Participation' => (int) ($medicalStatusCounts->get('Restricted Participation') ?? 0),
+            'Expired' => (int) ($medicalStatusCounts->get('Expired') ?? 0),
         ],
         'attendanceToday' => [
             'counted' => $countedToday,
@@ -864,7 +872,7 @@ Route::get('/dashboard', function () use ($adminPage) {
             ...User::where('role', 'Student')->latest('created_at')->limit(2)->get()->map(fn ($athlete) => ['label' => $athlete->name.' was added as an athlete', 'date' => $athlete->created_at])->all(),
             ...Event::with('sport')->latest('created_at')->limit(2)->get()->map(fn ($event) => ['label' => $event->title.' was created', 'date' => $event->created_at])->all(),
             ...Application::latest('created_at')->limit(2)->get()->map(fn ($application) => ['label' => $application->name.' submitted a sports application', 'date' => $application->created_at])->all(),
-            ...MedicalRecord::with('athlete')->latest('updated_at')->limit(2)->get()->map(fn ($record) => ['label' => 'Medical record updated'.($record->athlete?->name ? ' for '.$record->athlete->name : ''), 'date' => $record->updated_at])->all(),
+            ...MedicalRecord::active()->with('athlete')->latest('updated_at')->limit(2)->get()->map(fn ($record) => ['label' => 'Medical record updated'.($record->athlete?->name ? ' for '.$record->athlete->name : ''), 'date' => $record->updated_at])->all(),
             ...AttendanceSession::latest('created_at')->limit(2)->get()->map(fn ($session) => ['label' => 'Attendance session created for '.$session->effectiveSportName(), 'date' => $session->created_at])->all(),
             ...Achievement::with('athlete')->latest('created_at')->limit(2)->get()->map(fn ($achievement) => ['label' => $achievement->title.' awarded to '.($achievement->athlete?->name ?? 'an athlete'), 'date' => $achievement->created_at])->all(),
         ])->sortByDesc('date')->take(5)->values(),
@@ -904,12 +912,17 @@ Route::post('/athletes/{athlete}/password-reset', [AthleteController::class, 're
 Route::get('/admin/medical', [MedicalController::class, 'index'])->middleware('auth')->name('admin.medical');
 Route::get('/admin/medical/create', [MedicalController::class, 'create'])->middleware('auth')->name('admin.medical.create');
 Route::post('/admin/medical', [MedicalController::class, 'store'])->middleware('auth')->name('admin.medical.store');
+Route::post('/admin/medical/{medical}/documents', [MedicalController::class, 'storeDocument'])->middleware('auth')->name('admin.medical.documents.store');
+Route::get('/admin/medical/{medical}/documents/{document}/view', [MedicalController::class, 'viewDocument'])->middleware('auth')->name('admin.medical.documents.view');
+Route::get('/admin/medical/{medical}/documents/{document}', [MedicalController::class, 'downloadDocument'])->middleware('auth')->name('admin.medical.documents.download');
+Route::delete('/admin/medical/{medical}/documents/{document}', [MedicalController::class, 'destroyDocument'])->middleware('auth')->name('admin.medical.documents.destroy');
 Route::post('/admin/medical/incidents', [MedicalIncidentController::class, 'store'])->middleware('auth')->name('admin.medical.incidents.store');
 Route::put('/admin/medical/incidents/{incident}', [MedicalIncidentController::class, 'update'])->middleware('auth')->name('admin.medical.incidents.update');
 Route::delete('/admin/medical/incidents/{incident}', [MedicalIncidentController::class, 'destroy'])->middleware('auth')->name('admin.medical.incidents.destroy');
 Route::patch('/admin/medical/{medical}/archive', [MedicalController::class, 'archive'])->middleware('auth')->name('admin.medical.archive');
 Route::patch('/admin/medical/{medical}/restore', [MedicalController::class, 'restore'])->middleware('auth')->name('admin.medical.restore');
 Route::get('/admin/medical/{medical}/certificate/view', [MedicalController::class, 'viewCertificate'])->middleware('auth')->name('admin.medical.certificate.view');
+Route::delete('/admin/medical/{medical}/certificate', [MedicalController::class, 'destroyCertificate'])->middleware('auth')->name('admin.medical.certificate.destroy');
 Route::get('/admin/medical/{medical}', [MedicalController::class, 'show'])->middleware('auth')->name('admin.medical.show');
 Route::get('/admin/medical/{medical}/edit', [MedicalController::class, 'edit'])->middleware('auth')->name('admin.medical.edit');
 Route::put('/admin/medical/{medical}', [MedicalController::class, 'update'])->middleware('auth')->name('admin.medical.update');

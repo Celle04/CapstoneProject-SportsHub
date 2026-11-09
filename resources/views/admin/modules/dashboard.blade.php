@@ -25,9 +25,9 @@
     };
     $medicalTone = fn (string $status) => match ($status) {
         'Cleared' => 'success',
-        'Pending' => 'warning',
-        'Not Cleared' => 'danger',
-        'Restricted' => 'violet',
+        'For Evaluation' => 'warning',
+        'Expired' => 'danger',
+        'Restricted Participation' => 'violet',
         default => 'neutral',
     };
 @endphp
@@ -308,7 +308,7 @@
                 <div class="hub-panel-body">
                     @php($medicalTotal = max(1, array_sum($medicalStatusCounts)))
                     <ul class="hub-status-list">
-                        @foreach (['Cleared' => 'success', 'Pending' => 'warning', 'Not Cleared' => 'danger', 'Restricted' => 'violet'] as $status => $tone)
+                        @foreach (['Cleared' => 'success', 'For Evaluation' => 'warning', 'Restricted Participation' => 'violet', 'Expired' => 'danger'] as $status => $tone)
                             <li class="hub-status-row">
                                 <span class="hub-status-name"><span class="hub-status-dot hub-status-dot--{{ $tone }}" aria-hidden="true"></span>{{ $status }}</span>
                                 <span class="hub-status-bar"><span class="hub-status-bar-fill hub-status-bar-fill--{{ $tone }}" style="width: {{ round((($medicalStatusCounts[$status] ?? 0) / $medicalTotal) * 100) }}%"></span></span>

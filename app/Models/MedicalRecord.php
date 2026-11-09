@@ -21,7 +21,9 @@ class MedicalRecord extends Model
      *
      * @var array<int, string>
      */
-    public const STATUSES = ['Pending', 'Cleared', 'Restricted', 'Not Cleared'];
+    public const STATUSES = ['For Evaluation', 'Cleared', 'Restricted Participation', 'Expired'];
+
+    public const LEGACY_STATUSES = ['Pending', 'Restricted', 'Not Cleared'];
 
     /**
      * Expiration states a certificate or checkup deadline can be in.
@@ -51,6 +53,22 @@ class MedicalRecord extends Model
         'last_checkup',
         'clearance',
         'archived_at',
+        'height_cm',
+        'weight_kg',
+        'blood_type',
+        'allergies',
+        'medical_conditions',
+        'previous_injuries',
+        'current_medications',
+        'medical_history',
+        'examining_personnel',
+        'medical_assessment',
+        'medical_remarks',
+        'clearance_date',
+        'expiration_date',
+        'clearance_remarks',
+        'created_by',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -59,6 +77,8 @@ class MedicalRecord extends Model
             'examination_date' => 'date',
             'next_checkup_date' => 'date',
             'last_checkup' => 'date',
+            'clearance_date' => 'date',
+            'expiration_date' => 'date',
             'archived_at' => 'datetime',
         ];
     }
@@ -91,6 +111,32 @@ class MedicalRecord extends Model
     public function injuries(): HasMany
     {
         return $this->hasMany(MedicalIncident::class, 'athlete_id', 'athlete_id');
+    }
+
+    /**
+     * @return HasMany<MedicalDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(MedicalDocument::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * @return HasMany<MedicalRecordHistory, $this>
+     */
+    public function history(): HasMany
+    {
+        return $this->hasMany(MedicalRecordHistory::class)->latest();
     }
 
     /**
@@ -132,7 +178,21 @@ class MedicalRecord extends Model
                     ->orWhere('student_id', 'like', "%{$search}%"));
             }))
             ->when($sportId, fn (Builder $nested) => $nested->whereHas('athlete', fn (Builder $athleteQuery) => $athleteQuery->where('sport_id', $sportId)))
-            ->when($status, fn (Builder $nested) => $nested->where('medical_status', $status))
+            ->when($status, function (Builder $nested) use ($status) {
+                if ($status === 'Expired') {
+                    return $nested->where(function (Builder $expired) {
+                        $expired->where('medical_status', 'Expired')
+                            ->orWhereRaw('COALESCE(expiration_date, next_checkup_date) < ?', [today()->toDateString()]);
+                    });
+                }
+
+                return $nested->where('medical_status', $status)
+                    ->where(function (Builder $valid) {
+                        $valid->whereNull('expiration_date')
+                            ->whereNull('next_checkup_date')
+                            ->orWhereRaw('COALESCE(expiration_date, next_checkup_date) >= ?', [today()->toDateString()]);
+                    });
+            })
             ->when($examinationDate, fn (Builder $nested) => $nested->whereDate('examination_date', $examinationDate))
             ->when($certificate, fn (Builder $nested, string $state) => $this->applyCertificateFilter($nested, $state));
     }
@@ -152,16 +212,16 @@ class MedicalRecord extends Model
             self::CERTIFICATE_MISSING => $query->whereNull('medical_certificate'),
             self::CERTIFICATE_EXPIRED => $query
                 ->whereNotNull('medical_certificate')
-                ->whereNotNull('next_checkup_date')
-                ->whereDate('next_checkup_date', '<', today()->toDateString()),
+                ->whereRaw('COALESCE(expiration_date, next_checkup_date) < ?', [today()->toDateString()]),
             self::CERTIFICATE_EXPIRING => $query
                 ->whereNotNull('medical_certificate')
-                ->whereBetween('next_checkup_date', [today()->toDateString(), $warningEnd]),
+                ->whereRaw('COALESCE(expiration_date, next_checkup_date) between ? and ?', [today()->toDateString(), $warningEnd]),
             default => $query
                 ->whereNotNull('medical_certificate')
                 ->where(fn (Builder $expiryQuery) => $expiryQuery
+                    ->whereNull('expiration_date')
                     ->whereNull('next_checkup_date')
-                    ->orWhereDate('next_checkup_date', '>', $warningEnd)),
+                    ->orWhereRaw('COALESCE(expiration_date, next_checkup_date) > ?', [$warningEnd])),
         };
     }
 
@@ -214,7 +274,7 @@ class MedicalRecord extends Model
      */
     public function certificateExpiryDate(): ?Carbon
     {
-        return $this->next_checkup_date;
+        return $this->expiration_date ?? $this->next_checkup_date;
     }
 
     /**
@@ -278,7 +338,31 @@ class MedicalRecord extends Model
 
     public function statusBadgeClass(): string
     {
-        return 'badge medical-status-'.str_replace(' ', '-', strtolower((string) $this->medical_status));
+        return 'badge medical-status-'.str_replace(' ', '-', strtolower($this->effectiveStatus()));
+    }
+
+    public function effectiveStatus(): string
+    {
+        if ($this->isExpired() || $this->medical_status === 'Expired') {
+            return 'Expired';
+        }
+
+        return match ($this->medical_status) {
+            'Pending' => 'For Evaluation',
+            'Restricted', 'Not Cleared' => 'Restricted Participation',
+            default => (string) $this->medical_status,
+        };
+    }
+
+    public function statusDescription(): string
+    {
+        return match ($this->effectiveStatus()) {
+            'Cleared' => 'Cleared for participation, subject to other school requirements.',
+            'For Evaluation' => 'Further medical assessment is required.',
+            'Restricted Participation' => 'Participation is limited by the recorded restrictions.',
+            'Expired' => 'Clearance has expired and needs renewal.',
+            default => 'No clearance decision has been recorded.',
+        };
     }
 
     public function certificateBadgeClass(): string

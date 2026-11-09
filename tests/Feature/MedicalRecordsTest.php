@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\MedicalIncident;
+use App\Models\MedicalDocument;
 use App\Models\MedicalRecord;
+use App\Models\MedicalRecordHistory;
 use App\Models\Sport;
 use App\Models\User;
 use App\Notifications\CheckupReminderNotification;
@@ -88,6 +90,16 @@ class MedicalRecordsTest extends TestCase
     {
         [$admin, $sport, $athlete] = $this->context();
         $record = MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id]));
+        Storage::disk('private')->put('medical-documents/report.pdf', 'private');
+        $document = MedicalDocument::create([
+            'medical_record_id' => $record->id,
+            'category' => 'Physical Examination Results',
+            'original_name' => 'report.pdf',
+            'path' => 'medical-documents/report.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 7,
+            'uploaded_by' => $admin->id,
+        ]);
         Storage::disk('private')->put('medical-certificates/cert.pdf', 'binary');
         $record->update(['medical_certificate' => 'medical-certificates/cert.pdf']);
 
@@ -97,6 +109,11 @@ class MedicalRecordsTest extends TestCase
         $this->actingAs($athlete)->get(route('admin.medical.edit', $record))->assertForbidden();
         $this->actingAs($athlete)->get(route('admin.medical.certificate', $record))->assertForbidden();
         $this->actingAs($athlete)->get(route('admin.medical.certificate.view', $record))->assertForbidden();
+        $this->actingAs($athlete)->delete(route('admin.medical.certificate.destroy', $record))->assertForbidden();
+        $this->actingAs($athlete)->get(route('admin.medical.documents.view', [$record, $document]))->assertForbidden();
+        $this->actingAs($athlete)->get(route('admin.medical.documents.download', [$record, $document]))->assertForbidden();
+        $this->actingAs($athlete)->post(route('admin.medical.documents.store', $record), [])->assertForbidden();
+        $this->actingAs($athlete)->delete(route('admin.medical.documents.destroy', [$record, $document]))->assertForbidden();
         $this->actingAs($athlete)->post(route('admin.medical.store'), $this->payload($athlete))->assertForbidden();
         $this->actingAs($athlete)->put(route('admin.medical.update', $record), $this->payload($athlete))->assertForbidden();
         $this->actingAs($athlete)->patch(route('admin.medical.archive', $record))->assertForbidden();
@@ -156,7 +173,7 @@ class MedicalRecordsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.medical'))
             ->assertOk()
-            ->assertSeeInOrder(['Total Records', 'Cleared', 'Pending', 'Restricted', 'Expiring Soon', 'Under Recovery']);
+            ->assertSeeInOrder(['Total Medical Records', 'Cleared Athletes', 'For Evaluation', 'Restricted Participation', 'Expired Clearances', 'Under Recovery']);
     }
 
     public function test_the_required_record_fields_are_validated(): void
@@ -302,6 +319,156 @@ class MedicalRecordsTest extends TestCase
         ]);
     }
 
+    public function test_an_administrator_can_record_physical_examination_and_clearance_details_with_audit_history(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $this->actingAs($admin)->post(route('admin.medical.store'), $this->payload($athlete, [
+            'medical_status' => 'Cleared',
+            'height_cm' => '172.5',
+            'weight_kg' => '68.2',
+            'blood_type' => 'O+',
+            'allergies' => 'Unknown / not reported',
+            'medical_conditions' => 'None reported',
+            'previous_injuries' => 'Not reported',
+            'current_medications' => 'Unknown',
+            'medical_history' => 'Not reported',
+            'examining_personnel' => 'School Nurse',
+            'medical_assessment' => 'Fit for evaluation.',
+            'medical_remarks' => 'Review at next checkup.',
+            'clearance_date' => today()->format('Y-m-d'),
+            'expiration_date' => today()->addMonths(6)->format('Y-m-d'),
+            'clearance_remarks' => 'Cleared subject to school requirements.',
+        ]))->assertRedirect(route('admin.medical'));
+
+        $record = MedicalRecord::firstOrFail();
+        $this->assertSame($admin->id, $record->created_by);
+        $this->assertSame($admin->id, $record->updated_by);
+        $this->assertSame('O+', $record->blood_type);
+        $this->assertSame('School Nurse', $record->examining_personnel);
+        $this->assertDatabaseHas('medical_record_histories', [
+            'medical_record_id' => $record->id,
+            'changed_by' => $admin->id,
+            'action' => 'created',
+            'new_status' => 'Cleared',
+        ]);
+
+        $this->put(route('admin.medical.update', $record), $this->payload($athlete, [
+            'medical_status' => 'Restricted Participation',
+            'expiration_date' => today()->addMonths(2)->format('Y-m-d'),
+            'clearance_date' => today()->format('Y-m-d'),
+            'height_cm' => '172.5',
+            'weight_kg' => '68.2',
+            'blood_type' => 'O+',
+        ]))->assertRedirect(route('admin.medical'));
+
+        $this->assertSame('Restricted Participation', $record->fresh()->effectiveStatus());
+        $this->assertSame($admin->id, $record->fresh()->updated_by);
+        $this->assertDatabaseHas('medical_record_histories', [
+            'medical_record_id' => $record->id,
+            'changed_by' => $admin->id,
+            'action' => 'updated',
+            'previous_status' => 'Cleared',
+            'new_status' => 'Restricted Participation',
+        ]);
+        $this->assertSame(2, MedicalRecordHistory::where('medical_record_id', $record->id)->count());
+    }
+
+    public function test_medical_documents_are_private_and_can_be_uploaded_viewed_downloaded_and_removed(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id]));
+
+        $this->actingAs($admin)
+            ->post(route('admin.medical.documents.store', $record), [
+                'category' => 'Physical Examination Results',
+                'document' => UploadedFile::fake()->createWithContent('results.pdf', 'private examination content'),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $document = MedicalDocument::firstOrFail();
+        Storage::disk('private')->assertExists($document->path);
+        $this->assertDatabaseHas('medical_record_histories', [
+            'medical_record_id' => $record->id,
+            'action' => 'document uploaded',
+        ]);
+
+        $this->get(route('admin.medical.documents.view', [$record, $document]))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->get(route('admin.medical.documents.download', [$record, $document]))->assertOk();
+
+        $this->delete(route('admin.medical.documents.destroy', [$record, $document]))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Storage::disk('private')->assertMissing($document->path);
+        $this->assertDatabaseMissing('medical_documents', ['id' => $document->id]);
+        $this->assertDatabaseHas('medical_record_histories', [
+            'medical_record_id' => $record->id,
+            'action' => 'document removed',
+        ]);
+    }
+
+    public function test_medical_document_upload_rejects_unsupported_and_oversized_files(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id]));
+
+        $this->actingAs($admin)
+            ->post(route('admin.medical.documents.store', $record), [
+                'category' => 'Other',
+                'document' => UploadedFile::fake()->create('script.exe', 10, 'application/octet-stream'),
+            ])
+            ->assertSessionHasErrors('document');
+
+        $this->post(route('admin.medical.documents.store', $record), [
+            'category' => 'Other',
+            'document' => UploadedFile::fake()->create('large.pdf', config('medical.certificate_max_kb') + 1, 'application/pdf'),
+        ])
+            ->assertSessionHasErrors('document');
+
+        $this->assertDatabaseCount('medical_documents', 0);
+    }
+
+    public function test_expired_clearance_is_flagged_even_if_the_saved_status_was_cleared(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, [
+            'sport_id' => $sport->id,
+            'medical_status' => 'Cleared',
+            'expiration_date' => today()->subDay()->format('Y-m-d'),
+            'next_checkup_date' => null,
+        ]));
+
+        $this->assertSame('Expired', $record->effectiveStatus());
+        $this->actingAs($admin)
+            ->get(route('admin.medical', ['status' => 'Expired']))
+            ->assertOk()
+            ->assertSee('Expired Clearances')
+            ->assertSee('Expired');
+    }
+
+    public function test_the_medical_records_table_is_paginated_and_multiple_examinations_are_preserved(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        foreach (range(1, 17) as $index) {
+            MedicalRecord::create($this->payload($athlete, [
+                'sport_id' => $sport->id,
+                'examination_date' => today()->subDays($index)->format('Y-m-d'),
+            ]));
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.medical'))
+            ->assertOk()
+            ->assertSee('medical/2');
+
+        $this->get(route('admin.medical', ['page' => 2]))
+            ->assertOk();
+        $this->assertDatabaseCount('medical_records', 17);
+    }
+
     public function test_an_administrator_can_view_the_athlete_medical_profile(): void
     {
         [$admin, $sport, $athlete] = $this->context();
@@ -407,6 +574,11 @@ class MedicalRecordsTest extends TestCase
 
         $this->assertDatabaseMissing('medical_records', ['id' => $record->id]);
         Storage::disk('private')->assertMissing('medical-certificates/cert.pdf');
+        $this->assertDatabaseHas('medical_record_histories', [
+            'medical_record_id' => null,
+            'athlete_id' => $athlete->id,
+            'action' => 'deleted',
+        ]);
     }
 
     public function test_the_list_can_be_searched_and_filtered(): void

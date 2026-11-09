@@ -6,6 +6,7 @@ use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -57,6 +58,15 @@ class User extends Authenticatable
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class, 'athlete_id');
+    }
+
+    public function currentMedicalRecord(): HasOne
+    {
+        return $this->hasOne(MedicalRecord::class, 'athlete_id')
+            ->ofMany(
+                ['examination_date' => 'max', 'id' => 'max'],
+                fn (Builder $query) => $query->whereNull('archived_at'),
+            );
     }
 
     /**
@@ -171,11 +181,18 @@ class User extends Authenticatable
     {
         $matchesNotEligible = fn (Builder $nested) => $nested
             ->whereHas('applications', fn (Builder $applications) => $applications->where('status', 'Rejected'))
-            ->orWhereHas('medicalRecords', fn (Builder $medical) => $medical->whereIn('medical_status', ['Not Cleared', 'Restricted']));
+            ->orWhereHas('currentMedicalRecord', fn (Builder $medical) => $medical
+                ->whereIn('medical_status', ['Restricted Participation', 'Restricted', 'Not Cleared', 'Expired'])
+                ->orWhereRaw('COALESCE(expiration_date, next_checkup_date) < ?', [today()->toDateString()]));
 
         $matchesEligible = fn (Builder $nested) => $nested
             ->whereHas('applications', fn (Builder $applications) => $applications->where('status', 'Approved'))
-            ->orWhereHas('medicalRecords', fn (Builder $medical) => $medical->where('medical_status', 'Cleared'));
+            ->whereHas('currentMedicalRecord', fn (Builder $medical) => $medical
+                ->where('medical_status', 'Cleared')
+                ->where(fn (Builder $valid) => $valid
+                    ->whereNull('expiration_date')
+                    ->whereNull('next_checkup_date')
+                    ->orWhereRaw('COALESCE(expiration_date, next_checkup_date) >= ?', [today()->toDateString()])));
 
         return match ($eligibility) {
             'Not Eligible' => $query->where($matchesNotEligible),
@@ -185,22 +202,24 @@ class User extends Authenticatable
     }
 
     /**
-     * Eligibility shown across the portal. An approved application or a
-     * Cleared medical record makes an athlete eligible; a rejected application
-     * or an uncleared medical record rules them out. Anything else is pending.
+     * Eligibility requires an approved application and a current valid
+     * medical clearance. Historical examinations do not override the latest
+     * active examination.
      */
     public function eligibilityStatus(): string
     {
         $applications = $this->relationLoaded('applications') ? $this->applications : $this->applications()->get();
-        $medicalRecords = $this->relationLoaded('medicalRecords') ? $this->medicalRecords : $this->medicalRecords()->get();
+        $medicalRecord = $this->relationLoaded('medicalRecords')
+            ? $this->medicalRecords->whereNull('archived_at')->sortByDesc(fn (MedicalRecord $record) => [$record->examination_date?->format('Y-m-d') ?? '', $record->id])->first()
+            : $this->currentMedicalRecord()->first();
 
         if ($applications->contains(fn (Application $application) => $application->status === 'Rejected')
-            || $medicalRecords->contains(fn (MedicalRecord $medical) => in_array($medical->medical_status, ['Not Cleared', 'Restricted'], true))) {
+            || ($medicalRecord && in_array($medicalRecord->effectiveStatus(), ['Expired', 'Restricted Participation'], true))) {
             return 'Not Eligible';
         }
 
         if ($applications->contains(fn (Application $application) => $application->status === 'Approved')
-            || $medicalRecords->contains(fn (MedicalRecord $medical) => $medical->medical_status === 'Cleared')) {
+            && $medicalRecord?->effectiveStatus() === 'Cleared') {
             return 'Eligible';
         }
 

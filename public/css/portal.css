@@ -1964,6 +1964,10 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .medical-detail-actions form { display: inline; margin: 0; }
 .medical-table { min-width: 1080px; }
 .medical-incidents-table { min-width: 1150px; }
+.medical-pagination { margin-top: 16px; }
+.medical-pagination nav { display: flex; justify-content: center; }
+.medical-pagination nav > div:first-child { display: none; }
+.medical-pagination nav > div:last-child > span, .medical-pagination nav > div:last-child > a { display: inline-flex; align-items: center; gap: 4px; margin: 0 2px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 5px; color: var(--color-primary); font-size: 11px; text-decoration: none; }
 
 /* KPI summary -------------------------------------------------------------- */
 .medical-kpi { display: flex; align-items: center; gap: 13px; min-height: 88px; padding: 16px; }
@@ -2035,6 +2039,25 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .medical-copy-card { padding: 14px; border: 1px solid var(--color-border); border-radius: 8px; background: rgba(255, 255, 255, .45); }
 .medical-copy-card strong { font-size: 11px; }
 .medical-copy-card p { margin: 7px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.5; white-space: pre-line; }
+.medical-profile-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.medical-profile-section { min-width: 0; padding: 15px; border: 1px solid var(--color-border); border-radius: 8px; background: rgba(255, 255, 255, .45); }
+.medical-profile-section h3 { margin: 0 0 12px; color: var(--color-text); font-size: 12px; }
+.medical-profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.medical-profile-grid > div { min-width: 0; }
+.medical-profile-grid dt { color: var(--color-muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.medical-profile-grid dd { margin: 4px 0 0; color: var(--color-text); font-size: 11px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.medical-clearance-highlight { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+.medical-clearance-highlight small { color: var(--color-muted); font-size: 10px; line-height: 1.4; }
+.medical-document-upload { display: grid; grid-template-columns: minmax(150px, .7fr) minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
+.medical-managed-documents { display: grid; }
+.medical-managed-document { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); }
+.medical-managed-document > span:first-child { display: grid; gap: 4px; min-width: 0; }
+.medical-managed-document strong { font-size: 11px; }
+.medical-managed-document small { color: var(--color-muted); font-size: 10px; overflow-wrap: anywhere; }
+.medical-document-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.medical-audit-entry { display: grid; gap: 5px; padding: 12px 0; border-top: 1px solid var(--color-border); font-size: 11px; }
+.medical-audit-entry > span, .medical-audit-entry small { color: var(--color-muted); }
+.medical-audit-entry ul { display: grid; gap: 3px; margin: 2px 0 0; padding-left: 18px; color: var(--color-muted); }
 .medical-documents { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .medical-documents strong { font-size: 11px; }
 .medical-documents p { margin: 7px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.5; }
@@ -2049,13 +2072,18 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .medical-form-body .form-group + .form-group,
 .medical-form-body .grid + .medical-form-actions,
 .medical-form-body .form-group + .medical-form-actions { margin-top: 14px; }
+.medical-form-section { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; }
+.medical-form-section + .medical-form-section { margin-top: 16px; }
+.medical-form-section legend { padding: 0 8px; color: var(--color-primary); font-size: 12px; font-weight: 800; }
 .medical-form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .medical-form-actions form { margin: 0; }
 
 .medical-status-cleared { color: var(--color-success); background: var(--color-success-soft); }
 .medical-status-pending { color: var(--color-warning); background: var(--color-warning-soft); }
+.medical-status-for-evaluation { color: var(--color-warning); background: var(--color-warning-soft); }
 .medical-status-not-cleared { color: var(--color-danger); background: var(--color-danger-soft); }
-.medical-status-restricted { color: var(--color-violet); background: var(--color-violet-soft); }
+.medical-status-restricted, .medical-status-restricted-participation { color: var(--color-violet); background: var(--color-violet-soft); }
+.medical-status-expired { color: var(--color-danger); background: var(--color-danger-soft); }
 .medical-certificate-valid { color: var(--color-success); background: var(--color-success-soft); }
 .medical-certificate-expiring { color: var(--color-warning); background: var(--color-warning-soft); }
 .medical-certificate-expired { color: var(--color-danger); background: var(--color-danger-soft); }
@@ -2070,6 +2098,8 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     .medical-tracker-grid { grid-template-columns: 1fr; }
     .medical-copy-grid { grid-template-columns: 1fr; }
     .medical-fact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .medical-dashboard-insights { grid-template-columns: 1fr; }
+    .medical-recent-card { grid-column: auto; }
 }
 @media (max-width: 760px) {
     .report-summary-grid, .report-chart-grid, .report-filters { grid-template-columns: 1fr; }
@@ -2077,6 +2107,9 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     .report-alert-row { align-items: flex-start; flex-direction: column; }
     .medical-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .medical-fact-grid { grid-template-columns: 1fr; }
+    .medical-profile-sections, .medical-profile-grid { grid-template-columns: 1fr; }
+    .medical-document-upload { grid-template-columns: 1fr; }
+    .medical-managed-document { align-items: flex-start; flex-direction: column; }
     .medical-tracker-row { align-items: flex-start; flex-wrap: wrap; }
     .medical-tracker-right { justify-items: start; margin-left: 44px; }
     .medical-hero { flex-direction: column; align-items: flex-start; }
@@ -3695,7 +3728,29 @@ html[data-theme="dark"] .otp-box[disabled] { background: #171a20; }
 
 /* Overview / KPI row ------------------------------------------------------ */
 .medical-overview { gap: 16px; }
-.medical-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.medical-kpis { grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 14px; }
+.medical-dashboard-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.medical-chart-card { min-width: 0; padding: 18px; }
+.medical-chart-card .medical-card-head { margin-bottom: 16px; }
+.medical-chart-card .medical-card-head h2 { margin-top: 4px; }
+.medical-chart-bars { display: grid; gap: 14px; }
+.medical-chart-row { display: grid; gap: 6px; min-width: 0; }
+.medical-chart-label { display: flex; justify-content: space-between; gap: 12px; color: var(--color-muted); font-size: 11px; }
+.medical-chart-label strong { color: var(--color-text); }
+.medical-chart-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--color-border); }
+.medical-chart-bar { display: block; min-width: 2px; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.medical-chart-for-evaluation { background: var(--color-warning); }
+.medical-chart-restricted-participation, .medical-chart-expired { background: var(--color-danger); }
+.medical-chart-sport { background: var(--color-info); }
+.medical-recent-card { grid-column: 1 / -1; }
+.medical-recent-list { display: grid; }
+.medical-recent-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); color: inherit; text-decoration: none; }
+.medical-recent-row:first-child { border-top: 0; }
+.medical-recent-row:hover strong { color: var(--color-primary); }
+.medical-recent-row svg { width: 16px; height: 16px; flex: 0 0 16px; stroke: currentColor; fill: none; }
+.medical-recent-copy { display: grid; gap: 4px; min-width: 0; }
+.medical-recent-copy strong { font-size: 12px; }
+.medical-recent-copy small { color: var(--color-muted); font-size: 10px; }
 .medical-kpi {
     position: relative;
     display: flex;
@@ -3752,6 +3807,9 @@ html[data-theme="dark"] .otp-box[disabled] { background: #171a20; }
 html[data-theme="dark"] .medical-kpi:hover { border-color: rgba(255, 105, 0, .4); box-shadow: 0 14px 30px rgba(0, 0, 0, .35); }
 html[data-theme="dark"] .medical-kpi::before { background: linear-gradient(90deg, var(--color-primary), rgba(255, 105, 0, .25)); }
 html[data-theme="dark"] .medical-disclosure-toggle { border-color: var(--color-border); background: rgba(31, 35, 43, .6); color: var(--color-muted); }
+html[data-theme="dark"] .medical-profile-section,
+html[data-theme="dark"] .medical-fact,
+html[data-theme="dark"] .medical-chart-card { background: rgba(31, 35, 43, .55); }
 
 /* ==========================================================================
    Applications management — compact KPI row

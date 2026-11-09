@@ -3,7 +3,7 @@
 @section('content')
     @php
         $latestApplication = $athlete->applications->sortByDesc('created_at')->first();
-        $latestMedical = $athlete->medicalRecords->sortByDesc('examination_date')->first();
+        $latestMedical = $athlete->medicalRecords->whereNull('archived_at')->sortByDesc(fn ($record) => [$record->examination_date?->format('Y-m-d') ?? '', $record->id])->first();
         $eligibility = $athlete->eligibilityStatus();
         $attendanceRecords = $athlete->attendanceRecords;
         $presentCount = $attendanceRecords->where('status', 'Present')->count();
@@ -176,7 +176,7 @@
                 <a class="text-link" href="{{ route('admin.medical', ['search' => $athlete->name]) }}">View medical</a>
             </div>
             <div class="athlete-detail-list">
-                <span><strong>Medical clearance</strong>{{ $latestMedical?->medical_status ?? 'Pending' }}</span>
+                <span><strong>Medical clearance</strong>{{ $latestMedical?->effectiveStatus() ?? 'For Evaluation' }}</span>
                 <span><strong>Birth certificate</strong>{{ $latestApplication?->birth_document_status ?? ($latestApplication?->birth_certificate_path ? 'Submitted' : 'Missing') }}</span>
                 <span><strong>Parent consent</strong>{{ $latestApplication?->consent_document_status ?? ($latestApplication?->parent_consent_path ? 'Submitted' : 'Missing') }}</span>
                 <span><strong>Eligibility status</strong>{{ $eligibility }}</span>
