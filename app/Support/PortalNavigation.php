@@ -50,6 +50,7 @@ class PortalNavigation
             ['key' => 'calendar', 'label' => 'Calendar', 'icon' => 'calendar', 'route' => 'student.calendar', 'group' => 'My Sports'],
             ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'clipboard', 'route' => 'student.attendance', 'group' => 'Records'],
             ['key' => 'messages', 'label' => 'Messages', 'icon' => 'bell', 'route' => 'student.messages', 'group' => 'Records'],
+            ['key' => 'medical-follow-ups', 'label' => 'Medical Follow-ups', 'icon' => 'medical', 'route' => 'student.medical-follow-ups', 'group' => 'Records'],
             ['key' => 'achievements', 'label' => 'Achievements', 'icon' => 'trophy', 'route' => 'student.achievements', 'group' => 'Records'],
             ['key' => 'application', 'label' => 'My Application', 'icon' => 'clipboard', 'route' => 'student.application', 'group' => 'Account'],
             ['key' => 'coach', 'label' => 'Coach Info', 'icon' => 'users', 'route' => 'student.coach', 'group' => 'Account'],

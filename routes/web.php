@@ -10,6 +10,7 @@ use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MedicalController;
+use App\Http\Controllers\MedicalFollowUpController;
 use App\Http\Controllers\MedicalIncidentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
@@ -432,6 +433,11 @@ $studentAchievementData = function (?int $selectedId = null) use ($studentPage) 
 Route::middleware(['force.password.change'])->group(function () use ($studentPage, $studentNav, $calendarData, $studentAchievementData) {
     Route::get('/student/messages', [MessageController::class, 'inbox'])->middleware('auth')->name('student.messages');
     Route::get('/student/messages/{message}', [MessageController::class, 'studentShow'])->middleware('auth')->name('student.messages.show');
+    Route::get('/student/medical-follow-ups', [MedicalFollowUpController::class, 'studentIndex'])->middleware('auth')->name('student.medical-follow-ups');
+    Route::get('/student/medical-follow-ups/{conversation}', [MedicalFollowUpController::class, 'studentShow'])->middleware('auth')->name('student.medical-follow-ups.show');
+    Route::post('/student/medical-follow-ups/{conversation}/reply', [MedicalFollowUpController::class, 'studentReply'])->middleware('auth')->name('student.medical-follow-ups.reply');
+    Route::get('/student/medical-follow-ups/{conversation}/attachments/{message}/view', [MedicalFollowUpController::class, 'viewAttachment'])->middleware('auth')->name('student.medical-follow-ups.attachments.view');
+    Route::get('/student/medical-follow-ups/{conversation}/attachments/{message}', [MedicalFollowUpController::class, 'downloadAttachment'])->middleware('auth')->name('student.medical-follow-ups.attachments.download');
     Route::get('/student/events/{event}', [EventController::class, 'studentShow'])->middleware('auth')->name('student.events.show');
     Route::get('/student/achievements', fn () => $studentAchievementData())->middleware('auth')->name('student.achievements');
 Route::get('/student/achievements/{achievement}', fn (int $achievement) => $studentAchievementData($achievement))->middleware('auth')->name('student.achievements.show');
@@ -704,6 +710,7 @@ $adminPage = function (string $page, array $data = []) use ($adminNav) {
     return view('admin.page', array_merge(['page' => $page, 'heading' => $content[0], 'subtitle' => $content[1], 'action' => $content[2], 'active' => $page, 'navItems' => $adminNav, 'roleLabel' => 'Admin Portal', 'userName' => auth()->user()->name, 'userRole' => 'Administrator'], $data));
 };
 
+Route::middleware(['auth', 'administrator'])->group(function () use ($adminPage, $calendarData) {
 Route::get('/dashboard', function () use ($adminPage) {
     $today = today();
 
@@ -961,6 +968,15 @@ Route::post('/admin/medical/{medical}/checkup-reminder', [MedicalController::cla
 Route::delete('/admin/medical/{medical}', [MedicalController::class, 'destroy'])->middleware(['auth', 'administrator', 'password.confirm'])->name('admin.medical.destroy');
 Route::get('/admin/medical/{medical}/certificate', [MedicalController::class, 'downloadCertificate'])->middleware('auth')->name('admin.medical.certificate');
 
+Route::get('/admin/medical-follow-ups', [MedicalFollowUpController::class, 'adminIndex'])->middleware('auth')->name('admin.medical.follow-ups');
+Route::get('/admin/medical-follow-ups/create', [MedicalFollowUpController::class, 'adminCreate'])->middleware('auth')->name('admin.medical.follow-ups.create');
+Route::post('/admin/medical-follow-ups', [MedicalFollowUpController::class, 'adminStore'])->middleware('auth')->name('admin.medical.follow-ups.store');
+Route::get('/admin/medical-follow-ups/{conversation}', [MedicalFollowUpController::class, 'adminShow'])->middleware('auth')->name('admin.medical.follow-ups.show');
+Route::post('/admin/medical-follow-ups/{conversation}/reply', [MedicalFollowUpController::class, 'adminReply'])->middleware('auth')->name('admin.medical.follow-ups.reply');
+Route::patch('/admin/medical-follow-ups/{conversation}/status', [MedicalFollowUpController::class, 'adminUpdateStatus'])->middleware('auth')->name('admin.medical.follow-ups.status');
+Route::get('/admin/medical-follow-ups/{conversation}/attachments/{message}/view', [MedicalFollowUpController::class, 'viewAttachment'])->middleware('auth')->name('admin.medical.follow-ups.attachments.view');
+Route::get('/admin/medical-follow-ups/{conversation}/attachments/{message}', [MedicalFollowUpController::class, 'downloadAttachment'])->middleware('auth')->name('admin.medical.follow-ups.attachments.download');
+
 Route::get('/admin/messages', [MessageController::class, 'index'])->middleware('auth')->name('admin.messages');
 Route::get('/admin/messages/compose', [MessageController::class, 'create'])->middleware('auth')->name('admin.messages.create');
 Route::post('/admin/messages', [MessageController::class, 'store'])->middleware('auth')->name('admin.messages.store');
@@ -1006,3 +1022,4 @@ Route::put('/admin/attendance/records/{attendance}', [AttendanceController::clas
 Route::get('/reports', [ReportController::class, 'index'])->middleware('auth')->name('reports.index');
 
 Route::get('/reports/export', [ReportController::class, 'export'])->middleware('auth')->name('reports.export');
+});

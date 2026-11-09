@@ -35,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
          */
         Gate::define('view-medical-details', fn (User $user) => $user->role === 'Administrator');
 
+        Gate::define('manage-medical-follow-ups', fn (User $user) => $user->role === 'Administrator');
+
         /*
          * Slow down password guessing on the sign-in screen. The identifier
          * and the network source are limited separately, so one account cannot

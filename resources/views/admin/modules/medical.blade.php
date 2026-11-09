@@ -50,6 +50,17 @@
 @endphp
 
 <div class="admin-dashboard medical-page">
+    <section class="card" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+            <span class="admin-dashboard-kicker">COMMUNICATION</span>
+            <h2 style="margin:4px 0 0;">Medical Follow-ups</h2>
+            <p class="meta" style="margin:4px 0 0;">Private, database-driven follow-up messages with student-athletes about check-ups, requirements, and document requests.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="button" href="{{ route('admin.medical.follow-ups.create') }}">New Follow-up</a>
+            <a class="button button-secondary" href="{{ route('admin.medical.follow-ups') }}">View Follow-ups</a>
+        </div>
+    </section>
     <section class="dashboard-overview medical-overview">
         <div class="section-heading">
             <div>
