@@ -75,6 +75,8 @@ class Announcement extends Model
      */
     public static function forEvent(Event $event): self
     {
+        $event->loadMissing('sport');
+
         $details = $event->starts_at
             ? $event->starts_at->format('F j, Y \a\t g:i A')
             : 'a date to be confirmed';
@@ -89,12 +91,14 @@ class Announcement extends Model
             $body = $event->team_name.' — '.$body;
         }
 
-        return self::create([
-            'title' => 'New Event: '.$event->title,
-            'body' => $body,
-            'published_at' => today(),
-            'status' => self::STATUS_PUBLISHED,
-            'event_id' => $event->id,
-        ]);
+        return self::updateOrCreate(
+            ['event_id' => $event->id],
+            [
+                'title' => 'New Event: '.$event->title,
+                'body' => $body,
+                'published_at' => today(),
+                'status' => self::STATUS_PUBLISHED,
+            ],
+        );
     }
 }

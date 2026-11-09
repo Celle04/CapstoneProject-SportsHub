@@ -47,8 +47,10 @@ Route::get('/', function () {
             ->with(['event.sport'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->limit(6)
-            ->get(),
+            ->get()
+            ->unique(fn (Announcement $announcement) => $announcement->event_id ? 'event:'.$announcement->event_id : 'announcement:'.$announcement->id)
+            ->take(6)
+            ->values(),
     ]);
 })->name('landing');
 
