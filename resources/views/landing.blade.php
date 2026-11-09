@@ -81,6 +81,13 @@
 
             <a
                 class="login-button"
+                href="{{ route('application.status') }}"
+            >
+                Check Status
+            </a>
+
+            <a
+                class="login-button"
                 href="{{ route('login') }}"
             >
                 Sign In
@@ -135,6 +142,13 @@
                         href="{{ route('application.create') }}"
                     >
                         Apply for Sports
+                    </a>
+
+                    <a
+                        class="hero-secondary-button"
+                        href="{{ route('application.status') }}"
+                    >
+                        Check Application Status
                     </a>
 
                     <a
