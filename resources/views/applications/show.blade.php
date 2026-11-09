@@ -67,7 +67,9 @@
             <section>
                 <div class="medical-card-head"><div><span class="admin-dashboard-kicker">PROFILE</span><h2>Applicant Information</h2><p>Personal details submitted by the athlete.</p></div></div>
                 <div class="medical-fact-grid application-facts">
-                    <div class="medical-fact"><span>Full name</span><strong>{{ $application->name }}</strong></div>
+                    <div class="medical-fact"><span>First name</span><strong>{{ $application->first_name ?: $application->name }}</strong></div>
+                    <div class="medical-fact"><span>Middle name</span><strong>{{ $application->middle_name ?: 'N/A' }}</strong></div>
+                    <div class="medical-fact"><span>Last name</span><strong>{{ $application->last_name ?: 'Not provided' }}</strong></div>
                     <div class="medical-fact"><span>Student ID</span><strong>{{ $application->student_id ?: 'Not provided' }}</strong></div>
                     <div class="medical-fact"><span>Email address</span><strong>{{ $application->email }}</strong></div>
                     <div class="medical-fact"><span>Contact number</span><strong>{{ $contactNumber }}</strong></div>

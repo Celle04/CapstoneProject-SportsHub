@@ -31,7 +31,9 @@
             </div>
         </div>
         <div class="medical-fact-grid">
-            <div class="medical-fact"><span>Applicant</span><strong>{{ $application->name }}</strong></div>
+            <div class="medical-fact"><span>First name</span><strong>{{ $application->first_name ?: $application->name }}</strong></div>
+            <div class="medical-fact"><span>Middle name</span><strong>{{ $application->middle_name ?: 'N/A' }}</strong></div>
+            <div class="medical-fact"><span>Last name</span><strong>{{ $application->last_name ?: 'Not provided' }}</strong></div>
             <div class="medical-fact"><span>Application email</span><strong>{{ $application->email ?: 'Not provided' }}</strong></div>
             <div class="medical-fact"><span>Student ID</span><strong>{{ $application->student_id ?: 'Not provided' }}</strong></div>
             <div class="medical-fact"><span>Grade</span><strong>{{ $application->grade ?: 'Not provided' }}</strong></div>
@@ -71,8 +73,16 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input class="form-control" id="name" type="text" value="{{ $application->name }}" readonly>
+                        <label for="first_name">First Name</label>
+                        <input class="form-control" id="first_name" type="text" value="{{ $application->first_name ?: $application->name }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="middle_name">Middle Name</label>
+                        <input class="form-control" id="middle_name" type="text" value="{{ $application->middle_name ?: 'N/A' }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input class="form-control" id="last_name" type="text" value="{{ $application->last_name ?: '' }}" readonly>
                     </div>
                     <div class="form-group">
                         <label for="email">Email Address</label>

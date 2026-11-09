@@ -255,13 +255,14 @@
                         >
 
                         <span style="display:block; margin-top:0.35rem;">
-                            <label for="no_middle_name" style="display:inline-flex; align-items:center; gap:0.45rem; font-weight:normal; cursor:pointer;">
+                            <label for="no_middle_name" style="display:inline-flex; align-items:center; gap:0.45rem; font-weight:normal; cursor:pointer; margin:0;">
                                 <input
                                     id="no_middle_name"
                                     type="checkbox"
                                     name="no_middle_name"
                                     value="1"
                                     @checked(old('no_middle_name'))
+                                    style="width:18px;height:18px;min-width:18px;min-height:0;padding:0;margin:0;flex:0 0 auto;accent-color:var(--color-primary);"
                                 >
                                 <span>I have no middle name</span>
                             </label>
