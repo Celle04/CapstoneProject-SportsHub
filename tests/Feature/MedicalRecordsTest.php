@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class MedicalRecordsTest extends TestCase
@@ -551,6 +552,24 @@ class MedicalRecordsTest extends TestCase
             ->assertSessionHasErrors('checkup_reminder');
 
         Notification::assertNothingSent();
+    }
+
+    public function test_a_mail_transport_failure_returns_to_the_medical_profile_with_an_error(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, [
+            'sport_id' => $sport->id,
+            'next_checkup_date' => today()->addDays(7)->format('Y-m-d'),
+        ]));
+
+        Notification::shouldReceive('send')
+            ->once()
+            ->andThrow(new TransportException('SMTP unavailable.'));
+
+        $this->actingAs($admin)
+            ->post(route('admin.medical.checkup-reminder', $record))
+            ->assertRedirect()
+            ->assertSessionHasErrors('checkup_reminder');
     }
 
     public function test_an_administrator_can_archive_restore_and_delete_a_record(): void

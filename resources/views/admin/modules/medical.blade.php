@@ -153,6 +153,12 @@
 
 @if ($medicalViewMode === 'show' && $selectedMedicalRecord)
     <section class="card medical-detail-card">
+        @if (session('success'))
+            <div class="notice" role="status">{{ session('success') }}</div>
+        @endif
+        @if ($errors->has('checkup_reminder'))
+            <div class="notice notice-error" role="alert">{{ $errors->first('checkup_reminder') }}</div>
+        @endif
         <div class="profile-hero medical-hero">
             <span class="avatar avatar--lg avatar-initials medical-hero-avatar" aria-hidden="true">{{ filled($selectedMedicalRecord->athlete?->name ?? '') ? $initials($selectedMedicalRecord->athlete->name) : '?' }}</span>
             <div class="medical-hero-copy">

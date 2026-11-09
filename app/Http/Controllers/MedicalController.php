@@ -16,12 +16,14 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class MedicalController extends Controller
 {
@@ -190,7 +192,19 @@ class MedicalController extends Controller
             return back()->withErrors(['checkup_reminder' => 'The athlete does not have a valid email address on their account.']);
         }
 
-        $athlete->notify(new CheckupReminderNotification($medical->next_checkup_date));
+        try {
+            $athlete->notify(new CheckupReminderNotification($medical->next_checkup_date));
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+            Log::warning('Medical checkup reminder email could not be delivered.', [
+                'medical_record_id' => $medical->id,
+                'athlete_id' => $athlete->id,
+            ]);
+
+            return back()->withErrors([
+                'checkup_reminder' => 'The reminder email could not be delivered. Check the email service settings and try again.',
+            ]);
+        }
 
         return back()->with('success', "Checkup reminder sent to the athlete's registered email address.");
     }
