@@ -1709,7 +1709,17 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
 .not-cleared-dot { background: var(--color-danger); }
 .restricted-dot { background: #7657c7; }
 .dashboard-attention, .dashboard-table-section, .dashboard-activity { margin-top: 18px; }
-.attention-item { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; margin-top: 9px; padding: 12px; border: 1px solid transparent; border-radius: 7px; font-size: 12px; }
+.attention-item {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 9px;
+    padding: 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-size: 12px;
+}
 .attention-item > span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-weight: 700; }
 .attention-warning { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
 .attention-warning > span { background: var(--color-warning-border); }
@@ -3772,9 +3782,25 @@ html[data-theme="dark"] .otp-box[disabled] { background: #171a20; }
 .medical-kpi .medical-kpi-icon { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 10px; align-self: flex-start; }
 
 /* Attention item body (title + message) ----------------------------------- */
-.attention-body { min-width: 0; }
-.attention-body strong { display: block; font-size: 12px; }
-.attention-body p { margin: 4px 0 0; font-size: 11px; line-height: 1.5; }
+.attention-body {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+.attention-body strong {
+    display: block;
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.attention-body p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
 
 /* Trackers ---------------------------------------------------------------- */
 .medical-tracker-grid { gap: 16px; }
