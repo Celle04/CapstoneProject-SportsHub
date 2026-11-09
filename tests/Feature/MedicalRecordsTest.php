@@ -6,15 +6,15 @@ use App\Models\MedicalIncident;
 use App\Models\MedicalDocument;
 use App\Models\MedicalRecord;
 use App\Models\MedicalRecordHistory;
+use App\Models\Message;
 use App\Models\Sport;
 use App\Models\User;
-use App\Notifications\CheckupReminderNotification;
+use App\Notifications\MessageReceivedNotification;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class MedicalRecordsTest extends TestCase
@@ -516,7 +516,7 @@ class MedicalRecordsTest extends TestCase
             ->assertSee('Moderate');
     }
 
-    public function test_an_administrator_can_send_a_checkup_reminder_to_the_athletes_registered_email(): void
+    public function test_an_administrator_can_send_a_checkup_reminder_in_app_to_the_athlete(): void
     {
         Notification::fake();
         [$admin, $sport, $athlete] = $this->context();
@@ -525,16 +525,19 @@ class MedicalRecordsTest extends TestCase
             'next_checkup_date' => today()->addDays(7)->format('Y-m-d'),
         ]));
 
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->post(route('admin.medical.checkup-reminder', $record))
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        Notification::assertSentTo(
-            $athlete,
-            CheckupReminderNotification::class,
-            fn (CheckupReminderNotification $notification): bool => $notification->checkupDate->isSameDay($record->next_checkup_date),
-        );
+        $message = Message::query()->where('message_type', 'medical_reminder')->firstOrFail();
+        $response->assertRedirect(route('admin.messages.show', $message));
+        $this->assertDatabaseHas('message_recipients', [
+            'message_id' => $message->id,
+            'recipient_id' => $athlete->id,
+            'is_read' => false,
+        ]);
+        Notification::assertSentTo($athlete, MessageReceivedNotification::class);
     }
 
     public function test_a_checkup_reminder_is_not_sent_without_a_next_checkup_date(): void
@@ -552,24 +555,7 @@ class MedicalRecordsTest extends TestCase
             ->assertSessionHasErrors('checkup_reminder');
 
         Notification::assertNothingSent();
-    }
-
-    public function test_a_mail_transport_failure_returns_to_the_medical_profile_with_an_error(): void
-    {
-        [$admin, $sport, $athlete] = $this->context();
-        $record = MedicalRecord::create($this->payload($athlete, [
-            'sport_id' => $sport->id,
-            'next_checkup_date' => today()->addDays(7)->format('Y-m-d'),
-        ]));
-
-        Notification::shouldReceive('send')
-            ->once()
-            ->andThrow(new TransportException('SMTP unavailable.'));
-
-        $this->actingAs($admin)
-            ->post(route('admin.medical.checkup-reminder', $record))
-            ->assertRedirect()
-            ->assertSessionHasErrors('checkup_reminder');
+        $this->assertDatabaseCount('messages', 0);
     }
 
     public function test_an_administrator_can_archive_restore_and_delete_a_record(): void

@@ -5037,3 +5037,64 @@ a:focus-visible {
         transition-duration: .01ms !important;
     }
 }
+
+/* Internal messages -------------------------------------------------------- */
+.message-summary-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 18px; }
+.message-summary-grid .stat { min-width: 0; }
+.message-list-card,
+.message-compose-card,
+.message-detail-card,
+.student-message-list,
+.student-message-detail { margin-top: 18px; }
+.message-list-card .section-heading,
+.message-compose-card .section-heading,
+.message-detail-card .section-heading,
+.student-message-list .section-heading,
+.student-message-detail .section-heading { align-items: flex-start; }
+.message-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.message-filter-tabs a { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-muted-strong); font-size: 11px; font-weight: 700; text-decoration: none; }
+.message-filter-tabs a.is-active,
+.message-filter-tabs a:hover { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }
+.message-search-form { align-items: center; }
+.message-search-form .form-control { max-width: 300px; }
+.message-form { display: grid; gap: 16px; }
+.message-form > .form-group,
+.message-recipient-panel { min-width: 0; }
+.message-form .form-group { margin: 0; }
+.message-recipient-panel[hidden],
+.message-medical-fields[hidden] { display: none; }
+.message-recipient-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 260px; overflow-y: auto; margin-top: 8px; border: 1px solid var(--color-border); border-radius: 8px; }
+.message-recipient-option { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px 11px; border-bottom: 1px solid var(--color-border); color: var(--color-text); font-size: 11px; cursor: pointer; }
+.message-recipient-option > span { flex: 1; min-width: 0; }
+.message-recipient-option small { color: var(--color-muted); font-size: 10px; }
+.message-recipient-option input { accent-color: var(--color-primary); }
+.message-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.message-delete-form { display: inline-block; margin-left: 8px; }
+.message-detail-metadata { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.message-detail-metadata > span { display: grid; gap: 5px; min-width: 110px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text); font-size: 11px; }
+.message-detail-metadata strong { color: var(--color-muted); font-size: 9px; text-transform: uppercase; }
+.message-content { margin: 16px 0 22px; padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); color: var(--color-text); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-reminder-schedule { display: grid; gap: 5px; margin: 16px 0; padding: 14px; border-left: 3px solid var(--color-primary); border-radius: 6px; background: var(--color-primary-soft); color: var(--color-text); font-size: 12px; }
+.message-reminder-schedule strong { color: var(--color-primary); }
+.student-message-items { display: grid; }
+.student-message-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--color-border); color: var(--color-text); text-decoration: none; }
+.student-message-item:hover { background: var(--color-surface-muted); }
+.student-message-item.is-unread .student-message-copy > strong { color: var(--color-primary); }
+.student-message-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 10px; background: var(--color-primary-soft); color: var(--color-primary); font-size: 12px; font-weight: 800; }
+.student-message-copy { display: grid; flex: 1; min-width: 0; gap: 4px; }
+.student-message-copy > strong { font-size: 13px; }
+.student-message-copy small,
+.student-message-copy > span { color: var(--color-muted); font-size: 10px; line-height: 1.5; }
+.student-message-status { display: grid; justify-items: end; gap: 5px; color: var(--color-muted); font-size: 10px; }
+.student-message-status em { color: var(--color-warning); font-style: normal; font-weight: 800; }
+.dashboard-medical-reminders { margin-top: 16px; }
+.dashboard-medical-reminder { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); color: var(--color-text); text-decoration: none; }
+.dashboard-medical-reminder strong,
+.dashboard-medical-reminder small { display: block; }
+.dashboard-medical-reminder small { margin-top: 3px; color: var(--color-muted); }
+@media (max-width: 760px) {
+    .message-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .message-recipient-list { grid-template-columns: 1fr; }
+    .message-search-form .form-control { max-width: none; }
+    .student-message-status { display: none; }
+}

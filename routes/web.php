@@ -11,6 +11,7 @@ use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MedicalController;
 use App\Http\Controllers\MedicalIncidentController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicPolicyController;
 use App\Http\Controllers\ReportController;
@@ -23,11 +24,13 @@ use App\Models\AttendanceSession;
 use App\Models\CertificateRequest;
 use App\Models\Event;
 use App\Models\MedicalRecord;
+use App\Models\MessageRecipient;
 use App\Models\Sport;
 use App\Models\User;
 use App\Notifications\CertificateRequestNotification;
 use App\Services\AttendanceSessionService;
 use App\Services\FailedPasswordAttemptService;
+use App\Services\MedicalClearanceNotifier;
 use App\Support\PortalNavigation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -272,6 +275,7 @@ $studentPage = function (string $page, array $data = []) use ($studentNav) {
     $dashboardData = [];
 
     if ($page === 'dashboard') {
+        app(MedicalClearanceNotifier::class)->notifyFor($athlete);
         $attendanceService = app(AttendanceSessionService::class);
         $attendanceCounts = $athlete->attendanceRecords()
             ->counted()
@@ -339,6 +343,17 @@ $studentPage = function (string $page, array $data = []) use ($studentNav) {
             'dashboardAchievementCount' => $dashboardAchievements->count(),
             'dashboardMedalCount' => $dashboardAchievements->filter(fn ($achievement) => $achievement->isMedal())->count(),
             'dashboardRecentAchievements' => $dashboardAchievements->take(3),
+            'dashboardUpcomingMedicalReminders' => MessageRecipient::query()
+                ->where('recipient_id', $athlete->id)
+                ->whereHas('message', fn ($query) => $query
+                    ->where('status', 'sent')
+                    ->where('message_type', 'medical_reminder')
+                    ->whereDate('checkup_date', '>=', today()))
+                ->with('message.sender')
+                ->get()
+                ->sortBy(fn ($delivery) => $delivery->message?->checkup_date?->format('Y-m-d').' '.($delivery->message?->checkup_time ?? '00:00'))
+                ->take(5)
+                ->values(),
         ];
     }
     $content = [
@@ -413,6 +428,8 @@ $studentAchievementData = function (?int $selectedId = null) use ($studentPage) 
 };
 
 Route::middleware(['force.password.change'])->group(function () use ($studentPage, $studentNav, $calendarData, $studentAchievementData) {
+    Route::get('/student/messages', [MessageController::class, 'inbox'])->middleware('auth')->name('student.messages');
+    Route::get('/student/messages/{message}', [MessageController::class, 'studentShow'])->middleware('auth')->name('student.messages.show');
     Route::get('/student/achievements', fn () => $studentAchievementData())->middleware('auth')->name('student.achievements');
 Route::get('/student/achievements/{achievement}', fn (int $achievement) => $studentAchievementData($achievement))->middleware('auth')->name('student.achievements.show');
 Route::get('/student/achievements/{achievement}/certificate', function (int $achievement) {
@@ -602,6 +619,9 @@ Route::post('/notifications/{notification}/read', function (string $notification
     abort_unless(auth()->check(), 403);
     $record = auth()->user()->notifications()->whereKey($notification)->firstOrFail();
     $record->markAsRead();
+    if ($messageId = data_get($record->data, 'message_id')) {
+        MessageRecipient::markReadFor((int) $messageId, (int) auth()->id());
+    }
 
     return back();
 })->middleware('auth')->name('notifications.read');
@@ -616,6 +636,9 @@ Route::get('/notifications/{notification}', function (string $notification) {
     $record = auth()->user()->notifications()->whereKey($notification)->firstOrFail();
     $target = (string) (data_get($record->data, 'url') ?: '');
     $record->markAsRead();
+    if ($messageId = data_get($record->data, 'message_id')) {
+        MessageRecipient::markReadFor((int) $messageId, (int) auth()->id());
+    }
 
     /*
      * A notification only ever points at an in-app page. Anything that is not
@@ -632,7 +655,12 @@ Route::get('/notifications/{notification}', function (string $notification) {
 
 Route::post('/notifications/read-all', function () {
     abort_unless(auth()->check(), 403);
-    auth()->user()->unreadNotifications->each->markAsRead();
+    auth()->user()->unreadNotifications->each(function ($notification): void {
+        $notification->markAsRead();
+        if ($messageId = data_get($notification->data, 'message_id')) {
+            MessageRecipient::markReadFor((int) $messageId, (int) auth()->id());
+        }
+    });
 
     return back();
 })->middleware('auth')->name('notifications.read-all');
@@ -929,6 +957,14 @@ Route::put('/admin/medical/{medical}', [MedicalController::class, 'update'])->mi
 Route::post('/admin/medical/{medical}/checkup-reminder', [MedicalController::class, 'sendCheckupReminder'])->middleware('auth')->name('admin.medical.checkup-reminder');
 Route::delete('/admin/medical/{medical}', [MedicalController::class, 'destroy'])->middleware(['auth', 'administrator', 'password.confirm'])->name('admin.medical.destroy');
 Route::get('/admin/medical/{medical}/certificate', [MedicalController::class, 'downloadCertificate'])->middleware('auth')->name('admin.medical.certificate');
+
+Route::get('/admin/messages', [MessageController::class, 'index'])->middleware('auth')->name('admin.messages');
+Route::get('/admin/messages/compose', [MessageController::class, 'create'])->middleware('auth')->name('admin.messages.create');
+Route::post('/admin/messages', [MessageController::class, 'store'])->middleware('auth')->name('admin.messages.store');
+Route::get('/admin/messages/{message}/edit', [MessageController::class, 'edit'])->middleware('auth')->name('admin.messages.edit');
+Route::get('/admin/messages/{message}', [MessageController::class, 'show'])->middleware('auth')->name('admin.messages.show');
+Route::put('/admin/messages/{message}', [MessageController::class, 'update'])->middleware('auth')->name('admin.messages.update');
+Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy'])->middleware('auth')->name('admin.messages.destroy');
 
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');
 Route::get('/admin/achievements/create', [AchievementController::class, 'create'])->middleware('auth')->name('admin.achievements.create');

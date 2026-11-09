@@ -57,6 +57,22 @@
 			@endif
 			<a class="text-link" href="{{ route('student.attendance') }}">Full attendance history</a>
 		</section>
+
+        <section class="card dashboard-medical-reminders">
+            <div class="student-dashboard-heading">
+                <div><span class="student-dashboard-kicker">HEALTH & SAFETY</span><h2>Upcoming medical checkups</h2></div>
+                <a class="text-link" href="{{ route('student.messages') }}">Messages</a>
+            </div>
+            @forelse ($dashboardUpcomingMedicalReminders ?? [] as $delivery)
+                @php($reminder = $delivery->message)
+                <a class="dashboard-medical-reminder" href="{{ route('student.messages.show', $reminder) }}">
+                    <span><strong>{{ $reminder->subject }}</strong><small>{{ $reminder->checkup_date?->format('M j, Y') }}@if ($reminder->checkup_time) · {{ \Illuminate\Support\Carbon::parse($reminder->checkup_time)->format('g:i A') }}@endif</small></span>
+                    @if (!$delivery->is_read)<span class="badge status-pending">New</span>@endif
+                </a>
+            @empty
+                <p class="empty-state">No upcoming medical checkups.</p>
+            @endforelse
+        </section>
 	</div>
 
 	<div class="student-dashboard-panels">

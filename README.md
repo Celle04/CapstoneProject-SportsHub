@@ -71,6 +71,16 @@ One existing migration backfills legacy medical-record fields; review that
 mapping before running migrations against a populated database. Migrations are
 not run during the Docker build.
 
+### Internal messages and medical reminders
+
+SportsHub messages and medical checkup reminders are delivered through the
+existing MySQL-backed inbox and Laravel database notifications. They do not
+use SMTP, Resend, or SMS. The messages migration creates `messages` and
+`message_recipients`; apply it through the normal Railway migration step (or
+run `php artisan migrate --force` after confirming the production database and
+backup). Students see only messages addressed to their own account, and
+opening a message records its read timestamp.
+
 The demo `admin@example.com` account is only seeded in local and testing
 environments. To create a production administrator, open the Railway web
 service console after this code is deployed and run `php artisan admin:create`.

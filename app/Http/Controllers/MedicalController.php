@@ -8,22 +8,20 @@ use App\Models\MedicalRecord;
 use App\Models\MedicalRecordHistory;
 use App\Models\Sport;
 use App\Models\User;
-use App\Notifications\CheckupReminderNotification;
 use App\Support\PortalNavigation;
+use App\Services\MessageDeliveryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class MedicalController extends Controller
 {
@@ -173,7 +171,7 @@ class MedicalController extends Controller
         return redirect()->route('admin.medical')->with('success', 'Medical record updated successfully.');
     }
 
-    public function sendCheckupReminder(MedicalRecord $medical): RedirectResponse
+    public function sendCheckupReminder(MedicalRecord $medical, MessageDeliveryService $delivery): RedirectResponse
     {
         $this->ensureAdministrator();
         $medical->loadMissing('athlete');
@@ -188,25 +186,24 @@ class MedicalController extends Controller
 
         $athlete = $medical->athlete;
 
-        if (! $athlete || ! filter_var($athlete->email, FILTER_VALIDATE_EMAIL)) {
-            return back()->withErrors(['checkup_reminder' => 'The athlete does not have a valid email address on their account.']);
+        if (! $athlete || $athlete->role !== 'Student' || $athlete->status !== 'Active') {
+            return back()->withErrors(['checkup_reminder' => 'Only active student-athlete accounts can receive checkup reminders.']);
         }
 
-        try {
-            $athlete->notify(new CheckupReminderNotification($medical->next_checkup_date));
-        } catch (TransportExceptionInterface $exception) {
-            report($exception);
-            Log::warning('Medical checkup reminder email could not be delivered.', [
-                'medical_record_id' => $medical->id,
-                'athlete_id' => $athlete->id,
-            ]);
+        $message = $delivery->send(auth()->user(), [
+            'subject' => 'Medical Checkup Reminder',
+            'content' => 'Your medical record indicates a checkup is scheduled for '.$medical->next_checkup_date->format('F j, Y').'. Please contact the school sports office to confirm the time and location.',
+            'message_type' => 'medical_reminder',
+            'priority' => 'Important',
+            'recipient_type' => 'individual',
+            'athlete_id' => $athlete->id,
+            'checkup_date' => $medical->next_checkup_date->toDateString(),
+            'checkup_time' => null,
+            'location' => null,
+            'medical_record_id' => $medical->id,
+        ]);
 
-            return back()->withErrors([
-                'checkup_reminder' => 'The reminder email could not be delivered. Check the email service settings and try again.',
-            ]);
-        }
-
-        return back()->with('success', "Checkup reminder sent to the athlete's registered email address.");
+        return redirect()->route('admin.messages.show', $message)->with('success', 'In-app checkup reminder sent to the athlete.');
     }
 
     /**
