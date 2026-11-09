@@ -81,13 +81,6 @@
 
             <a
                 class="login-button"
-                href="{{ route('application.status') }}"
-            >
-                Check Status
-            </a>
-
-            <a
-                class="login-button"
                 href="{{ route('login') }}"
             >
                 Sign In
