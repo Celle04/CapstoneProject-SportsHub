@@ -28,11 +28,13 @@ class AthleteAccountCreationTest extends TestCase
             'medical_certificate_path' => 'medical.pdf', 'birth_certificate_path' => 'birth.pdf', 'parent_consent_path' => 'consent.pdf',
         ]);
 
-        $this->actingAs(User::factory()->create(['role' => 'Administrator']))
-            ->post(route('athletes.store'), ['application_id' => $application->id, 'username' => 'ana.santos', 'password' => 'TemporaryPass1', 'password_confirmation' => 'TemporaryPass1'])
-            ->assertRedirect(route('athletes.index'));
+        $response = $this->actingAs(User::factory()->create(['role' => 'Administrator']))
+            ->post(route('athletes.store'), ['application_id' => $application->id, 'username' => 'ana.santos'])
+            ->assertRedirect(route('athletes.index'))
+            ->assertSessionHas('generated_password')
+            ->assertSessionHas('generated_username', 'ana.santos');
 
-        $this->assertDatabaseHas('users', ['email' => 'ana@example.com', 'username' => 'ana.santos', 'student_id' => '2026-102', 'sport_id' => $sport->id, 'role' => 'Student']);
+        $this->assertDatabaseHas('users', ['email' => 'ana@example.com', 'username' => 'ana.santos', 'student_id' => '2026-102', 'sport_id' => $sport->id, 'role' => 'Student', 'must_change_password' => true]);
     }
 
     public function test_student_cannot_create_athlete_accounts(): void
@@ -74,12 +76,11 @@ class AthleteAccountCreationTest extends TestCase
                 'application_id' => $application->id,
                 'email' => 'ana.corrected@example.com',
                 'username' => 'ana.santos',
-                'password' => 'TemporaryPass1',
-                'password_confirmation' => 'TemporaryPass1',
             ])
-            ->assertRedirect(route('athletes.index'));
+            ->assertRedirect(route('athletes.index'))
+            ->assertSessionHas('generated_password');
 
-        $this->assertDatabaseHas('users', ['email' => 'ana.corrected@example.com', 'student_id' => '2026-102']);
+        $this->assertDatabaseHas('users', ['email' => 'ana.corrected@example.com', 'student_id' => '2026-102', 'must_change_password' => true]);
     }
 
     public function test_account_is_not_created_when_the_email_already_exists(): void
@@ -92,8 +93,6 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'TemporaryPass1',
-                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -112,8 +111,6 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'TemporaryPass1',
-                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -132,8 +129,6 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.second',
-                'password' => 'TemporaryPass1',
-                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertRedirect(route('athletes.create', $application))
             ->assertSessionHasErrors('email');
@@ -149,8 +144,6 @@ class AthleteAccountCreationTest extends TestCase
             ->post(route('athletes.store'), [
                 'application_id' => $application->id,
                 'username' => 'ana.santos',
-                'password' => 'TemporaryPass1',
-                'password_confirmation' => 'TemporaryPass1',
             ])
             ->assertStatus(422);
 

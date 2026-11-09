@@ -63,7 +63,6 @@ class AthleteController extends Controller
             'application_id' => ['required', 'exists:applications,id'],
             'email' => ['nullable', 'email', 'max:255'],
             'username' => ['required', 'string', 'max:100', 'unique:users,username'],
-            'password' => PasswordRules::default(),
         ]);
 
         $application = Application::findOrFail($validated['application_id']);
@@ -97,6 +96,8 @@ class AthleteController extends Controller
             return back()->withErrors(['email' => 'An account with this email already exists.'])->withInput();
         }
 
+        $temporaryPassword = self::generateTemporaryPassword();
+
         $athlete = User::create([
             'name' => $application->name,
             'email' => $email,
@@ -104,12 +105,18 @@ class AthleteController extends Controller
             'student_id' => $application->student_id,
             'sport_id' => $application->sport_id,
             'role' => 'Student',
-            'password' => $validated['password'],
+            'password' => $temporaryPassword,
+            'must_change_password' => true,
         ]);
 
         $application->update(['athlete_id' => $athlete->id]);
 
-        return redirect()->route('athletes.index')->with('success', 'Official athlete account created.');
+        return redirect()->route('athletes.index')->with([
+            'success' => 'Official athlete account created for '.$athlete->name.'. Share the temporary password through a secure, non-electronic channel.',
+            'generated_password' => $temporaryPassword,
+            'generated_username' => $athlete->username,
+            'generated_athlete_name' => $athlete->name,
+        ]);
     }
 
     public function show(User $athlete): View

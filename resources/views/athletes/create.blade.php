@@ -67,7 +67,7 @@
                     <div>
                         <span class="admin-dashboard-kicker">CREDENTIALS</span>
                         <h2>Account Details</h2>
-                        <p class="meta">The athlete signs in with the email below using the username and temporary password you set.</p>
+                        <p class="meta">Set the username and confirm the athlete's email. SportsHub will generate a secure temporary password for this account.</p>
                     </div>
                 </div>
 
@@ -123,26 +123,14 @@
                         <input class="form-control" id="role" type="text" value="Student" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="password">Temporary Password</label>
-                        <input
-                            class="form-control @error('password') is-invalid @enderror"
-                            id="password"
-                            name="password"
-                            type="password"
-                            minlength="8"
-                            required
-                            autocomplete="new-password"
-                        >
-                        @error('password')<small class="form-error">{{ $message }}</small>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label for="password_confirmation">Confirm Password</label>
-                        <input class="form-control" id="password_confirmation" name="password_confirmation" type="password" minlength="8" required autocomplete="new-password">
+                        <label>Temporary Password</label>
+                        <input class="form-control" type="text" value="Will be generated securely after you submit" readonly>
+                        <small class="form-hint">The athlete will be required to change this temporary password on first login.</small>
                     </div>
                 </div>
 
                 <div class="event-actions">
-                    <button class="button" type="submit">Create Athlete Account</button>
+                    <button class="button" type="submit">Generate &amp; Create Athlete Account</button>
                     <a class="button button-muted" href="{{ route('applications.show', $application) }}">Cancel</a>
                 </div>
             </section>

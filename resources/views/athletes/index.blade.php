@@ -19,6 +19,23 @@
         <div class="notice">{{ session('success') }}</div>
     @endif
 
+    @if (session('generated_password'))
+        <section class="card" style="margin-bottom: 1rem; border: 1px solid rgba(245, 158, 11, .35);">
+            <div class="medical-card-head">
+                <div>
+                    <span class="admin-dashboard-kicker">TEMPORARY CREDENTIALS</span>
+                    <h2>Share this password securely</h2>
+                    <p class="meta">This temporary password is shown only now. Share it with {{ session('generated_athlete_name', 'the athlete') }} through a secure, non-electronic channel. The athlete must change it on first login.</p>
+                </div>
+            </div>
+            <div class="medical-fact-grid">
+                <div class="medical-fact"><span>Athlete</span><strong>{{ session('generated_athlete_name') }}</strong></div>
+                <div class="medical-fact"><span>Username</span><strong><code>{{ session('generated_username') }}</code></strong></div>
+                <div class="medical-fact"><span>Temporary Password</span><strong><code style="font-size:1.05rem; letter-spacing:.03em;">{{ session('generated_password') }}</code></strong></div>
+            </div>
+        </section>
+    @endif
+
     @if ($errors->any())
         <div class="notice notice-error">{{ $errors->first() }}</div>
     @endif
