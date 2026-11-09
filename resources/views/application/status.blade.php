@@ -7,20 +7,6 @@
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ filemtime(public_path('css/theme.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/legal.css') }}?v={{ filemtime(public_path('css/legal.css')) }}">
-    <style>
-        .status-result { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: 14px; border: 1px solid rgba(15,23,42,.1); background: #fff; }
-        .status-badge { display:inline-flex; align-items:center; padding:.35rem .75rem; border-radius:999px; font-weight:700; font-size:.92rem; }
-        .status-Pending { background:#fef3c7; color:#92400e; }
-        .status-Under-Review { background:#dbeafe; color:#1d4ed8; }
-        .status-Requires-Revision { background:#ffedd5; color:#c2410c; }
-        .status-Approved { background:#dcfce7; color:#166534; }
-        .status-Rejected { background:#fee2e2; color:#991b1b; }
-        .status-grid { display:grid; gap:.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin:1rem 0; }
-        .status-item span { display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:#64748b; font-weight:700; }
-        .status-item strong { display:block; margin-top:.15rem; color:#0f172a; }
-        .status-message { margin-top: .85rem; padding: .85rem 1rem; border-radius: 12px; background: #f8fafc; border: 1px solid rgba(15,23,42,.06); }
-        .status-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem; }
-    </style>
 </head>
 <body>
     <header class="site-header">
@@ -97,14 +83,14 @@
             @if (! empty($result))
                 @php($statusKey = str_replace(' ', '-', $result->status))
                 <section class="status-result" aria-live="polite">
-                    <div style="display:flex; gap:.75rem; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                    <div class="status-summary">
                         <div>
-                            <span class="student-application-label" style="display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:#64748b; font-weight:700;">Current Status</span>
+                            <span class="status-label">Current Status</span>
                             <span class="status-badge status-{{ $statusKey }}">{{ $result->status }}</span>
                         </div>
-                        <div style="text-align:right;">
-                            <span style="display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:#64748b; font-weight:700;">Reference</span>
-                            <strong>{{ $result->reference_number }}</strong>
+                        <div class="status-reference">
+                            <span class="status-label">Reference</span>
+                            <strong class="status-reference-value">{{ $result->reference_number }}</strong>
                         </div>
                     </div>
 
@@ -116,20 +102,20 @@
 
                     <div class="status-message">
                         <strong>What this means</strong>
-                        <p style="margin:.35rem 0 0;">{{ $statusDefinitions[$result->status] ?? 'Your application status has been updated.' }}</p>
+                        <p>{{ $statusDefinitions[$result->status] ?? 'Your application status has been updated.' }}</p>
                     </div>
 
                     @if (filled($result->review_notes) && in_array($result->status, ['Rejected', 'Requires Revision'], true))
                         <div class="status-message">
                             <strong>{{ $result->status === 'Rejected' ? 'Explanation' : 'Revision Instructions' }}</strong>
-                            <p style="margin:.35rem 0 0; white-space:pre-wrap;">{{ $result->status === 'Rejected' ? ($result->rejection_reason ?: $result->review_notes) : $result->review_notes }}</p>
+                            <p class="status-preserve-lines">{{ $result->status === 'Rejected' ? ($result->rejection_reason ?: $result->review_notes) : $result->review_notes }}</p>
                         </div>
                     @endif
 
                     @if (filled($result->admin_instructions))
                         <div class="status-message">
                             <strong>Instructions from SNNHS Sports Office</strong>
-                            <p style="margin:.35rem 0 0; white-space:pre-wrap;">{{ $result->admin_instructions }}</p>
+                            <p class="status-preserve-lines">{{ $result->admin_instructions }}</p>
                         </div>
                     @endif
 
@@ -141,8 +127,8 @@
                     @endif
 
                     <div class="status-actions">
-                        <a class="primary-button" href="{{ route('login') }}" style="text-decoration:none;">Go to Login</a>
-                        <a class="login-button" href="{{ route('application.status') }}" style="text-decoration:none;">Check Another</a>
+                        <a class="primary-button status-action-button" href="{{ route('login') }}">Go to Login</a>
+                        <a class="login-button status-action-button" href="{{ route('application.status') }}">Check Another</a>
                     </div>
                 </section>
             @endif
