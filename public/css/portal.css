@@ -964,7 +964,16 @@ body {
     flex-shrink: 0;
 }
 .attention-item span svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.attention-item strong { display: block; min-width: 0; font-size: 12px; color: var(--color-text); line-height: 1.4; overflow-wrap: anywhere; word-break: normal; }
+.attention-item strong {
+    display: block;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--color-text);
+    line-height: 1.4;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: normal;
+}
 .attention-item em { font-style: normal; font-size: 10px; color: var(--color-muted); white-space: nowrap; }
 .attention-warning { border-left: 3px solid var(--color-warning); }
 .attention-danger { border-left: 3px solid var(--color-danger); }
@@ -3791,15 +3800,17 @@ html[data-theme="dark"] .otp-box[disabled] { background: #171a20; }
     display: block;
     font-size: 12px;
     line-height: 1.35;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
     word-break: normal;
+    white-space: normal;
 }
 .attention-body p {
     margin: 0;
     font-size: 11px;
     line-height: 1.5;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
     word-break: normal;
+    white-space: normal;
 }
 
 /* Trackers ---------------------------------------------------------------- */
