@@ -54,6 +54,12 @@ class ApplicationStatusTrackingTest extends TestCase
             'application_id' => $application->id,
             'status' => 'Pending',
         ]);
+
+        $this->get(route('application.create'))
+            ->assertOk()
+            ->assertSee('Your application reference number')
+            ->assertSee('Copy reference number')
+            ->assertSee($application->reference_number);
     }
 
     public function test_public_status_check_requires_reference_and_matching_email(): void

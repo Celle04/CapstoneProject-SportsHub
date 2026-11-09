@@ -1592,6 +1592,85 @@ a {
     line-height: 1.5;
 }
 
+.application-reference {
+    display: grid;
+    justify-items: start;
+    gap: 7px;
+    margin: 12px 0;
+    padding: 14px 16px;
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, .72);
+}
+
+.application-reference-label {
+    color: var(--color-muted-strong);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.application-reference-value {
+    display: block;
+    max-width: 100%;
+    color: var(--color-text-strong);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(16px, 2.4vw, 20px);
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    user-select: all;
+}
+
+.application-reference-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.application-reference-copy {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.application-reference-copy:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+.application-reference-copy:focus-visible {
+    outline: 0;
+    box-shadow: var(--focus-ring);
+}
+
+.application-reference-feedback {
+    color: var(--color-success);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.application-status-link {
+    display: inline-flex;
+    margin-top: 6px;
+    text-decoration: none;
+}
+
+.success-message p.application-success-note {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
 
 /* =========================================================
    ERROR MESSAGE

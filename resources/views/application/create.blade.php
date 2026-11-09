@@ -123,12 +123,21 @@
                         Save your reference number to check your status online.
                     </p>
                     @if (session('application_reference'))
-                        <p><strong>Reference Number:</strong> <code style="font-size:1.05em; letter-spacing:.03em;">{{ session('application_reference') }}</code></p>
+                        <div class="application-reference">
+                            <span class="application-reference-label">Your application reference number</span>
+                            <code class="application-reference-value" id="application-reference-value">{{ session('application_reference') }}</code>
+                            <div class="application-reference-actions">
+                                <button class="application-reference-copy" type="button" data-copy-reference>
+                                    Copy reference number
+                                </button>
+                                <span class="application-reference-feedback" data-reference-feedback role="status" aria-live="polite"></span>
+                            </div>
+                        </div>
                     @endif
                     <p>
-                        <a href="{{ route('application.status') }}" class="primary-button" style="display:inline-flex; margin-top:.35rem; text-decoration:none;">Check Application Status</a>
+                        <a href="{{ route('application.status') }}" class="primary-button application-status-link">Check Application Status</a>
                     </p>
-                    <p style="margin-top:.5rem; font-size:.95em;">
+                    <p class="application-success-note">
                         You do not need to visit the SNNHS Sports Office just to find out your application status.
                         If your application requires office follow-up, instructions will appear on your status page.
                     </p>
@@ -659,19 +668,57 @@
         (function () {
             var checkbox = document.getElementById('no_middle_name');
             var middleName = document.getElementById('middle_name');
-            if (!checkbox || !middleName) return;
 
-            function syncMiddleName() {
-                var noMiddle = checkbox.checked;
-                middleName.disabled = noMiddle;
-                middleName.required = !noMiddle;
-                if (noMiddle) {
-                    middleName.value = '';
+            if (checkbox && middleName) {
+                function syncMiddleName() {
+                    var noMiddle = checkbox.checked;
+                    middleName.disabled = noMiddle;
+                    middleName.required = !noMiddle;
+                    if (noMiddle) {
+                        middleName.value = '';
+                    }
                 }
+
+                checkbox.addEventListener('change', syncMiddleName);
+                syncMiddleName();
             }
 
-            checkbox.addEventListener('change', syncMiddleName);
-            syncMiddleName();
+            var copyButton = document.querySelector('[data-copy-reference]');
+            var referenceValue = document.getElementById('application-reference-value');
+            var feedback = document.querySelector('[data-reference-feedback]');
+
+            if (copyButton && referenceValue && feedback) {
+                copyButton.addEventListener('click', function () {
+                    var value = referenceValue.textContent.trim();
+                    var copyPromise = navigator.clipboard && navigator.clipboard.writeText
+                        ? navigator.clipboard.writeText(value)
+                        : Promise.reject();
+
+                    copyPromise.then(function () {
+                        feedback.textContent = 'Copied to clipboard.';
+                    }).catch(function () {
+                        var temporaryInput = document.createElement('textarea');
+                        temporaryInput.value = value;
+                        temporaryInput.setAttribute('readonly', '');
+                        temporaryInput.style.position = 'fixed';
+                        temporaryInput.style.opacity = '0';
+                        document.body.appendChild(temporaryInput);
+                        temporaryInput.select();
+
+                        var copied = false;
+                        try {
+                            copied = document.execCommand('copy');
+                        } catch (error) {
+                            copied = false;
+                        }
+
+                        temporaryInput.remove();
+                        feedback.textContent = copied
+                            ? 'Copied to clipboard.'
+                            : 'Copy unavailable. Select the reference number to copy it.';
+                    });
+                });
+            }
         })();
     </script>
 
