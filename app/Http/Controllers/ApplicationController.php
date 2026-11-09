@@ -151,7 +151,7 @@ class ApplicationController extends Controller
         $validated = $request->validate(array_merge($nameRules, [
             'student_id' => ['required', 'string', 'max:100'],
             'grade' => ['required', 'in:Grade 7,Grade 8,Grade 9,Grade 10,Grade 11,Grade 12'],
-            'gender' => ['required', 'in:Male,Female,Prefer not to say'],
+            'gender' => ['required', 'in:Male,Female'],
             'email' => ['required', 'email', 'max:255'],
             'sport_id' => ['required', 'exists:sports,id'],
             'policy_accepted' => ['accepted'],

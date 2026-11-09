@@ -351,7 +351,6 @@
                                 @foreach ([
                                     'Male',
                                     'Female',
-                                    'Prefer not to say'
                                 ] as $gender)
 
                                     <option
