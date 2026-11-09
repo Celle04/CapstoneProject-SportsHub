@@ -7,10 +7,14 @@
     var athleteSelect = document.getElementById('message-athlete');
     var recipientSearch = document.getElementById('message-recipient-search');
 
+    function panelMatches(panel, value) {
+        return panel.dataset.recipientPanel.split(/\s+/).indexOf(value) !== -1;
+    }
+
     function updatePanels() {
         if (recipientType) {
             document.querySelectorAll('[data-recipient-panel]').forEach(function (panel) {
-                panel.hidden = panel.dataset.recipientPanel !== recipientType.value;
+                panel.hidden = !panelMatches(panel, recipientType.value);
             });
         }
 

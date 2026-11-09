@@ -37,6 +37,11 @@ class Event extends Model
         return $this->hasMany(Achievement::class);
     }
 
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

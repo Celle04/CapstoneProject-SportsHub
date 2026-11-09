@@ -15,7 +15,7 @@
 					<small>{{ $event->starts_at?->format('Y') ?? '' }}</small>
 				</div>
 				<div class="student-schedule-details">
-					<h3>{{ $event->title }}</h3>
+					<h3><a class="text-link" href="{{ route('student.events.show', $event) }}">{{ $event->title }}</a></h3>
 					<div class="student-schedule-meta">
 						<span><svg aria-hidden="true"><use href="#icon-calendar"></use></svg>{{ $event->starts_at?->format('g:i A') ?? 'Time TBD' }}<span aria-hidden="true">-</span>{{ $event->ends_at?->format('g:i A') ?? 'TBD' }}</span>
 						<span><svg aria-hidden="true"><use href="#icon-activity"></use></svg>{{ $event->venue ?: 'Venue to be announced' }}</span>

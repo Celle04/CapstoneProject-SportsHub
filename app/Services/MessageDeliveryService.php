@@ -65,16 +65,19 @@ class MessageDeliveryService
      */
     private function attributes(array $data): array
     {
-        $isReminder = ($data['message_type'] ?? 'general') === 'medical_reminder';
+        $messageType = $data['message_type'] ?? 'general';
+        $isReminder = $messageType === 'medical_reminder';
+        $recipientType = $data['recipient_type'] ?? 'individual';
 
         return [
-            'sport_id' => $data['recipient_type'] === 'sport' ? ($data['sport_id'] ?? null) : null,
+            'sport_id' => in_array($recipientType, ['sport', 'team'], true) ? ($data['sport_id'] ?? null) : null,
             'medical_record_id' => $isReminder ? ($data['medical_record_id'] ?? null) : null,
+            'event_id' => ! empty($data['event_id']) ? (int) $data['event_id'] : null,
             'subject' => $data['subject'] ?? null,
             'content' => $data['content'] ?? null,
-            'message_type' => $data['message_type'] ?? 'general',
+            'message_type' => $messageType,
             'priority' => $data['priority'] ?? 'Normal',
-            'recipient_type' => $data['recipient_type'] ?? 'individual',
+            'recipient_type' => $recipientType,
             'checkup_date' => $isReminder ? ($data['checkup_date'] ?? null) : null,
             'checkup_time' => $isReminder ? ($data['checkup_time'] ?? null) : null,
             'location' => $isReminder ? ($data['location'] ?? null) : null,
@@ -105,11 +108,12 @@ class MessageDeliveryService
     private function resolveRecipients(array $data): Collection
     {
         $query = User::query()->where('role', 'Student')->where('status', 'Active');
+        $recipientType = $data['recipient_type'] ?? 'individual';
 
-        return match ($data['recipient_type'] ?? 'individual') {
+        return match ($recipientType) {
             'individual' => $query->whereKey((int) ($data['athlete_id'] ?? 0))->get(),
             'selected' => $query->whereKey(array_values(array_unique(array_map('intval', $data['recipient_ids'] ?? []))))->get(),
-            'sport' => $query->where(function ($students) use ($data) {
+            'sport', 'team' => $query->where(function ($students) use ($data) {
                 $sportId = (int) ($data['sport_id'] ?? 0);
                 $students->where('sport_id', $sportId)
                     ->orWhereHas('applications', fn ($applications) => $applications

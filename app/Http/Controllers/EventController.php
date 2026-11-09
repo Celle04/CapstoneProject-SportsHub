@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\AttendanceSession;
 use App\Models\Event;
 use App\Models\Coach;
+use App\Models\MessageRecipient;
 use App\Models\Sport;
 use App\Services\AttendanceSessionService;
 use App\Services\StudentUpdateNotifier;
@@ -73,6 +74,8 @@ class EventController extends Controller
         $this->ensureAdministrator();
 
         $validated = $this->validated($request);
+        $sendNotification = (bool) ($validated['send_event_notification'] ?? false);
+        unset($validated['send_event_notification'], $validated['notify_changes'], $validated['notify_cancellation']);
         $this->ensureVenueAvailable($validated['venue'], $validated['starts_at'], $validated['ends_at']);
         $event = Event::create($validated);
 
@@ -80,12 +83,21 @@ class EventController extends Controller
 
         $this->announce($event);
 
+        if ($sendNotification) {
+            return redirect()
+                ->route('admin.messages.create', $this->notificationPrefill($event, 'Event created: '.$event->title))
+                ->with('success', ($session
+                    ? 'Event created successfully with its attendance session. The roster is ready for check-ins.'
+                    : 'Event created successfully.').' Review and send the event notification below.');
+        }
+
         if ($event->status === 'Scheduled' && $event->starts_at?->isFuture()) {
             app(StudentUpdateNotifier::class)->notifyStudents(
                 $event->sport_id ? [$event->sport_id] : null,
                 'New sports event',
                 $event->title.' has been scheduled for '.$event->starts_at->format('M j, Y g:i A').'.',
                 route('student.schedule'),
+                ['event_id' => $event->id],
             );
         }
 
@@ -139,6 +151,35 @@ class EventController extends Controller
         ], $event);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function notificationPrefill(Event $event, ?string $subject = null, ?string $message = null): array
+    {
+        $competitionTypes = ['Competition', 'Tournament', 'Friendly Match', 'District Meet', 'Regional Meet'];
+        $category = in_array($event->event_type, $competitionTypes, true) ? 'competition' : 'sports_event';
+
+        $lines = array_filter([
+            'Event: '.$event->title,
+            $event->event_type ? 'Type: '.$event->event_type : null,
+            $event->starts_at ? 'Date/Time: '.$event->starts_at->format('F j, Y g:i A').($event->ends_at ? ' - '.$event->ends_at->format('g:i A') : '') : null,
+            $event->venue ? 'Venue: '.$event->venue : null,
+            $event->sport?->name ? 'Sport: '.$event->sport->name : null,
+            $event->team_name ? 'Team: '.$event->team_name : null,
+            $event->description ? 'Description: '.$event->description : null,
+        ]);
+
+        return [
+            'event_id' => $event->id,
+            'message_type' => $category,
+            'priority' => 'Normal',
+            'recipient_type' => $event->sport_id ? 'sport' : 'all',
+            'sport_id' => $event->sport_id,
+            'subject' => $subject ?: $event->title,
+            'content' => $message ?: implode("\n", $lines),
+        ];
+    }
+
     public function edit(Event $event): View
     {
         $this->ensureAdministrator();
@@ -150,42 +191,143 @@ class EventController extends Controller
     {
         $this->ensureAdministrator();
 
-        return view('events.show', $this->portalData(['event' => $event->load(['sport', 'coach'])->loadCount('attendanceRecords')]));
+        $eventMessages = \App\Models\Message::query()
+            ->where('sender_id', auth()->id())
+            ->where('event_id', $event->id)
+            ->withCount('recipients')
+            ->withCount(['recipients as read_recipients_count' => fn ($query) => $query->where('is_read', true)])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('events.show', $this->portalData([
+            'event' => $event->load(['sport', 'coach'])->loadCount('attendanceRecords'),
+            'eventMessages' => $eventMessages,
+        ]));
     }
 
     public function update(Request $request, Event $event): RedirectResponse
     {
         $this->ensureAdministrator();
 
+        $before = $event->only(['title', 'venue', 'starts_at', 'ends_at', 'status', 'sport_id']);
         $previousStatus = $event->status;
         $previousSportId = $event->sport_id;
         $validated = $this->validated($request);
+        $notifyChanges = (bool) ($validated['notify_changes'] ?? false);
+        unset($validated['send_event_notification'], $validated['notify_changes'], $validated['notify_cancellation']);
         $this->ensureVenueAvailable($validated['venue'], $validated['starts_at'], $validated['ends_at'], $event);
         $event->update($validated);
+        $event->refresh();
+        $this->announce($event);
 
-        if (in_array($previousStatus, ['Scheduled', 'Ongoing'], true) || $event->status === 'Scheduled') {
-            $eventChanges = ['title', 'sport_id', 'venue', 'starts_at', 'ends_at', 'status', 'coach_id', 'description'];
-
-            if ($event->wasChanged($eventChanges)) {
-                $sportIds = $previousSportId === null || $event->sport_id === null
-                    ? null
-                    : [$previousSportId, $event->sport_id];
-                $updateMessage = match ($event->status) {
-                    'Cancelled' => $event->title.' has been cancelled.',
-                    'Postponed' => $event->title.' has been postponed.',
-                    default => $event->title.' has been updated. Check the schedule for details.',
-                };
-
-                app(StudentUpdateNotifier::class)->notifyStudents(
-                    $sportIds,
-                    'Sports event update',
-                    $updateMessage,
-                    route('student.schedule'),
-                );
+        $meaningfulFields = ['title', 'venue', 'starts_at', 'ends_at', 'status'];
+        $changed = [];
+        foreach ($meaningfulFields as $field) {
+            $old = $before[$field] ?? null;
+            $new = $event->getAttribute($field);
+            $oldValue = $old instanceof \Carbon\CarbonInterface ? $old->format('Y-m-d H:i:s') : (string) $old;
+            $newValue = $new instanceof \Carbon\CarbonInterface ? $new->format('Y-m-d H:i:s') : (string) $new;
+            if ($oldValue !== $newValue) {
+                $changed[] = $field;
             }
         }
 
+        if ($notifyChanges && $changed !== []) {
+            $changeLines = [];
+            foreach ($changed as $field) {
+                $label = match ($field) {
+                    'title' => 'Event name',
+                    'starts_at', 'ends_at' => 'Date/time',
+                    'venue' => 'Venue',
+                    'status' => 'Status',
+                    default => ucfirst($field),
+                };
+                $changeLines[$label] = true;
+            }
+
+            $subject = $event->status === 'Cancelled' ? 'Event cancelled: '.$event->title : 'Event update: '.$event->title;
+            $message = "The following event details have changed: ".implode(', ', array_keys($changeLines)).".\n\n"
+                ."Event: {$event->title}\n"
+                ."Status: {$event->status}\n"
+                .($event->starts_at ? "Date/Time: ".$event->starts_at->format('F j, Y g:i A').($event->ends_at ? ' - '.$event->ends_at->format('g:i A') : '')."\n" : '')
+                .($event->venue ? "Venue: {$event->venue}\n" : '');
+            if ($event->status === 'Cancelled') {
+                $message = "The event \"{$event->title}\" has been cancelled.\n\n".$message;
+            }
+
+            try {
+                $this->delivery()->send(auth()->user(), array_merge($this->notificationPrefill($event, $subject, trim($message)), [
+                    'message_type' => 'event_update',
+                    'priority' => $event->status === 'Cancelled' ? 'Important' : 'Normal',
+                ]));
+                return redirect()->route('events.index')->with('success', 'Event updated and affected athletes were notified.');
+            } catch (\Throwable $exception) {
+                report($exception);
+                return redirect()->route('events.index')->with('success', 'Event updated, but the notification could not be sent. You can send it from the event details page.');
+            }
+        }
+
+        // Preserve existing automatic in-app notifications for compatibility.
+        if ((in_array($previousStatus, ['Scheduled', 'Ongoing'], true) || $event->status === 'Scheduled') && $changed !== []) {
+            $sportIds = $previousSportId === null || $event->sport_id === null
+                ? null
+                : [$previousSportId, $event->sport_id];
+            $updateMessage = match ($event->status) {
+                'Cancelled' => $event->title.' has been cancelled.',
+                'Postponed' => $event->title.' has been postponed.',
+                default => $event->title.' has been updated. Check the schedule for details.',
+            };
+
+            app(StudentUpdateNotifier::class)->notifyStudents(
+                $sportIds,
+                'Sports event update',
+                $updateMessage,
+                route('student.schedule'),
+                ['event_id' => $event->id],
+            );
+        }
+
         return redirect()->route('events.index')->with('success', 'Event updated successfully.');
+    }
+
+    public function cancel(Request $request, Event $event): RedirectResponse
+    {
+        $this->ensureAdministrator();
+
+        $validated = $request->validate([
+            'notify_athletes' => ['nullable', 'boolean'],
+        ]);
+
+        if ($event->status === 'Cancelled') {
+            return back()->with('success', 'This event is already cancelled.');
+        }
+
+        $event->update(['status' => 'Cancelled']);
+        $this->announce($event->fresh());
+
+        if (! empty($validated['notify_athletes'])) {
+            $message = "The event \"{$event->title}\" has been cancelled.\n\n"
+                ."Date/Time: ".($event->starts_at?->format('F j, Y g:i A') ?? 'Not specified')."\n"
+                ."Venue: ".($event->venue ?: 'Not specified');
+            if ($event->description) {
+                $message .= "\n\nOriginal details: ".$event->description;
+            }
+
+            try {
+                $this->delivery()->send(auth()->user(), array_merge($this->notificationPrefill($event->fresh(), 'Event cancelled: '.$event->title, $message), [
+                    'message_type' => 'event_update',
+                    'priority' => 'Important',
+                ]));
+            } catch (\Throwable $exception) {
+                report($exception);
+                return redirect()->route('events.show', $event)->with('success', 'Event cancelled, but the notification could not be sent. You can send it from the event details page.');
+            }
+        }
+
+        return redirect()->route('events.show', $event)->with('success', ! empty($validated['notify_athletes'])
+            ? 'Event cancelled and affected athletes were notified.'
+            : 'Event cancelled. Event history was preserved.');
     }
 
     public function destroy(Event $event): RedirectResponse
@@ -198,12 +340,18 @@ class EventController extends Controller
                 'Sports event removed',
                 $event->title.' has been removed from the schedule.',
                 route('student.schedule'),
+                ['event_id' => $event->id],
             );
         }
 
         $event->delete();
 
         return redirect()->route('events.index')->with('success', 'Event deleted successfully.');
+    }
+
+    private function delivery(): \App\Services\MessageDeliveryService
+    {
+        return app(\App\Services\MessageDeliveryService::class);
     }
 
     private function validated(Request $request): array
@@ -221,6 +369,9 @@ class EventController extends Controller
             'max_participants' => ['nullable', 'integer', 'min:1'],
             'status' => ['required', 'in:'.implode(',', self::statuses())],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'send_event_notification' => ['nullable', 'boolean'],
+            'notify_changes' => ['nullable', 'boolean'],
+            'notify_cancellation' => ['nullable', 'boolean'],
             // Optional attendance session created together with the event.
             'attendance' => ['nullable', 'array'],
             'attendance.title' => ['nullable', 'string', 'max:255'],
@@ -274,6 +425,37 @@ class EventController extends Controller
             'userName' => auth()->user()->name,
             'userRole' => auth()->user()->role,
         ], $data);
+    }
+
+    public function studentShow(Event $event): View
+    {
+        $student = auth()->user();
+        abort_unless($student?->role === 'Student', 403);
+
+        $sportIds = $student->sportIds();
+        $visibleBySport = $event->sport_id === null || in_array((int) $event->sport_id, array_map('intval', $sportIds), true);
+        $notified = MessageRecipient::query()
+            ->where('recipient_id', $student->id)
+            ->whereHas('message', fn ($query) => $query->where('status', 'sent')->where('event_id', $event->id))
+            ->exists();
+
+        abort_unless($visibleBySport || $notified, 404);
+
+        $event->load(['sport', 'coach']);
+
+        return view('student.page', [
+            'page' => 'event',
+            'heading' => $event->title,
+            'subtitle' => $event->sport?->name ? $event->sport->name.' event details' : 'Sports event details',
+            'action' => null,
+            'active' => 'schedule',
+            'navItems' => PortalNavigation::student(),
+            'roleLabel' => 'Athlete/User Portal',
+            'userName' => $student->name,
+            'userRole' => $student->sport?->name ?? 'Unassigned sport',
+            'athlete' => $student,
+            'event' => $event,
+        ]);
     }
 
     private function ensureAdministrator(): void

@@ -5,6 +5,7 @@
     $recipientType = old('recipient_type', $messageRecord->recipient_type ?: 'individual');
     $messageType = old('message_type', $messageRecord->message_type ?: 'general');
     $selectedRecipientIds = array_map('strval', old('recipient_ids', $messageRecord->recipient_ids ?? []));
+    $eventRecord = $messageRecord->event ?? null;
 @endphp
 
 @if (session('success'))
@@ -28,6 +29,14 @@
         <form method="POST" action="{{ $messageRecord->exists ? route('admin.messages.update', $messageRecord) : route('admin.messages.store') }}" class="message-form">
             @csrf
             @if ($messageRecord->exists) @method('PUT') @endif
+            <input type="hidden" name="event_id" value="{{ old('event_id', $messageRecord->event_id) }}">
+            @if ($eventRecord)
+                <div class="notice" style="margin:0;">
+                    <strong>Associated event:</strong> {{ $eventRecord->title }}
+                    ({{ $eventRecord->starts_at?->format('M j, Y g:i A') ?? 'Date not set' }}@if ($eventRecord->venue) · {{ $eventRecord->venue }}@endif).
+                    <a class="text-link" href="{{ route('events.show', $eventRecord) }}">View event</a>
+                </div>
+            @endif
             <div class="form-group">
                 <label for="message-subject">Subject</label>
                 <input class="form-control @error('subject') is-invalid @enderror" id="message-subject" name="subject" maxlength="255" value="{{ old('subject', $messageRecord->subject) }}" placeholder="Enter a subject">
@@ -35,9 +44,12 @@
             </div>
             <div class="grid grid-3">
                 <div class="form-group">
-                    <label for="message-type">Message Type</label>
+                    <label for="message-type">Category</label>
                     <select class="form-control" id="message-type" name="message_type">
                         <option value="general" @selected($messageType === 'general')>General Message</option>
+                        <option value="sports_event" @selected($messageType === 'sports_event')>Sports Event</option>
+                        <option value="competition" @selected($messageType === 'competition')>Competition</option>
+                        <option value="event_update" @selected($messageType === 'event_update')>Event Update</option>
                         <option value="medical_reminder" @selected($messageType === 'medical_reminder')>Medical Checkup Reminder</option>
                     </select>
                 </div>
@@ -52,7 +64,7 @@
                 <div class="form-group">
                     <label for="recipient-type">Recipients</label>
                     <select class="form-control" id="recipient-type" name="recipient_type">
-                        @foreach (['individual' => 'One athlete', 'all' => 'All active athletes', 'sport' => 'Athletes by sport', 'selected' => 'Selected athletes'] as $value => $label)
+                        @foreach (['individual' => 'One athlete', 'all' => 'All active athletes', 'sport' => 'Athletes from a selected sport', 'team' => 'Athletes from a selected team', 'selected' => 'Individually selected athletes'] as $value => $label)
                             <option value="{{ $value }}" @selected($recipientType === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -73,10 +85,10 @@
                 @error('athlete_id')<small class="form-error">{{ $message }}</small>@enderror
             </div>
 
-            <div class="form-group message-recipient-panel" data-recipient-panel="sport" hidden>
-                <label for="message-sport">Sport</label>
+            <div class="form-group message-recipient-panel" data-recipient-panel="sport team" hidden>
+                <label for="message-sport">Sport / Team</label>
                 <select class="form-control" id="message-sport" name="sport_id">
-                    <option value="">Select a sport</option>
+                    <option value="">Select a sport or team</option>
                     @foreach ($sports as $sportOption)
                         <option value="{{ $sportOption->id }}" @selected((string) old('sport_id', $messageRecord->sport_id ?? '') === (string) $sportOption->id)>{{ $sportOption->name }}</option>
                     @endforeach
@@ -137,21 +149,34 @@
     <script src="{{ asset('js/messages.js') }}?v={{ filemtime(public_path('js/messages.js')) }}" defer></script>
 @elseif ($messageView === 'show' && isset($messageRecord))
     <section class="card message-detail-card">
+        @php($detailCategory = \App\Models\Message::categoryLabel($messageRecord->message_type))
         <div class="section-heading">
             <div>
-                <span class="admin-dashboard-kicker">{{ $messageRecord->message_type === 'medical_reminder' ? 'MEDICAL CHECKUP REMINDER' : 'SENT MESSAGE' }}</span>
+                <span class="admin-dashboard-kicker">{{ strtoupper($detailCategory) }}</span>
                 <h2>{{ $messageRecord->subject }}</h2>
                 <p>Sent {{ $messageRecord->sent_at?->format('M j, Y g:i A') }} by {{ $messageRecord->sender?->name ?? 'SportsHub Admin' }}</p>
             </div>
             <a class="text-link" href="{{ route('admin.messages') }}">Back to Messages</a>
         </div>
         <div class="message-detail-metadata">
+            <span><strong>Category</strong>{{ $detailCategory }}</span>
             <span><strong>Recipients</strong>{{ $messageRecord->recipients_count }}</span>
             <span><strong>Read</strong>{{ $messageRecord->read_recipients_count }}</span>
             <span><strong>Unread</strong>{{ $messageRecord->recipients_count - $messageRecord->read_recipients_count }}</span>
             <span><strong>Priority</strong><span class="badge">{{ $messageRecord->priority }}</span></span>
             <span><strong>Recipient type</strong>{{ ucfirst($messageRecord->recipient_type) }}@if ($messageRecord->sport) · {{ $messageRecord->sport->name }}@endif</span>
+            @if ($messageRecord->event)
+                <span><strong>Associated Event</strong><a class="text-link" href="{{ route('events.show', $messageRecord->event) }}">{{ $messageRecord->event->title }}</a></span>
+            @endif
         </div>
+        @if ($messageRecord->event)
+            <div class="message-reminder-schedule">
+                <strong>Event details</strong>
+                <span>{{ $messageRecord->event->title }} · {{ $messageRecord->event->starts_at?->format('M j, Y g:i A') ?? 'Date not set' }}@if ($messageRecord->event->ends_at) - {{ $messageRecord->event->ends_at->format('g:i A') }}@endif</span>
+                @if ($messageRecord->event->venue)<span>{{ $messageRecord->event->venue }}</span>@endif
+                <span>Status: {{ $messageRecord->event->status }}</span>
+            </div>
+        @endif
         @if ($messageRecord->message_type === 'medical_reminder')
             <div class="message-reminder-schedule">
                 <strong>Checkup schedule</strong>
@@ -198,6 +223,7 @@
             <a href="{{ route('admin.messages', ['status' => 'sent']) }}" class="{{ request('status') === 'sent' && !request('filter') ? 'is-active' : '' }}">Sent</a>
             <a href="{{ route('admin.messages', ['status' => 'draft']) }}" class="{{ request('status') === 'draft' ? 'is-active' : '' }}">Drafts</a>
             <a href="{{ route('admin.messages', ['filter' => 'medical']) }}" class="{{ request('filter') === 'medical' ? 'is-active' : '' }}">Medical Reminders</a>
+            <a href="{{ route('admin.messages', ['filter' => 'event']) }}" class="{{ request('filter') === 'event' ? 'is-active' : '' }}">Event Notifications</a>
         </nav>
         <form method="GET" class="filters message-search-form">
             <input class="form-control" type="search" name="search" value="{{ request('search') }}" placeholder="Search subject or message">
@@ -208,16 +234,17 @@
         </form>
         <div class="table-wrap">
             <table class="data-table">
-                <thead><tr><th>Subject</th><th>Recipient Type</th><th>Recipients</th><th>Date Sent</th><th>Read</th><th>Unread</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Subject</th><th>Category</th><th>Associated Event</th><th>Recipients</th><th>Read</th><th>Unread</th><th>Date Sent</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody>
                     @forelse ($messages as $row)
                         <tr>
-                            <td><strong>{{ $row->subject ?: 'Untitled draft' }}</strong>@if ($row->message_type === 'medical_reminder')<br><small class="meta">Medical reminder</small>@endif</td>
-                            <td>{{ ucfirst($row->recipient_type) }}@if ($row->sport) · {{ $row->sport->name }}@endif</td>
+                            <td><strong>{{ $row->subject ?: 'Untitled draft' }}</strong><br><small class="meta">{{ ucfirst($row->recipient_type) }}@if ($row->sport) · {{ $row->sport->name }}@endif</small></td>
+                            <td>{{ \App\Models\Message::categoryLabel($row->message_type) }}</td>
+                            <td>@if ($row->event)<a class="text-link" href="{{ route('events.show', $row->event) }}">{{ $row->event->title }}</a>@else — @endif</td>
                             <td>{{ $row->recipients_count ?: ($row->status === 'draft' ? 'Not sent' : 0) }}</td>
-                            <td>{{ $row->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
                             <td>{{ $row->status === 'sent' ? $row->read_recipients_count : '—' }}</td>
                             <td>{{ $row->status === 'sent' ? $row->recipients_count - $row->read_recipients_count : '—' }}</td>
+                            <td>{{ $row->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
                             <td><span class="badge {{ $row->status === 'sent' ? 'status-approved' : 'status-pending' }}">{{ ucfirst($row->status) }}</span></td>
                             <td>
                                 @if ($row->status === 'sent')
@@ -229,7 +256,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td class="empty-cell" colspan="8">No messages match this view yet.</td></tr>
+                        <tr><td class="empty-cell" colspan="9">No messages match this view yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

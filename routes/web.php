@@ -11,6 +11,7 @@ use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MedicalController;
 use App\Http\Controllers\MedicalIncidentController;
+use App\Http\Controllers\EmailReminderController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicPolicyController;
@@ -430,6 +431,7 @@ $studentAchievementData = function (?int $selectedId = null) use ($studentPage) 
 Route::middleware(['force.password.change'])->group(function () use ($studentPage, $studentNav, $calendarData, $studentAchievementData) {
     Route::get('/student/messages', [MessageController::class, 'inbox'])->middleware('auth')->name('student.messages');
     Route::get('/student/messages/{message}', [MessageController::class, 'studentShow'])->middleware('auth')->name('student.messages.show');
+    Route::get('/student/events/{event}', [EventController::class, 'studentShow'])->middleware('auth')->name('student.events.show');
     Route::get('/student/achievements', fn () => $studentAchievementData())->middleware('auth')->name('student.achievements');
 Route::get('/student/achievements/{achievement}', fn (int $achievement) => $studentAchievementData($achievement))->middleware('auth')->name('student.achievements.show');
 Route::get('/student/achievements/{achievement}/certificate', function (int $achievement) {
@@ -966,6 +968,14 @@ Route::get('/admin/messages/{message}', [MessageController::class, 'show'])->mid
 Route::put('/admin/messages/{message}', [MessageController::class, 'update'])->middleware('auth')->name('admin.messages.update');
 Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy'])->middleware('auth')->name('admin.messages.destroy');
 
+Route::get('/admin/email-reminders', [EmailReminderController::class, 'index'])->middleware('auth')->name('admin.email-reminders');
+Route::get('/admin/email-reminders/compose', [EmailReminderController::class, 'create'])->middleware('auth')->name('admin.email-reminders.create');
+Route::post('/admin/email-reminders/preview', [EmailReminderController::class, 'preview'])->middleware('auth')->name('admin.email-reminders.preview');
+Route::post('/admin/email-reminders/test', [EmailReminderController::class, 'sendTest'])->middleware('auth')->name('admin.email-reminders.test');
+Route::post('/admin/email-reminders', [EmailReminderController::class, 'store'])->middleware('auth')->name('admin.email-reminders.store');
+Route::get('/admin/email-reminders/{emailReminder}', [EmailReminderController::class, 'show'])->middleware('auth')->name('admin.email-reminders.show');
+Route::post('/admin/email-reminders/{emailReminder}/retry', [EmailReminderController::class, 'retry'])->middleware('auth')->name('admin.email-reminders.retry');
+
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');
 Route::get('/admin/achievements/create', [AchievementController::class, 'create'])->middleware('auth')->name('admin.achievements.create');
 Route::post('/admin/achievements', [AchievementController::class, 'store'])->middleware('auth')->name('admin.achievements.store');
@@ -987,6 +997,7 @@ Route::post('/admin/certificate-requests/{certificateRequest}/reject', [Certific
 Route::resource('coaches', CoachController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])->middleware('auth');
 Route::resource('events', EventController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->middleware('auth');
 Route::get('/events/{event}', [EventController::class, 'show'])->middleware('auth')->name('events.show');
+Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->middleware('auth')->name('events.cancel');
 Route::get('/admin/events', fn () => redirect()->route('events.index'))->middleware('auth')->name('admin.events.index');
 Route::get('/admin/attendance', [AttendanceController::class, 'index'])->middleware('auth')->name('admin.attendance');
 Route::post('/admin/attendance/sessions', [AttendanceController::class, 'store'])->middleware('auth')->name('admin.attendance.sessions.store');

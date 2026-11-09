@@ -16,6 +16,23 @@
 </div>
 <div class="form-group"><label for="description">Description</label><textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $event->description ?? '') }}</textarea></div>
 <div class="form-group"><label for="notes">Notes</label><textarea class="form-control" id="notes" name="notes" rows="3">{{ old('notes', $event->notes ?? '') }}</textarea></div>
+@if (! isset($event) || ! $event->exists)
+    <div class="form-group" style="margin-top: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-muted);">
+        <label style="display:flex; align-items:center; gap:10px; font-weight:700; cursor:pointer;">
+            <input type="checkbox" name="send_event_notification" value="1" @checked(old('send_event_notification'))>
+            Send Event Notification
+        </label>
+        <p class="meta" style="margin:8px 0 0;">After saving this event, you can choose recipients and review the notification with event details already filled in.</p>
+    </div>
+@else
+    <div class="form-group" style="margin-top: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-muted);">
+        <label style="display:flex; align-items:center; gap:10px; font-weight:700; cursor:pointer;">
+            <input type="checkbox" name="notify_changes" value="1" @checked(old('notify_changes'))>
+            Notify affected athletes about these changes
+        </label>
+        <p class="meta" style="margin:8px 0 0;">If you check this, affected athletes will receive an in-app notification only when meaningful event details change (name, date/time, venue, or status). To cancel with a confirmation, use the Cancel Event action on the event details page.</p>
+    </div>
+@endif
 <div class="event-form-errors">
     @foreach(['title','sport_id','event_type','venue','starts_at','ends_at','coach_id','team_name','max_participants','description','notes','status'] as $field) @error($field)<small class="form-error">{{ $message }}</small>@enderror @endforeach
 </div>

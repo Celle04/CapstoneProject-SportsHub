@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Message;
 use App\Models\MessageRecipient;
 use App\Models\Sport;
@@ -27,10 +28,15 @@ class MessageController extends Controller
 
         $query = Message::query()
             ->where('sender_id', auth()->id())
+            ->with(['event', 'sport'])
             ->withCount('recipients')
             ->withCount(['recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)])
             ->when(in_array($request->query('status'), ['sent', 'draft'], true), fn (Builder $messages) => $messages->where('status', $request->query('status')))
             ->when($request->query('filter') === 'medical', fn (Builder $messages) => $messages->where('message_type', 'medical_reminder'))
+            ->when($request->query('filter') === 'event', fn (Builder $messages) => $messages->where(function (Builder $eventMessages): void {
+                $eventMessages->whereNotNull('event_id')->orWhereIn('message_type', ['sports_event', 'competition', 'event_update']);
+            }))
+            ->when($request->filled('event_id'), fn (Builder $messages) => $messages->where('event_id', $request->integer('event_id')))
             ->when($request->filled('search'), function (Builder $messages) use ($request): void {
                 $search = trim($request->string('search')->toString());
                 $messages->where(function (Builder $matching) use ($search): void {
@@ -68,11 +74,41 @@ class MessageController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->ensureAdministrator();
 
-        return $this->adminView('compose', ['messageRecord' => new Message()]);
+        $message = new Message([
+            'message_type' => $request->query('message_type', 'general'),
+            'priority' => $request->query('priority', 'Normal'),
+            'recipient_type' => $request->query('recipient_type', 'individual'),
+            'sport_id' => $request->query('sport_id'),
+            'event_id' => $request->query('event_id'),
+            'subject' => $request->query('subject'),
+            'content' => $request->query('content'),
+        ]);
+
+        if ($request->filled('event_id')) {
+            $event = Event::with('sport')->find($request->integer('event_id'));
+            if ($event) {
+                $message->setRelation('event', $event);
+                $message->event_id = $event->id;
+                if (! $request->filled('subject')) {
+                    $message->subject = $event->title;
+                }
+                if (! $request->filled('recipient_type')) {
+                    $message->recipient_type = $event->sport_id ? 'sport' : 'all';
+                    $message->sport_id = $event->sport_id;
+                }
+                if (! $request->filled('message_type')) {
+                    $message->message_type = in_array($event->event_type, ['Competition', 'Tournament', 'District Meet', 'Regional Meet', 'Friendly Match'], true)
+                        ? 'competition'
+                        : 'sports_event';
+                }
+            }
+        }
+
+        return $this->adminView('compose', ['messageRecord' => $message]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -97,7 +133,7 @@ class MessageController extends Controller
         abort_unless($message->sender_id === auth()->id(), 404);
         abort_unless($message->status === 'sent', 404);
 
-        $message->load(['sender', 'sport', 'recipients.recipient.sport'])
+        $message->load(['sender', 'sport', 'event', 'recipients.recipient.sport'])
             ->loadCount(['recipients', 'recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)]);
 
         return $this->adminView('show', ['messageRecord' => $message]);
@@ -107,6 +143,7 @@ class MessageController extends Controller
     {
         $this->ensureAdministrator();
         $this->ensureOwnDraft($message);
+        $message->load('event');
 
         return $this->adminView('compose', ['messageRecord' => $message]);
     }
@@ -143,7 +180,7 @@ class MessageController extends Controller
         $messages = MessageRecipient::query()
             ->where('recipient_id', $student->id)
             ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
-            ->with('message.sender')
+            ->with('message.sender', 'message.event')
             ->latest()
             ->paginate(15);
 
@@ -157,7 +194,7 @@ class MessageController extends Controller
             ->where('recipient_id', $student->id)
             ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
             ->where('message_id', $message->id)
-            ->with('message.sender')
+            ->with('message.sender', 'message.event')
             ->firstOrFail();
 
         DB::transaction(function () use ($delivery, $student, $message): void {
@@ -176,18 +213,21 @@ class MessageController extends Controller
     private function validated(Request $request): array
     {
         $sending = $request->input('action') === 'send';
-        $medicalReminder = $request->input('message_type') === 'medical_reminder';
+        $messageType = $request->input('message_type', 'general');
+        $medicalReminder = $messageType === 'medical_reminder';
+        $recipientType = $request->input('recipient_type', 'individual');
         $validated = $request->validate([
             'subject' => [$sending ? 'required' : 'nullable', 'string', 'max:255'],
             'content' => [$sending ? 'required' : 'nullable', 'string', 'max:20000'],
-            'message_type' => ['required', Rule::in(['general', 'medical_reminder'])],
+            'message_type' => ['required', Rule::in(['general', 'medical_reminder', 'sports_event', 'competition', 'event_update'])],
             'priority' => ['required', Rule::in(['Normal', 'Important', 'Urgent'])],
-            'recipient_type' => ['required', Rule::in(['individual', 'all', 'sport', 'selected'])],
+            'recipient_type' => ['required', Rule::in(['individual', 'all', 'sport', 'team', 'selected'])],
             'action' => ['required', Rule::in(['draft', 'send'])],
-            'athlete_id' => [$sending && $request->input('recipient_type') === 'individual' ? 'required' : 'nullable', 'integer', 'exists:users,id'],
-            'recipient_ids' => [$sending && $request->input('recipient_type') === 'selected' ? 'required' : 'nullable', 'array', $sending && $request->input('recipient_type') === 'selected' ? 'min:1' : 'nullable'],
+            'event_id' => ['nullable', 'integer', 'exists:events,id'],
+            'athlete_id' => [$sending && $recipientType === 'individual' ? 'required' : 'nullable', 'integer', 'exists:users,id'],
+            'recipient_ids' => [$sending && $recipientType === 'selected' ? 'required' : 'nullable', 'array', $sending && $recipientType === 'selected' ? 'min:1' : 'nullable'],
             'recipient_ids.*' => ['integer', 'distinct', 'exists:users,id'],
-            'sport_id' => [$sending && $request->input('recipient_type') === 'sport' ? 'required' : 'nullable', 'integer', 'exists:sports,id'],
+            'sport_id' => [$sending && in_array($recipientType, ['sport', 'team'], true) ? 'required' : 'nullable', 'integer', 'exists:sports,id'],
             'checkup_date' => [$medicalReminder && $sending ? 'required' : 'nullable', 'date', 'after_or_equal:today'],
             'checkup_time' => [$medicalReminder && $sending ? 'required' : 'nullable', 'date_format:H:i'],
             'location' => ['nullable', 'string', 'max:255'],

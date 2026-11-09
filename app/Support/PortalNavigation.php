@@ -30,6 +30,7 @@ class PortalNavigation
             ['key' => 'applications', 'label' => 'Applications', 'icon' => 'clipboard', 'route' => 'admin.applications', 'group' => 'Records'],
             ['key' => 'medical', 'label' => 'Medical', 'icon' => 'medical', 'route' => 'admin.medical', 'group' => 'Records'],
             ['key' => 'messages', 'label' => 'Messages', 'icon' => 'bell', 'route' => 'admin.messages', 'group' => 'Records'],
+            ['key' => 'email-reminders', 'label' => 'Email Reminders', 'icon' => 'mail', 'route' => 'admin.email-reminders', 'group' => 'Records'],
             ['key' => 'achievements', 'label' => 'Achievements', 'icon' => 'trophy', 'route' => 'admin.achievements', 'group' => 'Records'],
             ['key' => 'certificate-requests', 'label' => 'Certificate Requests', 'icon' => 'certificate', 'route' => 'admin.certificate-requests', 'group' => 'Records'],
             ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart', 'route' => 'reports.index', 'group' => 'Insights'],

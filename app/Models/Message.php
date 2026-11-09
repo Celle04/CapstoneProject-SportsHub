@@ -12,6 +12,7 @@ class Message extends Model
         'sender_id',
         'sport_id',
         'medical_record_id',
+        'event_id',
         'subject',
         'content',
         'message_type',
@@ -49,8 +50,29 @@ class Message extends Model
         return $this->belongsTo(MedicalRecord::class);
     }
 
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
     public function recipients(): HasMany
     {
         return $this->hasMany(MessageRecipient::class);
+    }
+
+    public function isEventNotification(): bool
+    {
+        return in_array($this->message_type, ['sports_event', 'competition', 'event_update'], true) || $this->event_id !== null;
+    }
+
+    public static function categoryLabel(string $type): string
+    {
+        return match ($type) {
+            'medical_reminder' => 'Medical Checkup Reminder',
+            'sports_event' => 'Sports Event',
+            'competition' => 'Competition',
+            'event_update' => 'Event Update',
+            default => 'General Message',
+        };
     }
 }

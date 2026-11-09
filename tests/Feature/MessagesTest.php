@@ -244,7 +244,7 @@ class MessagesTest extends TestCase
             ->assertOk()
             ->assertSee('Compose Message')
             ->assertSee('Find athlete by name or Student ID')
-            ->assertSee('Selected athletes');
+            ->assertSee('Individually selected athletes');
 
         $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
             'recipient_type' => 'individual',
