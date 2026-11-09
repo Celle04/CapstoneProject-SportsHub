@@ -953,7 +953,7 @@ body {
     transition: background .15s ease, border-color .15s ease;
 }
 .attention-item:hover { background: rgba(23, 24, 43, .04); }
-.attention-item span {
+.attention-item > span:first-child {
     display: grid;
     place-items: center;
     width: 32px;
@@ -963,7 +963,7 @@ body {
     color: var(--color-primary);
     flex-shrink: 0;
 }
-.attention-item span svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.attention-item > span:first-child svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .attention-item strong {
     display: block;
     min-width: 0;
@@ -1719,9 +1719,8 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
 .restricted-dot { background: #7657c7; }
 .dashboard-attention, .dashboard-table-section, .dashboard-activity { margin-top: 18px; }
 .attention-item {
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr);
-    align-items: flex-start;
+    display: flex;
+    align-items: center;
     gap: 10px;
     margin-top: 9px;
     padding: 12px;
@@ -1729,11 +1728,11 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
     border-radius: 7px;
     font-size: 12px;
 }
-.attention-item > span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-weight: 700; }
+.attention-item > span:first-child { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-weight: 700; flex-shrink: 0; }
 .attention-warning { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
-.attention-warning > span { background: var(--color-warning-border); }
+.attention-warning > span:first-child { background: var(--color-warning-border); }
 .attention-danger { border-color: var(--color-danger-border); background: var(--color-danger-soft); color: var(--color-danger); }
-.attention-danger > span { background: var(--color-danger-border); }
+.attention-danger > span:first-child { background: var(--color-danger-border); }
 .empty-cell { color: var(--color-muted); text-align: center; }
 .admin-dashboard-kicker { color: var(--color-primary); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .attention-item { text-decoration: none; }
@@ -3793,24 +3792,26 @@ html[data-theme="dark"] .otp-box[disabled] { background: #171a20; }
 /* Attention item body (title + message) ----------------------------------- */
 .attention-body {
     min-width: 0;
-    display: grid;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     gap: 4px;
 }
 .attention-body strong {
     display: block;
     font-size: 12px;
     line-height: 1.35;
+    white-space: normal;
     overflow-wrap: normal;
     word-break: normal;
-    white-space: normal;
 }
 .attention-body p {
     margin: 0;
     font-size: 11px;
     line-height: 1.5;
+    white-space: normal;
     overflow-wrap: normal;
     word-break: normal;
-    white-space: normal;
 }
 
 /* Trackers ---------------------------------------------------------------- */
