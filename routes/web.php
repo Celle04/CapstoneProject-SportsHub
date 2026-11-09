@@ -11,7 +11,6 @@ use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MedicalController;
 use App\Http\Controllers\MedicalIncidentController;
-use App\Http\Controllers\EmailReminderController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicPolicyController;
@@ -967,14 +966,6 @@ Route::get('/admin/messages/{message}/edit', [MessageController::class, 'edit'])
 Route::get('/admin/messages/{message}', [MessageController::class, 'show'])->middleware('auth')->name('admin.messages.show');
 Route::put('/admin/messages/{message}', [MessageController::class, 'update'])->middleware('auth')->name('admin.messages.update');
 Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy'])->middleware('auth')->name('admin.messages.destroy');
-
-Route::get('/admin/email-reminders', [EmailReminderController::class, 'index'])->middleware('auth')->name('admin.email-reminders');
-Route::get('/admin/email-reminders/compose', [EmailReminderController::class, 'create'])->middleware('auth')->name('admin.email-reminders.create');
-Route::post('/admin/email-reminders/preview', [EmailReminderController::class, 'preview'])->middleware('auth')->name('admin.email-reminders.preview');
-Route::post('/admin/email-reminders/test', [EmailReminderController::class, 'sendTest'])->middleware('auth')->name('admin.email-reminders.test');
-Route::post('/admin/email-reminders', [EmailReminderController::class, 'store'])->middleware('auth')->name('admin.email-reminders.store');
-Route::get('/admin/email-reminders/{emailReminder}', [EmailReminderController::class, 'show'])->middleware('auth')->name('admin.email-reminders.show');
-Route::post('/admin/email-reminders/{emailReminder}/retry', [EmailReminderController::class, 'retry'])->middleware('auth')->name('admin.email-reminders.retry');
 
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');
 Route::get('/admin/achievements/create', [AchievementController::class, 'create'])->middleware('auth')->name('admin.achievements.create');
