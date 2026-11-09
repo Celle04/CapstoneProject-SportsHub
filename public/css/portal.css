@@ -2047,6 +2047,9 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .medical-hero-copy { flex: 1; min-width: 0; }
 .medical-hero-copy p { margin: 7px 0 0; font-size: 12px; line-height: 1.5; }
 .medical-hero-copy .admin-dashboard-kicker { color: rgba(255, 255, 255, .75); }
+.profile-hero .badge,
+.medical-hero .badge,
+.coach-detail-hero .badge { color: #fff; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .22); }
 .medical-hero-back { align-self: center; flex: 0 0 auto; padding: 8px 14px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700; text-decoration: none; transition: background .15s ease; }
 .medical-hero-back:hover { background: rgba(255, 255, 255, .14); color: #fff; }
 .medical-fact-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--color-border); }
@@ -4875,6 +4878,10 @@ html[data-theme="dark"] .portal-topbar {
     box-shadow: var(--shadow-xs);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+}
+
+.card.profile-hero {
+    background: linear-gradient(110deg, var(--color-primary), var(--color-primary-hover));
 }
 
 .table-wrap,
