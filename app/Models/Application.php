@@ -6,7 +6,33 @@ use Illuminate\Database\Eloquent\Model;
 
 class Application extends Model
 {
-    protected $fillable = ['name', 'student_id', 'grade', 'gender', 'email', 'sport', 'sport_id', 'medical_certificate_path', 'birth_certificate_path', 'parent_consent_path', 'privacy_accepted', 'terms_accepted', 'policy_accepted_at', 'medical_document_status', 'birth_document_status', 'consent_document_status', 'status', 'rejection_reason', 'review_notes', 'reviewed_by', 'reviewed_at', 'documents_requested', 'document_rejection_notes', 'review_history', 'athlete_id'];
+    protected $fillable = ['name', 'first_name', 'middle_name', 'last_name', 'student_id', 'grade', 'gender', 'email', 'sport', 'sport_id', 'medical_certificate_path', 'birth_certificate_path', 'parent_consent_path', 'privacy_accepted', 'terms_accepted', 'policy_accepted_at', 'medical_document_status', 'birth_document_status', 'consent_document_status', 'status', 'rejection_reason', 'review_notes', 'reviewed_by', 'reviewed_at', 'documents_requested', 'document_rejection_notes', 'review_history', 'athlete_id'];
+
+    /**
+     * Compose the display name from parts when available.
+     */
+    public function getNameAttribute($value): ?string
+    {
+        $first = trim((string) ($this->attributes['first_name'] ?? ''));
+        $last = trim((string) ($this->attributes['last_name'] ?? ''));
+
+        if ($first !== '' || $last !== '') {
+            $middle = trim((string) ($this->attributes['middle_name'] ?? ''));
+
+            return trim(implode(' ', array_filter([$first, $middle !== '' ? $middle : null, $last], fn ($part) => $part !== null && $part !== '')));
+        }
+
+        return $value;
+    }
+
+    public static function composeName(?string $firstName, ?string $middleName, ?string $lastName): string
+    {
+        return trim(implode(' ', array_filter([
+            trim((string) $firstName),
+            trim((string) $middleName) !== '' ? trim((string) $middleName) : null,
+            trim((string) $lastName),
+        ], fn ($part) => $part !== null && $part !== '')));
+    }
 
     protected function casts(): array
     {

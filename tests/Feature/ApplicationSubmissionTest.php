@@ -25,7 +25,9 @@ class ApplicationSubmissionTest extends TestCase
     private function applicationPayload(array $overrides = []): array
     {
         return array_merge([
-            'name' => 'Juan Dela Cruz',
+            'first_name' => 'Juan',
+            'middle_name' => 'Dela',
+            'last_name' => 'Cruz',
             'student_id' => '2026-0001',
             'grade' => 'Grade 11',
             'gender' => 'Male',
@@ -45,9 +47,16 @@ class ApplicationSubmissionTest extends TestCase
         $response->assertRedirect(route('application.create'));
         $application = Application::firstOrFail();
         $this->assertDatabaseHas('applications', [
-            'name' => 'Juan Dela Cruz', 'student_id' => '2026-0001', 'email' => 'juan@example.com',
-            'sport' => 'Basketball', 'status' => 'Pending',
-            'privacy_accepted' => 1, 'terms_accepted' => 1,
+            'name' => 'Juan Dela Cruz',
+            'first_name' => 'Juan',
+            'middle_name' => 'Dela',
+            'last_name' => 'Cruz',
+            'student_id' => '2026-0001',
+            'email' => 'juan@example.com',
+            'sport' => 'Basketball',
+            'status' => 'Pending',
+            'privacy_accepted' => 1,
+            'terms_accepted' => 1,
         ]);
         $this->assertNotNull($application->policy_accepted_at);
         $this->assertTrue($application->privacy_accepted);
@@ -55,6 +64,34 @@ class ApplicationSubmissionTest extends TestCase
         Storage::disk('private')->assertExists($application->medical_certificate_path);
         Storage::disk('private')->assertExists($application->birth_certificate_path);
         Storage::disk('private')->assertExists($application->parent_consent_path);
+    }
+
+    public function test_application_accepts_no_middle_name_option(): void
+    {
+        $response = $this->post(route('application.store'), $this->applicationPayload([
+            'middle_name' => null,
+            'no_middle_name' => '1',
+        ]));
+
+        $response->assertRedirect(route('application.create'));
+        $this->assertDatabaseHas('applications', [
+            'first_name' => 'Juan',
+            'middle_name' => null,
+            'last_name' => 'Cruz',
+            'name' => 'Juan Cruz',
+        ]);
+    }
+
+    public function test_middle_name_is_required_unless_no_middle_name_is_selected(): void
+    {
+        $this->from(route('application.create'))
+            ->post(route('application.store'), $this->applicationPayload([
+                'middle_name' => null,
+            ]))
+            ->assertRedirect(route('application.create'))
+            ->assertSessionHasErrors('middle_name');
+
+        $this->assertSame(0, Application::count());
     }
 
     public function test_incomplete_or_invalid_application_is_not_saved(): void

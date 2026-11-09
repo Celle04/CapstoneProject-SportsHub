@@ -22,6 +22,9 @@ class ApplicationController extends Controller
                 $search = trim($request->string('search')->toString());
                 $query->where(function ($applicationQuery) use ($search) {
                     $applicationQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('student_id', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
@@ -123,8 +126,29 @@ class ApplicationController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+        $hasNameParts = $request->filled('first_name') || $request->filled('last_name') || $request->has('no_middle_name');
+
+        $nameRules = $hasNameParts
+            ? [
+                'first_name' => ['required', 'string', 'max:255'],
+                'no_middle_name' => ['nullable', 'boolean'],
+                'middle_name' => [
+                    $request->boolean('no_middle_name') ? 'nullable' : 'required',
+                    'string',
+                    'max:255',
+                ],
+                'last_name' => ['required', 'string', 'max:255'],
+                'name' => ['nullable', 'string', 'max:255'],
+            ]
+            : [
+                'name' => ['required', 'string', 'max:255'],
+                'first_name' => ['nullable', 'string', 'max:255'],
+                'middle_name' => ['nullable', 'string', 'max:255'],
+                'last_name' => ['nullable', 'string', 'max:255'],
+                'no_middle_name' => ['nullable', 'boolean'],
+            ];
+
+        $validated = $request->validate(array_merge($nameRules, [
             'student_id' => ['required', 'string', 'max:100'],
             'grade' => ['required', 'in:Grade 7,Grade 8,Grade 9,Grade 10,Grade 11,Grade 12'],
             'gender' => ['required', 'in:Male,Female,Prefer not to say'],
@@ -134,15 +158,29 @@ class ApplicationController extends Controller
             'medical_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'birth_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'parent_consent' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-        ], [
+        ]), [
             'policy_accepted.accepted' => 'You must agree to the Privacy Policy and Terms & Conditions before submitting.',
+            'first_name.required' => 'Please enter your first name.',
+            'middle_name.required' => 'Please enter your middle name, or select "No middle name".',
+            'last_name.required' => 'Please enter your last name.',
         ]);
 
+        $firstName = trim((string) ($validated['first_name'] ?? ''));
+        $middleName = $request->boolean('no_middle_name') ? '' : trim((string) ($validated['middle_name'] ?? ''));
+        $lastName = trim((string) ($validated['last_name'] ?? ''));
+        $name = $hasNameParts
+            ? Application::composeName($firstName, $middleName, $lastName)
+            : trim((string) ($validated['name'] ?? ''));
+
         $sport = Sport::findOrFail($validated['sport_id']);
-        unset($validated['policy_accepted']);
+        unset($validated['policy_accepted'], $validated['no_middle_name']);
 
         Application::create([
             ...$validated,
+            'name' => $name,
+            'first_name' => $firstName !== '' ? $firstName : null,
+            'middle_name' => $middleName !== '' ? $middleName : null,
+            'last_name' => $lastName !== '' ? $lastName : null,
             'sport' => $sport->name,
             'privacy_accepted' => true,
             'terms_accepted' => true,

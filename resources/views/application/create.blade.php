@@ -197,21 +197,75 @@
                     </div>
 
 
-                    <!-- Full Name -->
+                    <!-- Applicant Name -->
+
+                    <div class="form-row">
+
+                        <label>
+
+                            <span>
+                                First Name <b>*</b>
+                            </span>
+
+                            <input
+                                type="text"
+                                name="first_name"
+                                value="{{ old('first_name') }}"
+                                placeholder="Enter your first name"
+                                required
+                                autocomplete="given-name"
+                            >
+
+                        </label>
+
+                        <label>
+
+                            <span>
+                                Last Name <b>*</b>
+                            </span>
+
+                            <input
+                                type="text"
+                                name="last_name"
+                                value="{{ old('last_name') }}"
+                                placeholder="Enter your last name"
+                                required
+                                autocomplete="family-name"
+                            >
+
+                        </label>
+
+                    </div>
 
                     <label>
 
                         <span>
-                            Full Name <b>*</b>
+                            Middle Name <b>*</b>
                         </span>
 
                         <input
+                            id="middle_name"
                             type="text"
-                            name="name"
-                            value="{{ old('name') }}"
-                            placeholder="Enter your full name"
-                            required
+                            name="middle_name"
+                            value="{{ old('no_middle_name') ? '' : old('middle_name') }}"
+                            placeholder="Enter your middle name"
+                            autocomplete="additional-name"
+                            @if (! old('no_middle_name')) required @endif
+                            @disabled(old('no_middle_name'))
                         >
+
+                        <span style="display:block; margin-top:0.35rem;">
+                            <label for="no_middle_name" style="display:inline-flex; align-items:center; gap:0.45rem; font-weight:normal; cursor:pointer;">
+                                <input
+                                    id="no_middle_name"
+                                    type="checkbox"
+                                    name="no_middle_name"
+                                    value="1"
+                                    @checked(old('no_middle_name'))
+                                >
+                                <span>I have no middle name</span>
+                            </label>
+                        </span>
 
                     </label>
 
@@ -591,6 +645,26 @@
         </div>
 
     </footer>
+
+    <script>
+        (function () {
+            var checkbox = document.getElementById('no_middle_name');
+            var middleName = document.getElementById('middle_name');
+            if (!checkbox || !middleName) return;
+
+            function syncMiddleName() {
+                var noMiddle = checkbox.checked;
+                middleName.disabled = noMiddle;
+                middleName.required = !noMiddle;
+                if (noMiddle) {
+                    middleName.value = '';
+                }
+            }
+
+            checkbox.addEventListener('change', syncMiddleName);
+            syncMiddleName();
+        })();
+    </script>
 
 </body>
 

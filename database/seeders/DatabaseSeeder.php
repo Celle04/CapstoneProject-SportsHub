@@ -89,7 +89,7 @@ class DatabaseSeeder extends Seeder
         $event = Event::where('title', 'Basketball Practice')->firstOrFail();
 
         $application = Application::updateOrCreate(['email' => 'maria.santos@example.com'], [
-            'name' => 'Maria Santos', 'student_id' => '2026-0002', 'grade' => 'Grade 10', 'gender' => 'Female', 'sport' => 'Volleyball', 'sport_id' => Sport::where('name', 'Volleyball')->value('id'), 'medical_certificate_path' => 'application-documents/seed/medical.pdf', 'birth_certificate_path' => 'application-documents/seed/birth.pdf', 'parent_consent_path' => 'application-documents/seed/consent.pdf', 'status' => 'Pending',
+            'name' => 'Maria Santos', 'first_name' => 'Maria', 'middle_name' => null, 'last_name' => 'Santos', 'student_id' => '2026-0002', 'grade' => 'Grade 10', 'gender' => 'Female', 'sport' => 'Volleyball', 'sport_id' => Sport::where('name', 'Volleyball')->value('id'), 'medical_certificate_path' => 'application-documents/seed/medical.pdf', 'birth_certificate_path' => 'application-documents/seed/birth.pdf', 'parent_consent_path' => 'application-documents/seed/consent.pdf', 'status' => 'Pending',
         ]);
 
         foreach (['medical_certificate_path', 'birth_certificate_path', 'parent_consent_path'] as $document) {
