@@ -193,22 +193,21 @@
                         </header>
                         <div class="portal-notification-list" role="menu">
                             @forelse ($recentNotifications as $notification)
-                                <article class="portal-notification-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}" role="menuitem">
-                                    <div class="portal-notification-icon-wrap"><svg aria-hidden="true"><use href="#icon-bell"></use></svg></div>
-                                    <div class="portal-notification-copy">
-                                        <div class="portal-notification-title-row">
-                                            <strong class="portal-notification-title">{{ data_get($notification->data, 'title', 'SportsHub update') }}</strong>
-                                            @if (! $notification->read_at)
-                                                <span class="portal-notification-unread-dot" aria-hidden="true"></span>
-                                            @endif
-                                        </div>
-                                        <p class="portal-notification-message">{{ data_get($notification->data, 'message', 'You have a new update.') }}</p>
-                                        <small class="portal-notification-time relative-time" data-posted-at="{{ \App\Support\RelativeTime::machine($notification->created_at) }}">{{ \App\Support\RelativeTime::of($notification->created_at) }}</small>
-                                    </div>
+                                <article class="portal-notification-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}">
+                                    <a class="portal-notification-content" role="menuitem" href="{{ route('notifications.open', $notification->id) }}">
+                                        <span class="portal-notification-icon-wrap"><svg aria-hidden="true"><use href="#icon-bell"></use></svg></span>
+                                        <span class="portal-notification-copy">
+                                            <span class="portal-notification-title-row">
+                                                <strong class="portal-notification-title">{{ data_get($notification->data, 'title', 'SportsHub update') }}</strong>
+                                                @if (! $notification->read_at)
+                                                    <span class="portal-notification-unread-dot" aria-hidden="true"></span>
+                                                @endif
+                                            </span>
+                                            <span class="portal-notification-message">{{ data_get($notification->data, 'message', 'You have a new update.') }}</span>
+                                            <small class="portal-notification-time relative-time" data-posted-at="{{ \App\Support\RelativeTime::machine($notification->created_at) }}">{{ \App\Support\RelativeTime::of($notification->created_at) }}</small>
+                                        </span>
+                                    </a>
                                     <div class="portal-notification-actions">
-                                        @if (data_get($notification->data, 'url'))
-                                            <a class="text-link portal-notification-open" href="{{ route('notifications.open', $notification->id) }}">Open</a>
-                                        @endif
                                         @if (! $notification->read_at)
                                             <form method="POST" action="{{ route('notifications.read', $notification->id) }}" class="portal-notification-mark-read">
                                                 @csrf

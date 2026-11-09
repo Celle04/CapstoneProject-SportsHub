@@ -15,15 +15,14 @@
     <div class="notification-inbox-list">
         @forelse ($notifications as $notification)
             <article class="card notification-inbox-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}">
-                <div class="notification-inbox-copy">
-                    <div class="notification-inbox-title"><strong>{{ data_get($notification->data, 'title', 'SportsHub update') }}</strong>@if (! $notification->read_at)<span>NEW</span>@endif</div>
-                    <p>{{ data_get($notification->data, 'message', 'You have a new update.') }}</p>
-                    <small>{{ $notification->created_at?->format('M j, Y g:i A') }}</small>
-                </div>
+                <a class="notification-inbox-link" href="{{ route('notifications.open', $notification->id) }}">
+                    <span class="notification-inbox-copy">
+                        <span class="notification-inbox-title"><strong>{{ data_get($notification->data, 'title', 'SportsHub update') }}</strong>@if (! $notification->read_at)<span>NEW</span>@endif</span>
+                        <span class="notification-inbox-message">{{ data_get($notification->data, 'message', 'You have a new update.') }}</span>
+                        <small>{{ $notification->created_at?->format('M j, Y g:i A') }}</small>
+                    </span>
+                </a>
                 <div class="notification-inbox-actions">
-                    @if (data_get($notification->data, 'url'))
-                        <a class="text-link" href="{{ route('notifications.open', $notification->id) }}">Open update</a>
-                    @endif
                     @if (! $notification->read_at)
                         <form method="POST" action="{{ route('notifications.read', $notification->id) }}">
                             @csrf

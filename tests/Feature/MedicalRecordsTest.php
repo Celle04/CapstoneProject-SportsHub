@@ -6,9 +6,11 @@ use App\Models\MedicalIncident;
 use App\Models\MedicalRecord;
 use App\Models\Sport;
 use App\Models\User;
+use App\Notifications\CheckupReminderNotification;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -99,6 +101,7 @@ class MedicalRecordsTest extends TestCase
         $this->actingAs($athlete)->put(route('admin.medical.update', $record), $this->payload($athlete))->assertForbidden();
         $this->actingAs($athlete)->patch(route('admin.medical.archive', $record))->assertForbidden();
         $this->actingAs($athlete)->patch(route('admin.medical.restore', $record))->assertForbidden();
+        $this->actingAs($athlete)->post(route('admin.medical.checkup-reminder', $record))->assertForbidden();
         $this->actingAs($athlete)->delete(route('admin.medical.destroy', $record))->assertForbidden();
         $this->actingAs($athlete)->post(route('admin.medical.incidents.store'), [])->assertForbidden();
     }
@@ -328,6 +331,44 @@ class MedicalRecordsTest extends TestCase
             ->assertSee('Injury & Medical Incident History')
             ->assertSee('Ankle sprain')
             ->assertSee('Moderate');
+    }
+
+    public function test_an_administrator_can_send_a_checkup_reminder_to_the_athletes_registered_email(): void
+    {
+        Notification::fake();
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, [
+            'sport_id' => $sport->id,
+            'next_checkup_date' => today()->addDays(7)->format('Y-m-d'),
+        ]));
+
+        $this->actingAs($admin)
+            ->post(route('admin.medical.checkup-reminder', $record))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Notification::assertSentTo(
+            $athlete,
+            CheckupReminderNotification::class,
+            fn (CheckupReminderNotification $notification): bool => $notification->checkupDate->isSameDay($record->next_checkup_date),
+        );
+    }
+
+    public function test_a_checkup_reminder_is_not_sent_without_a_next_checkup_date(): void
+    {
+        Notification::fake();
+        [$admin, $sport, $athlete] = $this->context();
+        $record = MedicalRecord::create($this->payload($athlete, [
+            'sport_id' => $sport->id,
+            'next_checkup_date' => null,
+        ]));
+
+        $this->actingAs($admin)
+            ->post(route('admin.medical.checkup-reminder', $record))
+            ->assertRedirect()
+            ->assertSessionHasErrors('checkup_reminder');
+
+        Notification::assertNothingSent();
     }
 
     public function test_an_administrator_can_archive_restore_and_delete_a_record(): void

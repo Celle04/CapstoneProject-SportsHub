@@ -396,7 +396,13 @@ class ReportsManagementTest extends TestCase
     {
         $admin = $this->admin();
         $sport = $this->sport('Fencing');
-        User::factory()->create(['name' => 'Roster Exporter', 'role' => 'Student', 'sport_id' => $sport->id, 'student_id' => '2026-8001']);
+        User::factory()->create([
+            'name' => 'Roster Exporter',
+            'role' => 'Student',
+            'sport_id' => $sport->id,
+            'student_id' => '2020202020202',
+            'phone' => '09171234567',
+        ]);
 
         $response = $this->actingAs($admin)
             ->get(route('reports.export', ['format' => 'csv', 'report' => 'athletes']))
@@ -407,7 +413,12 @@ class ReportsManagementTest extends TestCase
         $this->assertStringContainsString('OFFICIAL ATHLETE LIST', $csv);
         $this->assertStringContainsString('Total Athletes', $csv);
         $this->assertStringContainsString('Roster Exporter', $csv);
-        $this->assertStringContainsString('Student ID', $csv);
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        $this->assertStringContainsString('"Student ID","Athlete Name",Sport,Coach,"Year Level",Status', $csv);
+        $this->assertStringContainsString("\t2020202020202", $csv);
+        $this->assertStringNotContainsString('Contact Number', $csv);
+        $this->assertStringNotContainsString('Date Registered', $csv);
+        $this->assertStringNotContainsString('Email', $csv);
     }
 
     public function test_the_athlete_csv_export_neutralises_formula_cells(): void

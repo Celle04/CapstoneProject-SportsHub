@@ -913,6 +913,7 @@ Route::get('/admin/medical/{medical}/certificate/view', [MedicalController::clas
 Route::get('/admin/medical/{medical}', [MedicalController::class, 'show'])->middleware('auth')->name('admin.medical.show');
 Route::get('/admin/medical/{medical}/edit', [MedicalController::class, 'edit'])->middleware('auth')->name('admin.medical.edit');
 Route::put('/admin/medical/{medical}', [MedicalController::class, 'update'])->middleware('auth')->name('admin.medical.update');
+Route::post('/admin/medical/{medical}/checkup-reminder', [MedicalController::class, 'sendCheckupReminder'])->middleware('auth')->name('admin.medical.checkup-reminder');
 Route::delete('/admin/medical/{medical}', [MedicalController::class, 'destroy'])->middleware(['auth', 'administrator', 'password.confirm'])->name('admin.medical.destroy');
 Route::get('/admin/medical/{medical}/certificate', [MedicalController::class, 'downloadCertificate'])->middleware('auth')->name('admin.medical.certificate');
 

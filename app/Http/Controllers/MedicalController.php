@@ -6,6 +6,7 @@ use App\Models\MedicalIncident;
 use App\Models\MedicalRecord;
 use App\Models\Sport;
 use App\Models\User;
+use App\Notifications\CheckupReminderNotification;
 use App\Support\PortalNavigation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -98,6 +99,30 @@ class MedicalController extends Controller
         $medical->update($this->recordAttributes($validated, $certificate));
 
         return redirect()->route('admin.medical')->with('success', 'Medical record updated successfully.');
+    }
+
+    public function sendCheckupReminder(MedicalRecord $medical): RedirectResponse
+    {
+        $this->ensureAdministrator();
+        $medical->loadMissing('athlete');
+
+        if ($medical->isArchived()) {
+            return back()->withErrors(['checkup_reminder' => 'Restore this medical record before sending a checkup reminder.']);
+        }
+
+        if (! $medical->next_checkup_date) {
+            return back()->withErrors(['checkup_reminder' => 'Add a next checkup date before sending a reminder.']);
+        }
+
+        $athlete = $medical->athlete;
+
+        if (! $athlete || ! filter_var($athlete->email, FILTER_VALIDATE_EMAIL)) {
+            return back()->withErrors(['checkup_reminder' => 'The athlete does not have a valid email address on their account.']);
+        }
+
+        $athlete->notify(new CheckupReminderNotification($medical->next_checkup_date));
+
+        return back()->with('success', "Checkup reminder sent to the athlete's registered email address.");
     }
 
     /**

@@ -216,6 +216,16 @@
 
         <div class="medical-detail-actions">
             <a class="button" href="{{ route('admin.medical.edit', $selectedMedicalRecord) }}">Edit Record</a>
+            @if (!$selectedMedicalRecord->isArchived() && $selectedMedicalRecord->next_checkup_date)
+                @if (filled($selectedMedicalRecord->athlete?->email))
+                    <form method="POST" action="{{ route('admin.medical.checkup-reminder', $selectedMedicalRecord) }}">
+                        @csrf
+                        <button class="button button-secondary" type="submit">Send Checkup Reminder</button>
+                    </form>
+                @else
+                    <span class="meta">Add an email address to the athlete's account to send a reminder.</span>
+                @endif
+            @endif
             @if ($selectedMedicalRecord->isArchived())
                 <button class="button button-secondary" type="button" data-confirm-dialog data-confirm-title="Restore Medical Record?" data-confirm-message="Restore this medical record to the active list?" data-confirm-label="Restore" data-confirm-icon="check" data-confirm-variant="success" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.medical.restore', $selectedMedicalRecord) }}">Restore</button>
             @else

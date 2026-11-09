@@ -34,6 +34,8 @@ class StudentNotificationsTest extends TestCase
         $this->actingAs($student)->get(route('student.dashboard'))
             ->assertOk()
             ->assertSee('Schedule update')
+            ->assertSee('portal-notification-content')
+            ->assertSee(route('notifications.open', $notification->id))
             ->assertSee('1 unread')
             ->assertDontSee('Only for another student.');
 
@@ -56,6 +58,8 @@ class StudentNotificationsTest extends TestCase
         $this->get(route('notifications.index'))
             ->assertOk()
             ->assertSee('Schedule update')
+            ->assertSee('notification-inbox-link')
+            ->assertSee(route('notifications.open', $notification->id))
             ->assertDontSee('Only for another student.');
 
         $this->post(route('notifications.read', $foreignNotification->id))->assertNotFound();

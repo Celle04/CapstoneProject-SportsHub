@@ -118,9 +118,10 @@ class ReportController extends Controller
             ])->setPaper('a4', 'landscape')->download($filename);
         }
 
-        return response()->streamDownload(function () use ($payload) {
+        return response()->streamDownload(function () use ($payload, $report) {
             $handle = fopen('php://output', 'w');
 
+            fwrite($handle, "\xEF\xBB\xBF");
             fputcsv($handle, [self::SCHOOL]);
             fputcsv($handle, [self::HUB]);
             fputcsv($handle, [$payload['title']]);
@@ -135,7 +136,13 @@ class ReportController extends Controller
             }
 
             fputcsv($handle, []);
-            fputcsv($handle, array_column($payload['columns'], 'label'));
+            $columns = $report === 'athletes'
+                ? array_values(array_filter(
+                    $payload['columns'],
+                    fn (array $column) => in_array($column['key'], ['student_id', 'name', 'sport', 'coach', 'grade_level', 'status'], true),
+                ))
+                : $payload['columns'];
+            fputcsv($handle, array_column($columns, 'label'));
 
             $group = null;
 
@@ -151,8 +158,10 @@ class ReportController extends Controller
                 }
 
                 fputcsv($handle, array_map(
-                    fn (array $column) => $this->csvCell((string) ($row[$column['key']] ?? '')),
-                    $payload['columns'],
+                    fn (array $column) => $column['key'] === 'student_id'
+                        ? "\t".$this->csvCell((string) ($row[$column['key']] ?? ''))
+                        : $this->csvCell((string) ($row[$column['key']] ?? '')),
+                    $columns,
                 ));
             }
 
