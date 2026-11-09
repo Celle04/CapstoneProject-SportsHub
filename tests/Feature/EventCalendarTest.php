@@ -62,19 +62,21 @@ public function test_a_multi_day_event_appears_on_every_day_it_covers(): void
 
     /**
      * An event that runs past the end of the month has to stay visible in both
-     * months, without spilling past the days the grid actually shows.
+     * months, within the days each month grid actually shows.
      */
     public function test_a_multi_day_event_is_visible_in_both_months_it_spans(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'Administrator']));
 
-        $monthStart = now()->startOfMonth();
+        // Use a fixed month to keep grid boundaries deterministic.
+        $monthStart = \Illuminate\Support\Carbon::create(2026, 10, 1)->startOfMonth();
+        $nextMonthStart = $monthStart->copy()->addMonth();
 
-        Event::create([
+        $event = Event::create([
             'title' => 'Meet Finals',
             'venue' => 'Main Court',
-            'starts_at' => $monthStart->copy()->addDays(29)->setTime(8, 0),
-            'ends_at' => $monthStart->copy()->addDays(31)->setTime(17, 0),
+            'starts_at' => $monthStart->copy()->day(30)->setTime(8, 0),
+            'ends_at' => $nextMonthStart->copy()->day(1)->setTime(17, 0),
             'status' => 'Scheduled',
         ]);
 
@@ -83,11 +85,30 @@ public function test_a_multi_day_event_appears_on_every_day_it_covers(): void
             'admin-calendar-event-title">Meet Finals'
         );
 
-        // October's grid ends on the 31st, so the event shows on the 30th and 31st.
-        $this->assertSame(2, $chips($monthStart->format('Y-m')));
+        $gridDays = function (\Illuminate\Support\Carbon $month): array {
+            $cursor = $month->copy()->startOfWeek(\Illuminate\Support\Carbon::SUNDAY);
+            $last = $month->copy()->endOfMonth()->endOfWeek(\Illuminate\Support\Carbon::SATURDAY);
+            $days = [];
+            while ($cursor->lte($last)) {
+                $days[] = $cursor->toDateString();
+                $cursor->addDay();
+            }
 
-        // November's grid starts on the 1st, where the event is still running.
-        $this->assertSame(1, $chips($monthStart->copy()->addMonth()->format('Y-m')));
+            return $days;
+        };
+
+        $eventDays = [];
+        for ($day = $event->starts_at->copy()->startOfDay(); $day->lte($event->ends_at->copy()->startOfDay()); $day->addDay()) {
+            $eventDays[] = $day->toDateString();
+        }
+
+        $expectedOctober = count(array_intersect($gridDays($monthStart), $eventDays));
+        $expectedNovember = count(array_intersect($gridDays($nextMonthStart), $eventDays));
+
+        $this->assertGreaterThan(0, $expectedOctober);
+        $this->assertGreaterThan(0, $expectedNovember);
+        $this->assertSame($expectedOctober, $chips($monthStart->format('Y-m')));
+        $this->assertSame($expectedNovember, $chips($nextMonthStart->format('Y-m')));
     }
 
     /**
