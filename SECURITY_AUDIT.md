@@ -16,6 +16,8 @@
 ## 1. Executive summary
 
 **Overall risk rating: HIGH.**
+
+> **Update (2026-11, remediation pass):** Some items below have been addressed in code but should be re-verified in your deployment. **F-01 (outdated components):** targeted Symfony dependency updates applied (SEC-03); `composer audit` reported no known advisories at that time — re-run before release. **F-02 (default seeder credentials):** `DatabaseSeeder` now fails fast outside `local/testing` (SEC-02) and has safety tests; ensure production never runs demo seeding and no default accounts exist. **F-03 (login throttling):** `POST /login` uses `throttle:login` and `AppServiceProvider` defines a login rate limiter — verify effective behavior in production. **Route/admin hardening (SEC-01):** admin routes are grouped behind `auth,administrator` middleware (defense in depth). Items involving PII in failed-login notifications/logging (F-04/F-05) and other findings still require code/runtime review. Railway deployment/docs alignment is in progress; see `DEPLOY_NOTES.md`.
 The application's *authorization logic* is unusually strong for a capstone project — I found **no working IDOR, no role-escalation path, no SQL injection, and no confirmed stored XSS**. The risk is concentrated in three places: an **unpatched Laravel framework advisory (critical)**, **default credentials in the database seeder**, and a **login endpoint with no throttling** that also **emails and logs the exact identifier** a guesser typed. For a system holding **minors' medical and identity documents**, those three issues alone are enough to fail a data-protection review.
 
 ### Top 5 issues
