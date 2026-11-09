@@ -823,7 +823,39 @@ a {
 
 .programs {
     padding:
-        85px 0;
+        60px 0;
+}
+
+.program-grid-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: -14px 0 14px;
+}
+
+.program-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.program-view-all:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.program-view-all:focus-visible {
+    outline: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--focus-ring);
 }
 
 .program-grid {
@@ -833,6 +865,10 @@ a {
         repeat(3, minmax(0, 1fr));
 
     gap: 18px;
+}
+
+#program-grid > .program[hidden] {
+    display: none;
 }
 
 .program {

@@ -147,4 +147,21 @@ class LandingAnnouncementTest extends TestCase
             ->assertSee('Chess')
             ->assertSeeHtml('program-icon');
     }
+
+    public function test_landing_page_collapses_additional_sports_behind_view_all_control(): void
+    {
+        foreach (['Badminton', 'Basketball', 'Chess', 'Football'] as $name) {
+            Sport::create(['name' => $name, 'classification' => 'Sport', 'description' => $name, 'status' => 'Active']);
+        }
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('View All Sports')
+            ->assertSee('Badminton')
+            ->assertSee('Basketball')
+            ->assertSee('Chess')
+            ->assertSee('Football')
+            ->assertSeeHtml('data-extra hidden')
+            ->assertSeeHtml('aria-controls="program-grid"');
+    }
 }

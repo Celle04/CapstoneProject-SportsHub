@@ -305,11 +305,20 @@
             </div>
 
 
-            <div class="program-grid">
+            @if ($sports->count() > 3)
+                <div class="program-grid-actions">
+                    <button class="program-view-all" type="button" data-program-toggle aria-expanded="false" aria-controls="program-grid">
+                        View All Sports
+                        <span aria-hidden="true">&rarr;</span>
+                    </button>
+                </div>
+            @endif
+
+            <div class="program-grid" id="program-grid">
 
                 @forelse($sports as $sport)
 
-                    <article class="program">
+                    <article class="program" @if ($loop->index >= 3) data-extra hidden @endif>
 
                         @if($sport->logo_path)
                             <div class="program-icon program-icon--logo">
@@ -553,6 +562,28 @@
             });
 
             setActive(nav.querySelector('.nav-link.active') || links[0]);
+        })();
+
+        (function () {
+            var toggle = document.querySelector('[data-program-toggle]');
+            var grid = document.getElementById('program-grid');
+
+            if (!toggle || !grid) {
+                return;
+            }
+
+            toggle.addEventListener('click', function () {
+                var expanded = toggle.getAttribute('aria-expanded') === 'true';
+
+                Array.prototype.forEach.call(grid.querySelectorAll('.program[data-extra]'), function (program) {
+                    program.hidden = expanded;
+                });
+
+                toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                toggle.innerHTML = expanded
+                    ? 'View All Sports <span aria-hidden="true">&rarr;</span>'
+                    : 'Show Fewer Sports <span aria-hidden="true">&uarr;</span>';
+            });
         })();
     </script>
 
