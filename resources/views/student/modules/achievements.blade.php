@@ -43,9 +43,12 @@
 
 		<div class="achievement-detail-actions">
 			@php($certificateRequest = $certificateRequests[$selectedAchievement->id] ?? null)
-			@if ($certificateRequest && $certificateRequest->isReleased())
+			@php($hasIssuedCertificate = $certificateRequest && $certificateRequest->status === \App\Models\CertificateRequest::STATUS_ISSUED)
+			@if ($hasIssuedCertificate && $certificateRequest->isReleased())
 				<a class="button" href="{{ route('student.achievements.certificate', $selectedAchievement) }}">Download Certificate</a>
 				<span class="badge status-issued">Certificate available</span>
+			@elseif ($hasIssuedCertificate)
+				<span class="badge status-issued">Certificate issued</span>
 			@elseif ($certificateRequest && $certificateRequest->isGenerated())
 				<span class="badge status-approved">Certificate prepared &middot; waiting for release</span>
 			@elseif ($certificateRequest && in_array($certificateRequest->status, ['Pending', 'Approved'], true))

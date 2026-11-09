@@ -409,14 +409,18 @@ $studentAchievementData = function (?int $selectedId = null) use ($studentPage) 
             ->findOrFail($selectedId);
     }
 
-    // Latest certificate request per achievement, so the module can show a
-    // request button or the current request status without leaving the page.
+    // Most relevant certificate request per achievement (prefer issued/released,
+    // then open requests, then latest), so the UI can hide the request button
+    // once the student already has an issued certificate.
     $certificateRequests = CertificateRequest::query()
         ->forStudent($athlete)
         ->whereIn('achievement_id', $achievements->pluck('id'))
-        ->orderBy('id')
+        ->orderByRaw("CASE WHEN status = 'Issued' THEN 0 WHEN status IN ('Approved','Pending') THEN 1 WHEN status = 'Rejected' THEN 2 ELSE 3 END")
+        ->orderByDesc('handled_at')
+        ->orderByDesc('id')
         ->get()
-        ->keyBy('achievement_id');
+        ->groupBy('achievement_id')
+        ->map(fn ($requests) => $requests->first());
 
     return $studentPage('achievements', [
         'heading' => $selectedAchievement?->title ?? 'My Achievements',
