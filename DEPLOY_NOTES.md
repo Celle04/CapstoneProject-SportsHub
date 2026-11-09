@@ -11,7 +11,7 @@ Set in Railway variables (replace placeholders; mark secrets appropriately):
 - Database: `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (+ `MYSQL_ATTR_SSL_CA` if required)
 - Session/cache: `SESSION_DRIVER=database`, `SESSION_SECURE_COOKIE=true`, `CACHE_STORE=database`
 - Files/logging: `FILESYSTEM_DISK=local`, `LOG_CHANNEL=stderr`, `LOG_LEVEL=warning`
-- Mail: configure SMTP or `MAIL_MAILER=resend` + `RESEND_KEY` + verified `MAIL_FROM_ADDRESS` (SMTP may be blocked on some Railway plans)
+- Mail: defaults to `MAIL_MAILER=log` (no SMTP). Configure `resend`/SMTP later only if you enable email features.
 - `RUN_MIGRATIONS=true` if container startup runs migrations (confirm entrypoint behavior)
 
 ## Operations
