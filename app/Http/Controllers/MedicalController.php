@@ -62,11 +62,14 @@ class MedicalController extends Controller
         return view('admin.page', $this->viewData());
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->ensureAdministrator();
 
-        return view('admin.page', $this->viewData(['medicalShowForm' => true]));
+        return view('admin.page', $this->viewData([
+            'medicalShowForm' => true,
+            'medicalPreselectedAthleteId' => $this->preselectedAthleteId($request),
+        ]));
     }
 
     public function store(Request $request): RedirectResponse
@@ -567,6 +570,25 @@ class MedicalController extends Controller
     }
 
     /**
+     * The athlete a new record should be filed for, taken from the link that
+     * sent the administrator here. Unknown or non-athlete ids are ignored so
+     * the form still opens on the full athlete list.
+     */
+    private function preselectedAthleteId(Request $request): ?int
+    {
+        $athleteId = $request->integer('athlete_id');
+
+        if ($athleteId <= 0) {
+            return null;
+        }
+
+        return User::query()
+            ->where('role', 'Student')
+            ->whereKey($athleteId)
+            ->value('id');
+    }
+
+    /**
      * @param  Collection<int, MedicalRecord>  $records
      * @return array<int, array<string, mixed>>
      */
@@ -579,6 +601,8 @@ class MedicalController extends Controller
                 'type' => 'warning',
                 'title' => 'Medical clearance expiring soon',
                 'message' => $summary['expiring_soon'].' athlete record(s) have clearance or checkup dates due within '.$this->expiringDays().' days.',
+                'url' => route('admin.medical', ['certificate' => MedicalRecord::CERTIFICATE_EXPIRING]),
+                'action' => 'Review',
             ];
         }
 
@@ -587,6 +611,8 @@ class MedicalController extends Controller
                 'type' => 'danger',
                 'title' => 'Expired medical clearance',
                 'message' => $summary['expired'].' athlete record(s) have expired medical clearance or overdue checkup dates.',
+                'url' => route('admin.medical', ['status' => 'Expired']),
+                'action' => 'Review',
             ];
         }
 
@@ -595,6 +621,8 @@ class MedicalController extends Controller
                 'type' => 'danger',
                 'title' => 'Medical records missing',
                 'message' => $summary['missing'].' student-athlete account(s) have no active medical record.',
+                'url' => route('athletes.index', ['medical' => 'missing']),
+                'action' => 'Assign',
             ];
         }
 

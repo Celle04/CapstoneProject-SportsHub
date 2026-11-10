@@ -18,6 +18,20 @@ class User extends Authenticatable
 
     public const OTHER_GRADE_FILTER = '__other';
 
+    /**
+     * Medical record filters offered on the athlete list: athletes without an
+     * active medical record, or athletes whose active record is on file.
+     */
+    public const MEDICAL_FILTERS = ['missing', 'on_file'];
+
+    /**
+     * The labels shown for each medical record filter.
+     */
+    public const MEDICAL_FILTER_LABELS = [
+        'missing' => 'No Active Medical Record',
+        'on_file' => 'Medical Record On File',
+    ];
+
     use HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'username', 'role', 'status', 'sport_id', 'student_id', 'phone', 'grade_level', 'emergency_contact_name', 'emergency_contact_relationship', 'emergency_contact_phone', 'profile_photo_path', 'password', 'must_change_password'];
@@ -182,7 +196,14 @@ class User extends Authenticatable
             })
             ->when(! empty($filters['gender']), fn (Builder $nested) => $nested->whereHas('applications', fn (Builder $applications) => $applications->where('gender', (string) $filters['gender'])))
             ->when(! empty($filters['status']), fn (Builder $nested) => $nested->where('status', (string) $filters['status']))
-            ->when(! empty($filters['eligibility']), fn (Builder $nested) => $this->applyEligibilityFilter($nested, (string) $filters['eligibility']));
+            ->when(! empty($filters['eligibility']), fn (Builder $nested) => $this->applyEligibilityFilter($nested, (string) $filters['eligibility']))
+            ->when(in_array((string) ($filters['medical'] ?? ''), self::MEDICAL_FILTERS, true), function (Builder $nested) use ($filters) {
+                if ((string) $filters['medical'] === 'missing') {
+                    return $nested->whereDoesntHave('medicalRecords', fn (Builder $records) => $records->whereNull('archived_at'));
+                }
+
+                return $nested->whereHas('medicalRecords', fn (Builder $records) => $records->whereNull('archived_at'));
+            });
     }
 
     /**

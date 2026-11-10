@@ -46,6 +46,23 @@ class AthleteManagementTest extends TestCase
             ->assertSee('Eligible');
     }
 
+    public function test_the_athlete_list_can_be_filtered_to_athletes_without_a_medical_record(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $withRecord = User::factory()->create(['role' => 'Student', 'name' => 'Juan Dela Cruz', 'status' => 'Active']);
+        $withoutRecord = User::factory()->create(['role' => 'Student', 'name' => 'Maria Santos', 'status' => 'Active']);
+        MedicalRecord::create(['user_id' => $withRecord->id, 'athlete_id' => $withRecord->id, 'medical_status' => 'Cleared', 'examination_date' => today()]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('athletes.index', ['medical' => 'missing']))
+            ->assertOk();
+
+        $response->assertSee('Maria Santos');
+        $response->assertDontSee('Juan Dela Cruz');
+        $response->assertSee('Add Medical Record');
+        $response->assertSee(route('admin.medical.create', ['athlete_id' => $withoutRecord->id]), false);
+    }
+
     public function test_administrator_can_record_an_emergency_contact_for_an_athlete(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);

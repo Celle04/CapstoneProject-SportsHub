@@ -25,8 +25,13 @@ class AthleteController extends Controller
 
         $athletes = User::where('role', 'Student')
             ->with(['sport.coaches', 'applications', 'medicalRecords'])
-            ->withCount(['attendanceRecords', 'applications', 'medicalRecords'])
-            ->athleteFilters($request->only(['search', 'sport_id', 'grade', 'gender', 'status', 'eligibility']))
+            ->withCount([
+                'attendanceRecords',
+                'applications',
+                'medicalRecords',
+                'medicalRecords as active_medical_records_count' => fn ($query) => $query->whereNull('archived_at'),
+            ])
+            ->athleteFilters($request->only(['search', 'sport_id', 'grade', 'gender', 'status', 'eligibility', 'medical']))
             ->orderBy('name')
             ->get();
 
@@ -37,6 +42,7 @@ class AthleteController extends Controller
             'genders' => \App\Models\Application::whereNotNull('gender')->distinct()->orderBy('gender')->pluck('gender'),
             'statuses' => ['Active', 'Inactive'],
             'eligibilities' => ['Eligible', 'Pending', 'Not Eligible'],
+            'medicalFilters' => User::MEDICAL_FILTER_LABELS,
             'summary' => [
                 'total' => User::where('role', 'Student')->count(),
                 'active' => User::where('role', 'Student')->where('status', 'Active')->count(),

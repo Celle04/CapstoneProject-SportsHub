@@ -11,6 +11,8 @@
     ];
     $medicalFormMode = $medicalFormMode ?? 'create';
     $medicalFormRecord = $medicalFormRecord ?? null;
+    $medicalPreselectedAthleteId = $medicalPreselectedAthleteId ?? null;
+    $selectedAthleteId = (string) old('athlete_id', $medicalFormRecord?->athlete_id ?? $medicalPreselectedAthleteId ?? '');
     $medicalStatuses = $medicalStatuses ?? ['For Evaluation', 'Cleared', 'Restricted Participation', 'Expired'];
     $medicalCertificateStates = $medicalCertificateStates ?? ['Valid', 'Expiring Soon', 'Expired', 'Missing'];
     $medicalSeverities = $medicalSeverities ?? ['Mild', 'Moderate', 'Severe'];
@@ -150,13 +152,31 @@
         </div>
         <div class="dashboard-attention-items">
             @foreach ($medicalAlerts as $alert)
-                <div class="attention-item attention-{{ $alert['type'] === 'danger' ? 'danger' : 'warning' }}">
-                    <span><svg aria-hidden="true"><use href="#icon-{{ $alert['type'] === 'danger' ? 'medical' : 'bell' }}"></use></svg></span>
-                    <span class="attention-body">
-                        <strong>{{ $alert['title'] }}</strong>
-                        <p>{{ $alert['message'] }}</p>
-                    </span>
-                </div>
+                @php
+                    $alertTone = $alert['type'] === 'danger' ? 'danger' : 'warning';
+                    $alertIcon = $alert['type'] === 'danger' ? 'medical' : 'bell';
+                @endphp
+                @if (!empty($alert['url']))
+                    <a class="attention-item attention-{{ $alertTone }} attention-item--link" href="{{ $alert['url'] }}">
+                        <span><svg aria-hidden="true"><use href="#icon-{{ $alertIcon }}"></use></svg></span>
+                        <span class="attention-body">
+                            <strong>{{ $alert['title'] }}</strong>
+                            <p>{{ $alert['message'] }}</p>
+                        </span>
+                        <em class="attention-action">
+                            {{ $alert['action'] }}
+                            <svg aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+                        </em>
+                    </a>
+                @else
+                    <div class="attention-item attention-{{ $alertTone }}">
+                        <span><svg aria-hidden="true"><use href="#icon-{{ $alertIcon }}"></use></svg></span>
+                        <span class="attention-body">
+                            <strong>{{ $alert['title'] }}</strong>
+                            <p>{{ $alert['message'] }}</p>
+                        </span>
+                    </div>
+                @endif
             @endforeach
         </div>
     </section>
@@ -435,7 +455,7 @@
                     <select class="form-control @error('athlete_id') is-invalid @enderror" id="medical-athlete" name="athlete_id" required>
                         <option value="">Select athlete</option>
                         @foreach ($athletes ?? [] as $option)
-                            <option value="{{ $option->id }}" data-student-id="{{ $option->student_id }}" data-sport="{{ $option->sport?->name ?? 'Unassigned' }}" @selected((string) old('athlete_id', $medicalFormRecord?->athlete_id ?? '') === (string) $option->id)>
+                            <option value="{{ $option->id }}" data-student-id="{{ $option->student_id }}" data-sport="{{ $option->sport?->name ?? 'Unassigned' }}" @selected($selectedAthleteId === (string) $option->id)>
                                 {{ $option->name }}@if ($option->student_id) ({{ $option->student_id }})@endif &mdash; {{ $option->sport?->name ?? 'Unassigned' }}
                             </option>
                         @endforeach

@@ -1739,6 +1739,23 @@ html[data-theme="dark"] .dashboard-top-sports-list li { background: var(--color-
 .attention-item > span svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .attention-item > em { font-style: normal; font-weight: 700; white-space: nowrap; }
 
+/* Clickable attention items ------------------------------------------------ */
+.attention-item--link { cursor: pointer; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.attention-item--link:hover { box-shadow: 0 4px 12px rgba(23, 24, 43, .08); }
+.attention-item > em.attention-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding-left: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: inherit;
+}
+.attention-item > em.attention-action svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* ==========================================================================
    Admin Dashboard — redesigned layout
    ========================================================================== */

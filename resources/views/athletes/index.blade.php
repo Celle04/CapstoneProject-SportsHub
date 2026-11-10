@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $hasFilters = request()->hasAny(['search', 'sport_id', 'grade', 'gender', 'status', 'eligibility']);
+        $hasFilters = request()->hasAny(['search', 'sport_id', 'grade', 'gender', 'status', 'eligibility', 'medical']);
     @endphp
 
     <div class="module-header">
@@ -100,6 +100,12 @@
                     <option value="{{ $eligibility }}" @selected(request('eligibility') === $eligibility)>{{ $eligibility }}</option>
                 @endforeach
             </select>
+            <select class="form-control" name="medical" aria-label="Filter by medical record">
+                <option value="">All Medical Records</option>
+                @foreach ($medicalFilters as $medicalValue => $medicalLabel)
+                    <option value="{{ $medicalValue }}" @selected(request('medical') === $medicalValue)>{{ $medicalLabel }}</option>
+                @endforeach
+            </select>
             <button class="button" type="submit">Search</button>
             <a class="button button-secondary" href="{{ route('athletes.index') }}">Reset</a>
         </form>
@@ -123,6 +129,7 @@
                     <th scope="col">Coach</th>
                     <th scope="col">Eligibility</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Medical Record</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -148,9 +155,19 @@
                         <td><span class="badge eligibility-{{ strtolower(str_replace(' ', '-', $eligibility)) }}">{{ $eligibility }}</span></td>
                         <td><span class="badge athlete-status-{{ strtolower($athlete->status) }}">{{ $athlete->status }}</span></td>
                         <td>
+                            @if ($athlete->active_medical_records_count > 0)
+                                <span class="badge medical-status-cleared">On File</span>
+                            @else
+                                <span class="badge medical-certificate-missing">Missing</span>
+                            @endif
+                        </td>
+                        <td>
                             <div class="athlete-actions">
                                 <a class="text-link" href="{{ route('athletes.show', $athlete) }}">View</a>
                                 <a class="text-link" href="{{ route('athletes.edit', $athlete) }}">Edit</a>
+                                @if ($athlete->active_medical_records_count === 0)
+                                    <a class="row-action" href="{{ route('admin.medical.create', ['athlete_id' => $athlete->id]) }}">Add Medical Record</a>
+                                @endif
                                 <button class="row-action row-action-danger" type="button" data-confirm-dialog data-confirm-title="Delete Athlete?" data-confirm-message="Are you sure you want to delete this athlete? Athletes with related records will be set to inactive instead of deleted." data-confirm-label="Delete Athlete" data-confirm-method="DELETE" data-confirm-url="{{ route('athletes.destroy', $athlete) }}">Delete</button>
                                 <button class="button button-secondary" type="button" data-password-reset data-confirm-title="Reset Athlete Password" data-confirm-message="You are about to reset this athlete's password. A temporary password will be generated for the athlete to use when logging in. The athlete must change this password after their next successful login." data-confirm-label="Reset Password" data-confirm-busy-label="Resetting..." data-confirm-icon="lock" data-confirm-variant="warning" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete, false) }}">Reset Password</button>
                             </div>
@@ -158,7 +175,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="empty-cell">
+                        <td colspan="9" class="empty-cell">
                             @if ($hasFilters)
                                 <strong>No athletes found</strong>
                                 <br>

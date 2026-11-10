@@ -192,6 +192,35 @@ class MedicalRecordsTest extends TestCase
             ->assertSeeInOrder(['Total Medical Records', 'Cleared Athletes', 'For Evaluation', 'Restricted Participation', 'Expired Clearances', 'Under Recovery']);
     }
 
+    public function test_the_alerts_are_clickable_and_point_at_the_athletes_without_records(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        User::factory()->create(['role' => 'Student', 'name' => 'Maria Santos', 'status' => 'Active']);
+        MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id]));
+
+        $this->actingAs($admin)
+            ->get(route('admin.medical'))
+            ->assertOk()
+            ->assertSee('Medical records missing')
+            ->assertSee('attention-item--link', false)
+            ->assertSee(route('athletes.index', ['medical' => 'missing']), false);
+    }
+
+    public function test_the_new_medical_record_form_preselects_the_athlete_from_the_link(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+
+        $content = $this->actingAs($admin)
+            ->get(route('admin.medical.create', ['athlete_id' => $athlete->id]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString(
+            'value="'.$athlete->id.'" data-student-id="S-2048" data-sport="Basketball" selected',
+            $content
+        );
+    }
+
     public function test_the_required_record_fields_are_validated(): void
     {
         [$admin] = $this->context();
