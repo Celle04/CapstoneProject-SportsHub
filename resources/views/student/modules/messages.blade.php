@@ -112,10 +112,10 @@
                     </span>
                     <span class="student-message-status">
                         @if ($item->priority !== 'Normal')<em>{{ $item->priority }}</em>@endif
-                        @if ($item->isMedicalFollowUp() && $item->followUp)
+                        @if ($item->isMedicalFollowUp() && $item->followUp && $item->followUp->warrantsBadge())
                             <em class="follow-up-status follow-up-status-{{ strtolower($item->followUp->effectiveStatus()) }}">{{ $item->followUp->effectiveStatus() }}</em>
                         @endif
-                        <small>{{ $delivery->is_read ? 'Read' : 'Unread' }}</small>
+                        <small class="{{ $delivery->is_read ? 'is-read' : 'is-unread' }}">{{ $delivery->is_read ? 'Read' : 'Unread' }}</small>
                     </span>
                 </a>
             @empty

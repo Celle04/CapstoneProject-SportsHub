@@ -117,6 +117,22 @@ class MedicalFollowUp extends Model
     }
 
     /**
+     * Whether the status is worth showing next to a message.
+     *
+     * `Sent` and `Read` are states the athlete already sees on the message
+     * itself, so a badge for them only repeats the same word.
+     */
+    public function warrantsBadge(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_ACKNOWLEDGED,
+            self::STATUS_COMPLETED,
+            self::STATUS_OVERDUE,
+            self::STATUS_CANCELLED,
+        ], true);
+    }
+
+    /**
      * Recalculates the stored status from what the recipients actually did.
      *
      * Reading or acknowledging never completes a follow-up: only the

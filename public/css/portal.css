@@ -5132,6 +5132,9 @@ a:focus-visible {
 .student-message-copy > span { color: var(--color-muted); font-size: 10px; line-height: 1.5; }
 .student-message-status { display: grid; justify-items: end; gap: 5px; color: var(--color-muted); font-size: 10px; }
 .student-message-status em { color: var(--color-warning); font-style: normal; font-weight: 800; }
+.student-message-status em.follow-up-status { padding: 3px 9px; border-radius: 999px; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
+.student-message-status small.is-read { color: var(--color-muted); }
+.student-message-status small.is-unread { color: var(--color-warning); font-weight: 800; }
 .student-follow-up-actions { display: grid; gap: 10px; justify-items: start; margin: 16px 0; padding: 14px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); }
 .student-follow-up-actions label { font-size: 11px; font-weight: 700; color: var(--color-muted-strong); }
 .student-follow-up-actions .form-control { width: 100%; max-width: 640px; }

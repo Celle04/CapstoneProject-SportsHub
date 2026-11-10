@@ -346,6 +346,34 @@ class MedicalFollowUpTest extends TestCase
         $this->assertTrue($followUp->recipients()->firstOrFail()->isCompleted());
     }
 
+    public function test_the_student_list_only_shows_a_follow_up_status_that_adds_information(): void
+    {
+        [$admin, $first] = $this->context();
+
+        // A follow-up the athlete opened but did not acknowledge: the status
+        // of the follow-up is "Read", the same word the message already shows.
+        $read = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+        MessageRecipient::markReadFor($read->id, $first->id);
+        $read->fresh()->followUp->syncStatus();
+
+        $acknowledged = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+            'subject' => 'Clearance follow-up',
+        ]));
+        $this->actingAs($first)->post(route('student.messages.acknowledge', $acknowledged))->assertRedirect();
+
+        $response = $this->actingAs($first)->get(route('student.messages'));
+
+        $response->assertOk();
+        $response->assertSee('follow-up-status-acknowledged', false);
+        // The plain "Read" state is not repeated as a badge.
+        $response->assertDontSee('follow-up-status-read', false);
+    }
+
     public function test_an_athlete_cannot_complete_a_follow_up(): void
     {
         [$admin, $first] = $this->context();
