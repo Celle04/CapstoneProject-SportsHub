@@ -67,8 +67,25 @@ return new class extends Migration
 
         if (! Schema::hasColumn('messages', 'category')) {
             Schema::table('messages', function (Blueprint $table) {
-                $table->string('category', 32)->default('general')->after('message_type')->index();
-                $table->unsignedBigInteger('reply_to_message_id')->nullable()->after('category')->index();
+                $table->string('category', 32)->default('general')->after('message_type');
+            });
+        }
+
+        if (! $this->hasIndex('messages', 'messages_category_index')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->index('category');
+            });
+        }
+
+        if (! Schema::hasColumn('messages', 'reply_to_message_id')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->unsignedBigInteger('reply_to_message_id')->nullable()->after('category');
+            });
+        }
+
+        if (! $this->hasIndex('messages', 'messages_reply_to_message_id_index')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->index('reply_to_message_id');
             });
         }
     }
