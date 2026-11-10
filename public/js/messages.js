@@ -2,7 +2,7 @@
     'use strict';
 
     var recipientType = document.getElementById('recipient-type');
-    var messageType = document.getElementById('message-type');
+    var messageCategory = document.getElementById('message-category');
     var athleteSearch = document.getElementById('message-athlete-search');
     var athleteSelect = document.getElementById('message-athlete');
     var recipientSearch = document.getElementById('message-recipient-search');
@@ -18,17 +18,20 @@
             });
         }
 
-        var medicalFields = document.querySelector('[data-medical-fields]');
-        if (medicalFields && messageType) {
-            medicalFields.hidden = messageType.value !== 'medical_reminder';
+        // The medical fields only belong to a medical follow-up.
+        var medicalFields = document.querySelectorAll('[data-medical-fields]');
+        if (medicalFields.length && messageCategory) {
+            medicalFields.forEach(function (group) {
+                group.hidden = messageCategory.value !== 'medical_follow_up';
+            });
         }
     }
 
     if (recipientType) {
         recipientType.addEventListener('change', updatePanels);
     }
-    if (messageType) {
-        messageType.addEventListener('change', updatePanels);
+    if (messageCategory) {
+        messageCategory.addEventListener('change', updatePanels);
     }
     if (athleteSearch && athleteSelect) {
         athleteSearch.addEventListener('input', function () {

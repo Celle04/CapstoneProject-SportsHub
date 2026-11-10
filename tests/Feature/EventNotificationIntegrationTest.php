@@ -111,6 +111,7 @@ class EventNotificationIntegrationTest extends TestCase
             'event_id' => $event->id,
             'subject' => 'Championship reminder',
             'content' => 'See you at the venue.',
+            'category' => 'general',
             'message_type' => 'competition',
             'priority' => 'Important',
             'recipient_type' => 'sport',

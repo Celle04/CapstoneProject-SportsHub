@@ -21,9 +21,27 @@ class MessageReceivedNotification extends Notification
     public function toDatabase(object $notifiable): DatabaseMessage
     {
         $this->message->loadMissing('event');
-        $description = trim(strip_tags((string) $this->message->content));
+        $this->message->loadMissing('followUp');
 
-        if ($this->message->message_type === 'medical_reminder') {
+        $description = trim(strip_tags((string) $this->message->content));
+        $title = $this->message->subject ?: 'New SportsHub message';
+
+        if ($this->message->isMedicalFollowUp()) {
+            $followUp = $this->message->followUp;
+            $schedule = $followUp?->scheduleLabel() ?? 'No schedule set';
+            $description = trim($schedule.'. '.$description);
+            $title = $this->message->subject ?: 'New medical follow-up';
+
+            if ($followUp) {
+                $title = match ($followUp->follow_up_type) {
+                    'Medical Checkup Reminder' => 'Medical checkup reminder',
+                    'Medical Clearance Follow-up' => 'Medical clearance follow-up',
+                    'Medical Document Submission' => 'Medical document submission request',
+                    'Medical Re-examination' => 'Upcoming medical examination',
+                    default => 'New medical follow-up',
+                };
+            }
+        } elseif ($this->message->message_type === 'medical_reminder') {
             $schedule = 'Checkup: '.$this->message->checkup_date?->format('M j, Y');
             if ($this->message->checkup_time) {
                 $schedule .= ' at '.\Illuminate\Support\Carbon::parse($this->message->checkup_time)->format('g:i A');
@@ -52,11 +70,12 @@ class MessageReceivedNotification extends Notification
         }
 
         return new DatabaseMessage([
-            'title' => $this->message->subject ?: ($event?->title ? 'Event update: '.$event->title : 'New SportsHub message'),
+            'title' => $title,
             'message' => Str::limit($description, 160),
             'url' => $url,
             'message_id' => $this->message->id,
             'message_type' => $this->message->message_type,
+            'category' => $this->message->category,
             'priority' => $this->message->priority,
             'event_id' => $event?->id,
         ]);

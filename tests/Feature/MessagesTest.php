@@ -53,6 +53,7 @@ class MessagesTest extends TestCase
         return array_merge([
             'subject' => 'Training Update',
             'content' => 'Training starts at 3 PM.',
+            'category' => 'general',
             'message_type' => 'general',
             'priority' => 'Normal',
             'recipient_type' => 'individual',
@@ -183,25 +184,24 @@ class MessagesTest extends TestCase
         $this->actingAs($admin)->post(route('admin.messages.store'), $this->payload([
             'subject' => 'Medical Checkup Reminder',
             'content' => 'Bring your medical documents.',
-            'message_type' => 'medical_reminder',
+            'category' => 'medical_follow_up',
             'priority' => 'Important',
             'recipient_type' => 'individual',
             'athlete_id' => $first->id,
-            'checkup_date' => $checkupDate->format('Y-m-d'),
-            'checkup_time' => '08:30',
+            'follow_up_type' => 'Medical Checkup Reminder',
+            'scheduled_date' => $checkupDate->format('Y-m-d'),
+            'scheduled_time' => '08:30',
             'location' => 'School Medical Clinic',
             'action' => 'send',
         ]))->assertRedirect();
 
-        $message = Message::query()->where('message_type', 'medical_reminder')->firstOrFail();
-        $this->assertDatabaseHas('messages', [
-            'id' => $message->id,
-            'location' => 'School Medical Clinic',
-        ]);
-        $this->assertSame('08:30', substr((string) $message->refresh()->checkup_time, 0, 5));
+        $message = Message::query()->where('category', 'medical_follow_up')->firstOrFail();
+        $followUp = \App\Models\MedicalFollowUp::query()->where('message_id', $message->id)->firstOrFail();
+        $this->assertSame('School Medical Clinic', $followUp->location);
+        $this->assertSame('08:30', substr((string) $followUp->scheduled_time, 0, 5));
         $notification = $first->notifications()->firstOrFail();
         $this->assertSame(MessageReceivedNotification::class, $notification->type);
-        $this->assertStringContainsString($checkupDate->format('M j, Y'), data_get($notification->data, 'message'));
+        $this->assertStringContainsString($checkupDate->format('F j, Y'), data_get($notification->data, 'message'));
         $this->assertStringContainsString('8:30 AM', data_get($notification->data, 'message'));
         $this->assertStringContainsString('School Medical Clinic', data_get($notification->data, 'message'));
 
@@ -232,7 +232,8 @@ class MessagesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.messages'))
             ->assertOk()
             ->assertSee('Total Messages Sent')
-            ->assertSee('Read Messages')
+            ->assertSee('General Messages')
+            ->assertSee('Medical Follow-ups')
             ->assertSee('Training Update');
     }
 
@@ -265,6 +266,7 @@ class MessagesTest extends TestCase
         $this->from(route('admin.messages.create'))
             ->actingAs($admin)
             ->post(route('admin.messages.store'), [
+                'category' => 'general',
                 'message_type' => 'general',
                 'priority' => 'Normal',
                 'recipient_type' => 'individual',

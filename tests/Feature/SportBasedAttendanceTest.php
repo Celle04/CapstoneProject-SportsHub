@@ -180,6 +180,11 @@ class SportBasedAttendanceTest extends TestCase
         $sport = $this->sport('Track and Field');
         $runner = $this->athlete($sport, 'Runner Boy', '20260005');
 
+        // The clock is frozen in the middle of the day, so the session that
+        // started an hour ago always keeps the date of the check-in, even
+        // when the test runs shortly after midnight.
+        $this->travelTo(now()->startOfDay()->addHours(10));
+
         $session = AttendanceSession::create([
             'title' => 'Athletics Training',
             'sport_id' => $sport->id,
@@ -199,6 +204,8 @@ class SportBasedAttendanceTest extends TestCase
             'user_id' => $runner->id,
             'status' => 'Late',
         ]);
+
+        $this->travelBack();
     }
 
     public function test_athlete_cannot_check_in_for_another_sport_or_a_closed_session(): void

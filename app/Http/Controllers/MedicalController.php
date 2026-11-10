@@ -196,13 +196,17 @@ class MedicalController extends Controller
         $message = $delivery->send(auth()->user(), [
             'subject' => 'Medical Checkup Reminder',
             'content' => 'Your medical record indicates a checkup is scheduled for '.$medical->next_checkup_date->format('F j, Y').'. Please contact the school sports office to confirm the time and location.',
-            'message_type' => 'medical_reminder',
+            'category' => \App\Models\Message::CATEGORY_MEDICAL_FOLLOW_UP,
+            'message_type' => 'medical_follow_up',
             'priority' => 'Important',
             'recipient_type' => 'individual',
             'athlete_id' => $athlete->id,
-            'checkup_date' => $medical->next_checkup_date->toDateString(),
-            'checkup_time' => null,
+            'follow_up_type' => 'Medical Checkup Reminder',
+            'scheduled_date' => $medical->next_checkup_date->toDateString(),
+            'scheduled_time' => null,
             'location' => null,
+            'additional_instructions' => 'Please contact the school sports office to confirm the time and location before your next practice.',
+            'response_required' => true,
             'medical_record_id' => $medical->id,
         ]);
 

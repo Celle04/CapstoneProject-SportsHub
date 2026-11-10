@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
+use App\Models\MedicalFollowUp;
 use App\Models\Message;
 use App\Models\MessageRecipient;
 use App\Models\Sport;
 use App\Models\User;
+use App\Notifications\FollowUpAcknowledgedNotification;
 use App\Services\MessageDeliveryService;
 use App\Support\PortalNavigation;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,63 +23,70 @@ class MessageController extends Controller
     {
     }
 
+    /**
+     * The unified Messages & Follow-ups module of the sports office.
+     */
     public function index(Request $request): View
     {
         $this->ensureAdministrator();
 
-        $query = Message::query()
+        $tab = $this->tab($request);
+
+        $messages = Message::query()
             ->where('sender_id', auth()->id())
             ->with(['event', 'sport'])
             ->withCount('recipients')
             ->withCount(['recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)])
-            ->when(in_array($request->query('status'), ['sent', 'draft'], true), fn (Builder $messages) => $messages->where('status', $request->query('status')))
-            ->when($request->query('filter') === 'medical', fn (Builder $messages) => $messages->where('message_type', 'medical_reminder'))
-            ->when($request->query('filter') === 'event', fn (Builder $messages) => $messages->where(function (Builder $eventMessages): void {
-                $eventMessages->whereNotNull('event_id')->orWhereIn('message_type', ['sports_event', 'competition', 'event_update']);
-            }))
-            ->when($request->filled('event_id'), fn (Builder $messages) => $messages->where('event_id', $request->integer('event_id')))
-            ->when($request->filled('search'), function (Builder $messages) use ($request): void {
-                $search = trim($request->string('search')->toString());
-                $messages->where(function (Builder $matching) use ($search): void {
+            ->when($tab === 'general', fn (Builder $query) => $query->where('category', Message::CATEGORY_GENERAL))
+            ->when($tab === 'medical', fn (Builder $query) => $query->where('category', Message::CATEGORY_MEDICAL_FOLLOW_UP))
+            ->when(in_array($tab, ['sent', 'drafts'], true), fn (Builder $query) => $query->where('status', $tab === 'sent' ? 'sent' : 'draft'))
+            ->when($request->filled('event_id'), fn (Builder $query) => $query->where('event_id', $request->integer('event_id')))
+            ->when($request->filled('search'), function (Builder $query) use ($request): void {
+                $search = trim((string) $request->input('search'));
+                $query->where(function (Builder $matching) use ($search): void {
                     $matching->where('subject', 'like', "%{$search}%")
                         ->orWhere('content', 'like', "%{$search}%");
                 });
             });
 
         $sort = $request->query('sort') === 'oldest' ? 'asc' : 'desc';
-        $messages = $query->orderByRaw('COALESCE(sent_at, updated_at) '.$sort)->orderByDesc('id')->paginate(15)->withQueryString();
+        $messages = $messages->orderByRaw('COALESCE(sent_at, updated_at) '.$sort)->orderByDesc('id')->paginate(15)->withQueryString();
+
+        $followUps = MedicalFollowUp::query()
+            ->with(['message.sender', 'message.sport', 'recipients.recipient'])
+            ->when($request->filled('search'), function (Builder $query) use ($request): void {
+                $search = trim((string) $request->input('search'));
+                $query->where(function (Builder $matching) use ($search): void {
+                    $matching->whereHas('message', fn (Builder $message) => $message
+                        ->where('subject', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%"))
+                        ->orWhereHas('recipients.recipient', fn (Builder $athlete) => $athlete
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('student_id', 'like', "%{$search}%"));
+                });
+            })
+            ->orderByDesc('scheduled_date')
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
 
         return $this->adminView('index', [
             'messages' => $messages,
-            'messageSummary' => [
-                'sent' => Message::where('sender_id', auth()->id())->where('status', 'sent')->count(),
-                'recipients' => DB::table('message_recipients')
-                    ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
-                    ->where('messages.sender_id', auth()->id())
-                    ->where('messages.status', 'sent')
-                    ->count(),
-                'read' => DB::table('message_recipients')
-                    ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
-                    ->where('messages.sender_id', auth()->id())
-                    ->where('messages.status', 'sent')
-                    ->where('message_recipients.is_read', true)
-                    ->count(),
-                'unread' => DB::table('message_recipients')
-                    ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
-                    ->where('messages.sender_id', auth()->id())
-                    ->where('messages.status', 'sent')
-                    ->where('message_recipients.is_read', false)
-                    ->count(),
-                'drafts' => Message::where('sender_id', auth()->id())->where('status', 'draft')->count(),
-            ],
+            'followUps' => $followUps,
+            'messageTab' => $tab,
+            'messageSummary' => $this->summary(),
         ]);
     }
 
+    /**
+     * The compose screen of the unified module.
+     */
     public function create(Request $request): View
     {
         $this->ensureAdministrator();
 
         $message = new Message([
+            'category' => $request->query('category', Message::CATEGORY_GENERAL),
             'message_type' => $request->query('message_type', 'general'),
             'priority' => $request->query('priority', 'Normal'),
             'recipient_type' => $request->query('recipient_type', 'individual'),
@@ -89,7 +97,7 @@ class MessageController extends Controller
         ]);
 
         if ($request->filled('event_id')) {
-            $event = Event::with('sport')->find($request->integer('event_id'));
+            $event = \App\Models\Event::with('sport')->find($request->integer('event_id'));
             if ($event) {
                 $message->setRelation('event', $event);
                 $message->event_id = $event->id;
@@ -108,7 +116,10 @@ class MessageController extends Controller
             }
         }
 
-        return $this->adminView('compose', ['messageRecord' => $message]);
+        return $this->adminView('compose', [
+            'messageRecord' => $message,
+            'followUpRecord' => $message->followUp,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -127,25 +138,38 @@ class MessageController extends Controller
         return redirect()->route('admin.messages.edit', $message)->with('success', 'Draft saved.');
     }
 
+    /**
+     * The detail of a message. A medical follow-up shows its schedule and the
+     * acknowledgment and completion state of every athlete it reached.
+     *
+     * Every administrator of the sports office may open a delivered message,
+     * so a follow-up can be monitored by whoever is on duty. Drafts stay
+     * private to the administrator who wrote them.
+     */
     public function show(Message $message): View
     {
         $this->ensureAdministrator();
-        abort_unless($message->sender_id === auth()->id(), 404);
         abort_unless($message->status === 'sent', 404);
 
-        $message->load(['sender', 'sport', 'event', 'recipients.recipient.sport'])
+        $message->load(['sender', 'sport', 'event', 'recipients.recipient.sport', 'followUp.recipients.recipient.sport', 'replies.sender'])
             ->loadCount(['recipients', 'recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)]);
 
-        return $this->adminView('show', ['messageRecord' => $message]);
+        return $this->adminView('show', [
+            'messageRecord' => $message,
+            'followUpRecord' => $message->followUp,
+        ]);
     }
 
     public function edit(Message $message): View
     {
         $this->ensureAdministrator();
         $this->ensureOwnDraft($message);
-        $message->load('event');
+        $message->load(['event', 'followUp']);
 
-        return $this->adminView('compose', ['messageRecord' => $message]);
+        return $this->adminView('compose', [
+            'messageRecord' => $message,
+            'followUpRecord' => $message->followUp,
+        ]);
     }
 
     public function update(Request $request, Message $message): RedirectResponse
@@ -174,19 +198,37 @@ class MessageController extends Controller
         return redirect()->route('admin.messages')->with('success', 'Draft deleted.');
     }
 
-    public function inbox(): View
+    /**
+     * The inbox of the athlete: general messages and medical follow-ups in
+     * one list.
+     */
+    public function inbox(Request $request): View
     {
         $student = $this->ensureStudent();
-        $messages = MessageRecipient::query()
+        $tab = $request->query('tab', 'all');
+
+        $deliveries = MessageRecipient::query()
             ->where('recipient_id', $student->id)
             ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
-            ->with('message.sender', 'message.event')
+            ->when($tab === 'general', fn (Builder $query) => $query->whereHas('message', fn (Builder $message) => $message->where('category', Message::CATEGORY_GENERAL)))
+            ->when($tab === 'medical', fn (Builder $query) => $query->whereHas('message', fn (Builder $message) => $message->where('category', Message::CATEGORY_MEDICAL_FOLLOW_UP)))
+            ->when($tab === 'unread', fn (Builder $query) => $query->where('is_read', false))
+            ->with('message.sender', 'message.event', 'message.followUp')
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return $this->studentView('index', ['messages' => $messages]);
+        return $this->studentView('index', [
+            'messages' => $deliveries,
+            'messageTab' => $tab,
+            'messageSummary' => $this->studentSummary($student),
+        ]);
     }
 
+    /**
+     * The detail of a received message, including the medical instructions
+     * and the acknowledgment button of a follow-up.
+     */
     public function studentShow(Message $message): View
     {
         $student = $this->ensureStudent();
@@ -194,11 +236,22 @@ class MessageController extends Controller
             ->where('recipient_id', $student->id)
             ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
             ->where('message_id', $message->id)
-            ->with('message.sender', 'message.event')
+            ->with('message.sender', 'message.event', 'message.followUp')
             ->firstOrFail();
 
         DB::transaction(function () use ($delivery, $student, $message): void {
             MessageRecipient::markReadFor($message->id, $student->id);
+
+            $followUp = $message->followUp;
+            if ($followUp) {
+                $recipient = $followUp->recipients()->where('recipient_id', $student->id)->first();
+                if ($recipient && ! $recipient->isRead()) {
+                    $recipient->forceFill(['read_at' => now(), 'status' => $recipient->isAcknowledged() ? $recipient->status : MedicalFollowUp::STATUS_READ])->save();
+                }
+
+                $followUp->syncStatus();
+            }
+
             $student->unreadNotifications
                 ->filter(fn ($notification) => (int) data_get($notification->data, 'message_id') === $message->id)
                 ->each->markAsRead();
@@ -207,30 +260,145 @@ class MessageController extends Controller
         return $this->studentView('show', [
             'message' => $delivery->message,
             'messageRecipient' => $delivery->fresh(),
+            'followUpRecipient' => $message->followUp?->recipients()->where('recipient_id', $student->id)->first(),
         ]);
     }
 
+    /**
+     * The athlete confirms that they received a follow-up.
+     *
+     * Opening a message is never an acknowledgment: only this action records
+     * it, with the time it happened.
+     */
+    public function acknowledge(Request $request, Message $message): RedirectResponse
+    {
+        $student = $this->ensureStudent();
+
+        $delivery = MessageRecipient::query()
+            ->where('recipient_id', $student->id)
+            ->where('message_id', $message->id)
+            ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
+            ->firstOrFail();
+
+        $followUp = $message->followUp;
+
+        abort_unless($followUp, 404);
+        abort_if($followUp->status === MedicalFollowUp::STATUS_CANCELLED, 422, 'This medical follow-up was cancelled by the sports office.');
+
+        $recipient = $followUp->recipients()->where('recipient_id', $student->id)->firstOrFail();
+
+        DB::transaction(function () use ($followUp, $recipient, $student): void {
+            if (! $recipient->isAcknowledged()) {
+                $recipient->forceFill([
+                    'acknowledged_at' => now(),
+                    'status' => MedicalFollowUp::STATUS_ACKNOWLEDGED,
+                ])->save();
+            }
+
+            $followUp->syncStatus();
+        });
+
+        $sender = $message->sender;
+
+        if ($sender && $sender->role === 'Administrator') {
+            $sender->notify(new FollowUpAcknowledgedNotification($followUp, $student));
+        }
+
+        return back()->with('success', 'Acknowledged. The sports office can now see your confirmation.');
+    }
+
+    /**
+     * The athlete answers a follow-up. The answer is kept in the same thread
+     * as the message it belongs to.
+     */
+    public function reply(Request $request, Message $message): RedirectResponse
+    {
+        $student = $this->ensureStudent();
+
+        $delivery = MessageRecipient::query()
+            ->where('recipient_id', $student->id)
+            ->where('message_id', $message->id)
+            ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:5000'],
+        ], [
+            'content.required' => 'Write a reply before sending it.',
+        ]);
+
+        $followUp = $message->followUp;
+        abort_unless($followUp, 404);
+        abort_if($followUp->status === MedicalFollowUp::STATUS_CANCELLED, 422, 'This medical follow-up was cancelled by the sports office.');
+
+        DB::transaction(function () use ($validated, $student, $message, $followUp, $delivery): void {
+            $reply = new Message([
+                'sender_id' => $student->id,
+                'subject' => $message->subject,
+                'content' => $validated['content'],
+                'message_type' => 'medical_follow_up',
+                'category' => Message::CATEGORY_MEDICAL_FOLLOW_UP,
+                'priority' => 'Normal',
+                'status' => 'sent',
+                'recipient_type' => 'individual',
+                'reply_to_message_id' => $message->id,
+                'sent_at' => now(),
+            ]);
+            $reply->save();
+            $reply->recipients()->create(['recipient_id' => $message->sender_id]);
+
+            $recipient = $followUp->recipients()->where('recipient_id', $student->id)->first();
+            if ($recipient && ! $recipient->isAcknowledged()) {
+                $recipient->forceFill([
+                    'acknowledged_at' => now(),
+                    'status' => MedicalFollowUp::STATUS_ACKNOWLEDGED,
+                ])->save();
+            }
+
+            $followUp->syncStatus();
+        });
+
+        $sender = $message->sender;
+
+        if ($sender && $sender->role === 'Administrator') {
+            $sender->notify(new FollowUpAcknowledgedNotification($followUp, $student));
+        }
+
+        return back()->with('success', 'Reply sent to the sports office.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function validated(Request $request): array
     {
         $sending = $request->input('action') === 'send';
-        $messageType = $request->input('message_type', 'general');
-        $medicalReminder = $messageType === 'medical_reminder';
+        $category = $request->input('category', Message::CATEGORY_GENERAL);
+        $isFollowUp = $category === Message::CATEGORY_MEDICAL_FOLLOW_UP;
         $recipientType = $request->input('recipient_type', 'individual');
+
         $validated = $request->validate([
             'subject' => [$sending ? 'required' : 'nullable', 'string', 'max:255'],
             'content' => [$sending ? 'required' : 'nullable', 'string', 'max:20000'],
-            'message_type' => ['required', Rule::in(['general', 'medical_reminder', 'sports_event', 'competition', 'event_update'])],
+            'category' => ['required', Rule::in(Message::CATEGORIES)],
+            'message_type' => ['nullable', Rule::in(['general', 'sports_event', 'competition', 'event_update'])],
             'priority' => ['required', Rule::in(['Normal', 'Important', 'Urgent'])],
-            'recipient_type' => ['required', Rule::in(['individual', 'all', 'sport', 'team', 'selected'])],
+            'recipient_type' => ['required', Rule::in(['individual', 'all', 'sport', 'selected'])],
             'action' => ['required', Rule::in(['draft', 'send'])],
             'event_id' => ['nullable', 'integer', 'exists:events,id'],
             'athlete_id' => [$sending && $recipientType === 'individual' ? 'required' : 'nullable', 'integer', 'exists:users,id'],
             'recipient_ids' => [$sending && $recipientType === 'selected' ? 'required' : 'nullable', 'array', $sending && $recipientType === 'selected' ? 'min:1' : 'nullable'],
             'recipient_ids.*' => ['integer', 'distinct', 'exists:users,id'],
-            'sport_id' => [$sending && in_array($recipientType, ['sport', 'team'], true) ? 'required' : 'nullable', 'integer', 'exists:sports,id'],
-            'checkup_date' => [$medicalReminder && $sending ? 'required' : 'nullable', 'date', 'after_or_equal:today'],
-            'checkup_time' => [$medicalReminder && $sending ? 'required' : 'nullable', 'date_format:H:i'],
+            'sport_id' => [$sending && $recipientType === 'sport' ? 'required' : 'nullable', 'integer', 'exists:sports,id'],
+            'follow_up_type' => [$isFollowUp ? 'required' : 'nullable', Rule::in(MedicalFollowUp::TYPES)],
+            'scheduled_date' => [$isFollowUp && $sending ? 'required' : 'nullable', 'date'],
+            'scheduled_time' => ['nullable', 'date_format:H:i'],
             'location' => ['nullable', 'string', 'max:255'],
+            'additional_instructions' => ['nullable', 'string', 'max:5000'],
+            'response_required' => ['nullable', 'boolean'],
+        ], [
+            'follow_up_type.required' => 'Choose the type of medical follow-up.',
+            'scheduled_date.required' => 'Set the date of the checkup or follow-up.',
         ]);
 
         $recipientIds = $validated['recipient_type'] === 'selected'
@@ -254,12 +422,83 @@ class MessageController extends Controller
         return $validated;
     }
 
+    /**
+     * The tab of the unified module, keeping the older query parameters
+     * working.
+     */
+    private function tab(Request $request): string
+    {
+        $tab = (string) $request->query('tab', '');
+
+        if (in_array($tab, ['all', 'general', 'medical', 'sent', 'drafts'], true)) {
+            return $tab;
+        }
+
+        return match ((string) $request->query('status', '')) {
+            'sent' => 'sent',
+            'draft' => 'drafts',
+            default => match ((string) $request->query('filter', '')) {
+                'medical' => 'medical',
+                default => 'all',
+            },
+        };
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function summary(): array
+    {
+        $sent = Message::where('sender_id', auth()->id())->where('status', 'sent');
+
+        return [
+            'sent' => (clone $sent)->count(),
+            'general' => (clone $sent)->where('category', Message::CATEGORY_GENERAL)->count(),
+            'medical' => (clone $sent)->where('category', Message::CATEGORY_MEDICAL_FOLLOW_UP)->count(),
+            'recipients' => DB::table('message_recipients')
+                ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
+                ->where('messages.sender_id', auth()->id())
+                ->where('messages.status', 'sent')
+                ->count(),
+            'read' => DB::table('message_recipients')
+                ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
+                ->where('messages.sender_id', auth()->id())
+                ->where('messages.status', 'sent')
+                ->where('message_recipients.is_read', true)
+                ->count(),
+            'unread' => DB::table('message_recipients')
+                ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
+                ->where('messages.sender_id', auth()->id())
+                ->where('messages.status', 'sent')
+                ->where('message_recipients.is_read', false)
+                ->count(),
+            'drafts' => Message::where('sender_id', auth()->id())->where('status', 'draft')->count(),
+        ];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function studentSummary(User $student): array
+    {
+        $deliveries = MessageRecipient::query()
+            ->where('recipient_id', $student->id)
+            ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'));
+
+        return [
+            'total' => (clone $deliveries)->count(),
+            'general' => (clone $deliveries)->whereHas('message', fn (Builder $message) => $message->where('category', Message::CATEGORY_GENERAL))->count(),
+            'medical' => (clone $deliveries)->whereHas('message', fn (Builder $message) => $message->where('category', Message::CATEGORY_MEDICAL_FOLLOW_UP))->count(),
+            'unread' => (clone $deliveries)->where('is_read', false)->count(),
+        ];
+    }
+
     private function adminView(string $view, array $data = []): View
     {
         return view('admin.page', array_merge([
             'page' => 'messages',
-            'heading' => 'Messages',
-            'subtitle' => 'Communicate with student-athletes through SportsHub',
+            'heading' => 'Messages & Follow-ups',
+            'subtitle' => 'Communicate with student-athletes and track medical follow-ups',
             'active' => 'messages',
             'navItems' => PortalNavigation::admin(),
             'roleLabel' => 'Admin Portal',
@@ -268,6 +507,7 @@ class MessageController extends Controller
             'messageView' => $view,
             'activeStudents' => User::query()->where('role', 'Student')->where('status', 'Active')->with('sport')->orderBy('name')->get(),
             'sports' => Sport::orderBy('name')->get(),
+            'followUpTypes' => MedicalFollowUp::TYPES,
         ], $data));
     }
 
@@ -277,8 +517,8 @@ class MessageController extends Controller
 
         return view('student.page', array_merge([
             'page' => 'messages',
-            'heading' => 'Messages',
-            'subtitle' => 'Messages and checkup reminders from the Sports Office',
+            'heading' => 'Messages & Follow-ups',
+            'subtitle' => 'Messages, reminders and medical follow-ups from the Sports Office',
             'active' => 'messages',
             'navItems' => PortalNavigation::student(),
             'roleLabel' => 'Athlete/User Portal',

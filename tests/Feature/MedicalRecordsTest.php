@@ -559,12 +559,17 @@ class MedicalRecordsTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $message = Message::query()->where('message_type', 'medical_reminder')->firstOrFail();
+        $message = Message::query()->where('category', 'medical_follow_up')->firstOrFail();
         $response->assertRedirect(route('admin.messages.show', $message));
         $this->assertDatabaseHas('message_recipients', [
             'message_id' => $message->id,
             'recipient_id' => $athlete->id,
             'is_read' => false,
+        ]);
+        $this->assertDatabaseHas('medical_follow_ups', [
+            'message_id' => $message->id,
+            'follow_up_type' => 'Medical Checkup Reminder',
+            'status' => 'Sent',
         ]);
         Notification::assertSentTo($athlete, MessageReceivedNotification::class);
     }

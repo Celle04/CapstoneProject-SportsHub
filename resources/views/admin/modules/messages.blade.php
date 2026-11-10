@@ -1,11 +1,14 @@
 @php
     $messageView = $messageView ?? 'index';
-    $messageSummary = $messageSummary ?? ['sent' => 0, 'recipients' => 0, 'read' => 0, 'unread' => 0, 'drafts' => 0];
+    $messageSummary = $messageSummary ?? ['sent' => 0, 'general' => 0, 'medical' => 0, 'recipients' => 0, 'read' => 0, 'unread' => 0, 'drafts' => 0];
     $messageRecord = $messageRecord ?? new \App\Models\Message();
+    $followUpRecord = $followUpRecord ?? $messageRecord->followUp;
+    $messageTab = $messageTab ?? 'all';
     $recipientType = old('recipient_type', $messageRecord->recipient_type ?: 'individual');
-    $messageType = old('message_type', $messageRecord->message_type ?: 'general');
+    $messageCategory = old('category', $messageRecord->category ?: 'general');
     $selectedRecipientIds = array_map('strval', old('recipient_ids', $messageRecord->recipient_ids ?? []));
     $eventRecord = $messageRecord->event ?? null;
+    $followUpTypes = $followUpTypes ?? \App\Models\MedicalFollowUp::TYPES;
 @endphp
 
 @if (session('success'))
@@ -21,7 +24,7 @@
             <div>
                 <span class="admin-dashboard-kicker">{{ $messageRecord->exists ? 'DRAFT' : 'NEW MESSAGE' }}</span>
                 <h2>{{ $messageRecord->exists ? 'Edit Draft' : 'Compose Message' }}</h2>
-                <p>Messages are delivered to recipients’ SportsHub inboxes and notification bell.</p>
+                <p>General messages and medical follow-ups are delivered to the athletes' SportsHub inbox and notification bell.</p>
             </div>
             <a class="text-link" href="{{ route('admin.messages') }}">Back to Messages</a>
         </div>
@@ -44,14 +47,12 @@
             </div>
             <div class="grid grid-3">
                 <div class="form-group">
-                    <label for="message-type">Category</label>
-                    <select class="form-control" id="message-type" name="message_type">
-                        <option value="general" @selected($messageType === 'general')>General Message</option>
-                        <option value="sports_event" @selected($messageType === 'sports_event')>Sports Event</option>
-                        <option value="competition" @selected($messageType === 'competition')>Competition</option>
-                        <option value="event_update" @selected($messageType === 'event_update')>Event Update</option>
-                        <option value="medical_reminder" @selected($messageType === 'medical_reminder')>Medical Checkup Reminder</option>
+                    <label for="message-category">Message Category</label>
+                    <select class="form-control" id="message-category" name="category">
+                        <option value="general" @selected($messageCategory === 'general')>General Message</option>
+                        <option value="medical_follow_up" @selected($messageCategory === 'medical_follow_up')>Medical Follow-up</option>
                     </select>
+                    <small class="form-hint">A medical follow-up is tracked until it is acknowledged and verified.</small>
                 </div>
                 <div class="form-group">
                     <label for="message-priority">Priority</label>
@@ -64,7 +65,7 @@
                 <div class="form-group">
                     <label for="recipient-type">Recipients</label>
                     <select class="form-control" id="recipient-type" name="recipient_type">
-                        @foreach (['individual' => 'One athlete', 'all' => 'All active athletes', 'sport' => 'Athletes from a selected sport', 'team' => 'Athletes from a selected team', 'selected' => 'Individually selected athletes'] as $value => $label)
+                        @foreach (['individual' => 'One athlete', 'selected' => 'Individually selected athletes', 'all' => 'All active athletes', 'sport' => 'Athletes from a selected sport'] as $value => $label)
                             <option value="{{ $value }}" @selected($recipientType === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -85,10 +86,10 @@
                 @error('athlete_id')<small class="form-error">{{ $message }}</small>@enderror
             </div>
 
-            <div class="form-group message-recipient-panel" data-recipient-panel="sport team" hidden>
-                <label for="message-sport">Sport / Team</label>
+            <div class="form-group message-recipient-panel" data-recipient-panel="sport" hidden>
+                <label for="message-sport">Sport</label>
                 <select class="form-control" id="message-sport" name="sport_id">
-                    <option value="">Select a sport or team</option>
+                    <option value="">Select a sport</option>
                     @foreach ($sports as $sportOption)
                         <option value="{{ $sportOption->id }}" @selected((string) old('sport_id', $messageRecord->sport_id ?? '') === (string) $sportOption->id)>{{ $sportOption->name }}</option>
                     @endforeach
@@ -116,20 +117,45 @@
 
             <div class="grid grid-3 message-medical-fields" data-medical-fields hidden>
                 <div class="form-group">
-                    <label for="checkup-date">Checkup Date</label>
-                    <input class="form-control @error('checkup_date') is-invalid @enderror" type="date" id="checkup-date" name="checkup_date" value="{{ old('checkup_date', $messageRecord->checkup_date?->format('Y-m-d')) }}">
-                    @error('checkup_date')<small class="form-error">{{ $message }}</small>@enderror
+                    <label for="follow-up-type">Follow-up Type</label>
+                    <select class="form-control @error('follow_up_type') is-invalid @enderror" id="follow-up-type" name="follow_up_type">
+                        @foreach ($followUpTypes as $type)
+                            <option value="{{ $type }}" @selected(old('follow_up_type', $followUpRecord?->follow_up_type ?? 'Medical Checkup Reminder') === $type)>{{ $type }}</option>
+                        @endforeach
+                    </select>
+                    @error('follow_up_type')<small class="form-error">{{ $message }}</small>@enderror
                 </div>
                 <div class="form-group">
-                    <label for="checkup-time">Checkup Time</label>
-                    <input class="form-control @error('checkup_time') is-invalid @enderror" type="time" id="checkup-time" name="checkup_time" value="{{ old('checkup_time', $messageRecord->checkup_time) }}">
-                    @error('checkup_time')<small class="form-error">{{ $message }}</small>@enderror
+                    <label for="scheduled-date">Checkup or Follow-up Date</label>
+                    <input class="form-control @error('scheduled_date') is-invalid @enderror" type="date" id="scheduled-date" name="scheduled_date" value="{{ old('scheduled_date', $followUpRecord?->scheduled_date?->format('Y-m-d') ?? $messageRecord->checkup_date?->format('Y-m-d')) }}">
+                    @error('scheduled_date')<small class="form-error">{{ $message }}</small>@enderror
                 </div>
                 <div class="form-group">
-                    <label for="checkup-location">Location</label>
-                    <input class="form-control @error('location') is-invalid @enderror" type="text" id="checkup-location" name="location" maxlength="255" value="{{ old('location', $messageRecord->location) }}" placeholder="e.g. School Medical Clinic">
+                    <label for="scheduled-time">Checkup or Follow-up Time</label>
+                    <input class="form-control @error('scheduled_time') is-invalid @enderror" type="time" id="scheduled-time" name="scheduled_time" value="{{ old('scheduled_time', $followUpRecord?->scheduled_time ?? $messageRecord->checkup_time) }}">
+                    @error('scheduled_time')<small class="form-error">{{ $message }}</small>@enderror
+                </div>
+            </div>
+
+            <div class="grid grid-2 message-medical-fields" data-medical-fields hidden>
+                <div class="form-group">
+                    <label for="follow-up-location">Location</label>
+                    <input class="form-control @error('location') is-invalid @enderror" type="text" id="follow-up-location" name="location" maxlength="255" value="{{ old('location', $followUpRecord?->location ?? $messageRecord->location) }}" placeholder="e.g. School Medical Clinic">
                     @error('location')<small class="form-error">{{ $message }}</small>@enderror
                 </div>
+                <div class="form-group">
+                    <label for="response-required">Response Required</label>
+                    <select class="form-control" id="response-required" name="response_required">
+                        <option value="0" @selected(! old('response_required', $followUpRecord?->response_required ?? false))>No acknowledgement needed</option>
+                        <option value="1" @selected((bool) old('response_required', $followUpRecord?->response_required ?? false))>Yes — the athlete must acknowledge</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group message-medical-fields" data-medical-fields hidden>
+                <label for="follow-up-instructions">Additional Medical Instructions</label>
+                <textarea class="form-control @error('additional_instructions') is-invalid @enderror" id="follow-up-instructions" name="additional_instructions" rows="3" maxlength="5000" placeholder="Documents to bring, preparation notes, and what the athlete has to do.">{{ old('additional_instructions', $followUpRecord?->additional_instructions) }}</textarea>
+                @error('additional_instructions')<small class="form-error">{{ $message }}</small>@enderror
             </div>
 
             <div class="form-group">
@@ -148,8 +174,10 @@
     </section>
     <script src="{{ asset('js/messages.js') }}?v={{ filemtime(public_path('js/messages.js')) }}" defer></script>
 @elseif ($messageView === 'show' && isset($messageRecord))
+    @php
+        $detailCategory = \App\Models\Message::categoryName($messageRecord->category);
+    @endphp
     <section class="card message-detail-card">
-        @php($detailCategory = \App\Models\Message::categoryLabel($messageRecord->message_type))
         <div class="section-heading">
             <div>
                 <span class="admin-dashboard-kicker">{{ strtoupper($detailCategory) }}</span>
@@ -160,6 +188,7 @@
         </div>
         <div class="message-detail-metadata">
             <span><strong>Category</strong>{{ $detailCategory }}</span>
+            <span><strong>Type</strong>{{ \App\Models\Message::categoryLabel($messageRecord->message_type) }}</span>
             <span><strong>Recipients</strong>{{ $messageRecord->recipients_count }}</span>
             <span><strong>Read</strong>{{ $messageRecord->read_recipients_count }}</span>
             <span><strong>Unread</strong>{{ $messageRecord->recipients_count - $messageRecord->read_recipients_count }}</span>
@@ -177,90 +206,186 @@
                 <span>Status: {{ $messageRecord->event->status }}</span>
             </div>
         @endif
-        @if ($messageRecord->message_type === 'medical_reminder')
+        @if ($followUpRecord)
             <div class="message-reminder-schedule">
-                <strong>Checkup schedule</strong>
-                <span>{{ $messageRecord->checkup_date?->format('F j, Y') ?? 'Date not specified' }}@if ($messageRecord->checkup_time) · {{ \Illuminate\Support\Carbon::parse($messageRecord->checkup_time)->format('g:i A') }}@endif</span>
-                @if ($messageRecord->location)<span>{{ $messageRecord->location }}</span>@endif
+                <strong>Medical follow-up</strong>
+                <span>{{ $followUpRecord->follow_up_type }}</span>
+                <span>{{ $followUpRecord->scheduleLabel() }}</span>
+                @if ($followUpRecord->additional_instructions)<span>{{ $followUpRecord->additional_instructions }}</span>@endif
+                <span>Response required: {{ $followUpRecord->response_required ? 'Yes' : 'No' }}</span>
+                <span>Status: <span class="badge follow-up-status follow-up-status-{{ strtolower($followUpRecord->effectiveStatus()) }}">{{ $followUpRecord->effectiveStatus() }}</span></span>
             </div>
         @endif
         <div class="message-content">{{ $messageRecord->content }}</div>
-        <h3>Recipient Read Tracking</h3>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead><tr><th>Athlete</th><th>Student ID</th><th>Sport</th><th>Delivery</th><th>Read Status</th><th>Read At</th></tr></thead>
-                <tbody>
-                    @foreach ($messageRecord->recipients as $delivery)
-                        <tr>
-                            <td>{{ $delivery->recipient?->name ?? 'Account removed' }}</td>
-                            <td>{{ $delivery->recipient?->student_id ?: '—' }}</td>
-                            <td>{{ $delivery->recipient?->sport?->name ?? 'Unassigned' }}</td>
-                            <td>Sent</td>
-                            <td><span class="badge {{ $delivery->is_read ? 'status-approved' : 'status-pending' }}">{{ $delivery->is_read ? 'Read' : 'Unread' }}</span></td>
-                            <td>{{ $delivery->read_at?->format('M j, Y g:i A') ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        @if ($followUpRecord)
+            <h3>Follow-up Recipient Tracking</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Athlete</th><th>Student ID</th><th>Sport</th><th>Delivery</th><th>Read Status</th><th>Acknowledgment</th><th>Completion</th><th>Follow-up Date</th><th>Last Updated</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        @forelse ($followUpRecord->recipients as $recipient)
+                            <tr>
+                                <td>{{ $recipient->recipient?->name ?? 'Account removed' }}</td>
+                                <td>{{ $recipient->recipient?->student_id ?: '—' }}</td>
+                                <td>{{ $recipient->recipient?->sport?->name ?? 'Unassigned' }}</td>
+                                <td>Sent</td>
+                                <td><span class="badge {{ $recipient->isRead() ? 'status-approved' : 'status-pending' }}">{{ $recipient->isRead() ? 'Read' : 'Unread' }}</span></td>
+                                <td><span class="badge {{ $recipient->isAcknowledged() ? 'status-approved' : 'status-pending' }}">{{ $recipient->isAcknowledged() ? 'Acknowledged' : 'Not acknowledged' }}</span></td>
+                                <td><span class="badge {{ $recipient->isCompleted() ? 'status-approved' : 'status-pending' }}">{{ $recipient->isCompleted() ? 'Completed' : 'Pending' }}</span></td>
+                                <td>{{ $followUpRecord->scheduled_date?->format('M j, Y') ?? '—' }}</td>
+                                <td>{{ $recipient->updated_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                                <td>
+                                    @unless ($recipient->isCompleted())
+                                        <button class="row-action" type="button" data-confirm-dialog data-confirm-title="Mark as completed?" data-confirm-message="Confirm that this athlete completed the follow-up. Only an administrator can verify a completion." data-confirm-label="Mark Completed" data-confirm-icon="check" data-confirm-variant="success" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.follow-ups.recipient.complete', [$messageRecord, $recipient->recipient_id]) }}">Mark Completed</button>
+                                    @endunless
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td class="empty-cell" colspan="10">This follow-up has no recipients yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="message-form-actions">
+                @unless (in_array($followUpRecord->status, [\App\Models\MedicalFollowUp::STATUS_COMPLETED, \App\Models\MedicalFollowUp::STATUS_CANCELLED], true))
+                    <button class="button" type="button" data-confirm-dialog data-confirm-title="Mark the follow-up as completed?" data-confirm-message="Only mark this follow-up as completed after verifying that the athletes finished it." data-confirm-label="Mark Completed" data-confirm-icon="check" data-confirm-variant="success" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.follow-ups.complete', $messageRecord) }}">Mark Follow-up Completed</button>
+                    <button class="button button-secondary" type="button" data-confirm-dialog data-confirm-title="Cancel this follow-up?" data-confirm-message="The athletes will see that this follow-up was cancelled." data-confirm-label="Cancel Follow-up" data-confirm-icon="warning" data-confirm-variant="warning" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.follow-ups.cancel', $messageRecord) }}">Cancel Follow-up</button>
+                @endunless
+            </div>
+        @else
+            <h3>Recipient Read Tracking</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Athlete</th><th>Student ID</th><th>Sport</th><th>Delivery</th><th>Read Status</th><th>Read At</th></tr></thead>
+                    <tbody>
+                        @foreach ($messageRecord->recipients as $delivery)
+                            <tr>
+                                <td>{{ $delivery->recipient?->name ?? 'Account removed' }}</td>
+                                <td>{{ $delivery->recipient?->student_id ?: '—' }}</td>
+                                <td>{{ $delivery->recipient?->sport?->name ?? 'Unassigned' }}</td>
+                                <td>Sent</td>
+                                <td><span class="badge {{ $delivery->is_read ? 'status-approved' : 'status-pending' }}">{{ $delivery->is_read ? 'Read' : 'Unread' }}</span></td>
+                                <td>{{ $delivery->read_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+        @if ($messageRecord->replies->isNotEmpty())
+            <h3>Replies</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>From</th><th>Reply</th><th>Sent</th></tr></thead>
+                    <tbody>
+                        @foreach ($messageRecord->replies as $reply)
+                            <tr>
+                                <td>{{ $reply->sender?->name ?? 'Unknown' }}</td>
+                                <td>{{ \Illuminate\Support\Str::limit($reply->content, 160) }}</td>
+                                <td>{{ $reply->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </section>
 @else
     <div class="grid message-summary-grid">
         <div class="card stat"><small>Total Messages Sent</small><strong>{{ $messageSummary['sent'] }}</strong></div>
-        <div class="card stat"><small>Total Recipients</small><strong>{{ $messageSummary['recipients'] }}</strong></div>
-        <div class="card stat"><small>Read Messages</small><strong>{{ $messageSummary['read'] }}</strong></div>
-        <div class="card stat"><small>Unread Messages</small><strong>{{ $messageSummary['unread'] }}</strong></div>
-        <div class="card stat"><small>Draft Messages</small><strong>{{ $messageSummary['drafts'] }}</strong></div>
+        <div class="card stat"><small>General Messages</small><strong>{{ $messageSummary['general'] }}</strong></div>
+        <div class="card stat"><small>Medical Follow-ups</small><strong>{{ $messageSummary['medical'] }}</strong></div>
+        <div class="card stat"><small>Read</small><strong>{{ $messageSummary['read'] }}</strong></div>
+        <div class="card stat"><small>Unread</small><strong>{{ $messageSummary['unread'] }}</strong></div>
+        <div class="card stat"><small>Drafts</small><strong>{{ $messageSummary['drafts'] }}</strong></div>
     </div>
 
     <section class="card message-list-card">
         <div class="section-heading">
-            <div><span class="admin-dashboard-kicker">SPORTSHUB INBOX</span><h2>Messages</h2></div>
-            <a class="button" href="{{ route('admin.messages.create') }}">Compose Message</a>
+            <div><span class="admin-dashboard-kicker">SPORTSHUB INBOX</span><h2>Messages &amp; Follow-ups</h2></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a class="button button-secondary" href="{{ route('admin.messages.create', ['category' => 'general']) }}">Compose Message</a>
+                <a class="button" href="{{ route('admin.messages.create', ['category' => 'medical_follow_up']) }}">Send Medical Follow-up</a>
+            </div>
         </div>
         <nav class="message-filter-tabs" aria-label="Message filters">
-            <a href="{{ route('admin.messages') }}" class="{{ !request('status') && !request('filter') ? 'is-active' : '' }}">All</a>
-            <a href="{{ route('admin.messages', ['status' => 'sent']) }}" class="{{ request('status') === 'sent' && !request('filter') ? 'is-active' : '' }}">Sent</a>
-            <a href="{{ route('admin.messages', ['status' => 'draft']) }}" class="{{ request('status') === 'draft' ? 'is-active' : '' }}">Drafts</a>
-            <a href="{{ route('admin.messages', ['filter' => 'medical']) }}" class="{{ request('filter') === 'medical' ? 'is-active' : '' }}">Medical Reminders</a>
-            <a href="{{ route('admin.messages', ['filter' => 'event']) }}" class="{{ request('filter') === 'event' ? 'is-active' : '' }}">Event Notifications</a>
+            <a href="{{ route('admin.messages', ['tab' => 'all']) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All</a>
+            <a href="{{ route('admin.messages', ['tab' => 'general']) }}" class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages</a>
+            <a href="{{ route('admin.messages', ['tab' => 'medical']) }}" class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups</a>
+            <a href="{{ route('admin.messages', ['tab' => 'sent']) }}" class="{{ $messageTab === 'sent' ? 'is-active' : '' }}">Sent</a>
+            <a href="{{ route('admin.messages', ['tab' => 'drafts']) }}" class="{{ $messageTab === 'drafts' ? 'is-active' : '' }}">Drafts</a>
         </nav>
         <form method="GET" class="filters message-search-form">
-            <input class="form-control" type="search" name="search" value="{{ request('search') }}" placeholder="Search subject or message">
-            @if (request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
-            @if (request('filter'))<input type="hidden" name="filter" value="{{ request('filter') }}">@endif
+            <input type="hidden" name="tab" value="{{ $messageTab }}">
+            <input class="form-control" type="search" name="search" value="{{ request('search') }}" placeholder="Search subject, message or athlete">
             <select class="form-control" name="sort"><option value="newest" @selected(request('sort') !== 'oldest')>Newest first</option><option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option></select>
             <button class="button button-secondary" type="submit">Apply</button>
         </form>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead><tr><th>Subject</th><th>Category</th><th>Associated Event</th><th>Recipients</th><th>Read</th><th>Unread</th><th>Date Sent</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>
-                    @forelse ($messages as $row)
-                        <tr>
-                            <td><strong>{{ $row->subject ?: 'Untitled draft' }}</strong><br><small class="meta">{{ ucfirst($row->recipient_type) }}@if ($row->sport) · {{ $row->sport->name }}@endif</small></td>
-                            <td>{{ \App\Models\Message::categoryLabel($row->message_type) }}</td>
-                            <td>@if ($row->event)<a class="text-link" href="{{ route('events.show', $row->event) }}">{{ $row->event->title }}</a>@else — @endif</td>
-                            <td>{{ $row->recipients_count ?: ($row->status === 'draft' ? 'Not sent' : 0) }}</td>
-                            <td>{{ $row->status === 'sent' ? $row->read_recipients_count : '—' }}</td>
-                            <td>{{ $row->status === 'sent' ? $row->recipients_count - $row->read_recipients_count : '—' }}</td>
-                            <td>{{ $row->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
-                            <td><span class="badge {{ $row->status === 'sent' ? 'status-approved' : 'status-pending' }}">{{ ucfirst($row->status) }}</span></td>
-                            <td>
-                                @if ($row->status === 'sent')
-                                    <a class="text-link" href="{{ route('admin.messages.show', $row) }}">View Details</a>
-                                @else
-                                    <a class="text-link" href="{{ route('admin.messages.edit', $row) }}">Edit Draft</a>
-                                    <button class="row-action row-action-danger message-delete-form" type="button" data-confirm-dialog data-confirm-title="Delete Draft?" data-confirm-message="This draft will be permanently deleted. No athletes have received it." data-confirm-label="Delete Draft" data-confirm-icon="warning" data-confirm-variant="danger" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.messages.destroy', $row) }}">Delete</button>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td class="empty-cell" colspan="9">No messages match this view yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        {{ $messages->links() }}
+        @if ($messageTab === 'medical')
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Follow-up Subject</th><th>Follow-up Type</th><th>Athlete / Group</th><th>Assigned Sport</th><th>Follow-up Date</th><th>Read</th><th>Acknowledged</th><th>Completed</th><th>Overdue</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        @forelse ($followUps as $followUp)
+                            @php
+                                $recipientNames = $followUp->recipients->pluck('recipient.name')->filter()->implode(', ');
+                                $overdueCount = $followUp->recipients->filter(fn ($recipient) => $followUp->isOverdue() && ! $recipient->isCompleted())->count();
+                            @endphp
+                            <tr>
+                                <td><strong>{{ $followUp->message?->subject ?: 'Untitled follow-up' }}</strong></td>
+                                <td>{{ $followUp->follow_up_type }}</td>
+                                <td>{{ $recipientNames ?: '—' }}</td>
+                                <td>{{ $followUp->message?->sport?->name ?? 'All sports' }}</td>
+                                <td>{{ $followUp->scheduled_date?->format('M j, Y') ?? '—' }}</td>
+                                <td>{{ $followUp->readCount() }}/{{ $followUp->recipientCount() }}</td>
+                                <td>{{ $followUp->acknowledgedCount() }}/{{ $followUp->recipientCount() }}</td>
+                                <td>{{ $followUp->completedCount() }}/{{ $followUp->recipientCount() }}</td>
+                                <td>{{ $overdueCount }}</td>
+                                <td><span class="badge follow-up-status follow-up-status-{{ strtolower($followUp->effectiveStatus()) }}">{{ $followUp->effectiveStatus() }}</span></td>
+                                <td>
+                                    @if ($followUp->message)
+                                        <a class="text-link" href="{{ route('admin.messages.show', $followUp->message) }}">View Details</a>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td class="empty-cell" colspan="11">No medical follow-ups match this view yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            {{ $followUps->links() }}
+        @else
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Subject</th><th>Category</th><th>Recipient Type</th><th>Recipients</th><th>Date Sent</th><th>Read</th><th>Unread</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        @forelse ($messages as $row)
+                            <tr>
+                                <td><strong>{{ $row->subject ?: 'Untitled draft' }}</strong>@if ($row->event)<br><small class="meta">{{ $row->event->title }}</small>@endif</td>
+                                <td><span class="badge {{ $row->category === 'medical_follow_up' ? 'medical-status-pending' : '' }}">{{ \App\Models\Message::categoryName($row->category) }}</span><br><small class="meta">{{ \App\Models\Message::categoryLabel($row->message_type) }}</small></td>
+                                <td>{{ ucfirst($row->recipient_type) }}@if ($row->sport) · {{ $row->sport->name }}@endif</td>
+                                <td>{{ $row->recipients_count ?: ($row->status === 'draft' ? 'Not sent' : 0) }}</td>
+                                <td>{{ $row->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
+                                <td>{{ $row->status === 'sent' ? $row->read_recipients_count : '—' }}</td>
+                                <td>{{ $row->status === 'sent' ? $row->recipients_count - $row->read_recipients_count : '—' }}</td>
+                                <td><span class="badge {{ $row->status === 'sent' ? 'status-approved' : 'status-pending' }}">{{ ucfirst($row->status) }}</span></td>
+                                <td>
+                                    @if ($row->status === 'sent')
+                                        <a class="text-link" href="{{ route('admin.messages.show', $row) }}">View Details</a>
+                                    @else
+                                        <a class="text-link" href="{{ route('admin.messages.edit', $row) }}">Edit Draft</a>
+                                        <button class="row-action row-action-danger message-delete-form" type="button" data-confirm-dialog data-confirm-title="Delete Draft?" data-confirm-message="This draft will be permanently deleted. No athletes have received it." data-confirm-label="Delete Draft" data-confirm-icon="warning" data-confirm-variant="danger" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.messages.destroy', $row) }}">Delete</button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td class="empty-cell" colspan="9">No messages match this view yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            {{ $messages->links() }}
+        @endif
     </section>
 @endif

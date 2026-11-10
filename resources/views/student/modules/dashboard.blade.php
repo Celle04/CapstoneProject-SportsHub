@@ -66,7 +66,7 @@
             @forelse ($dashboardUpcomingMedicalReminders ?? [] as $delivery)
                 @php($reminder = $delivery->message)
                 <a class="dashboard-medical-reminder" href="{{ route('student.messages.show', $reminder) }}">
-                    <span><strong>{{ $reminder->subject }}</strong><small>{{ $reminder->checkup_date?->format('M j, Y') }}@if ($reminder->checkup_time) · {{ \Illuminate\Support\Carbon::parse($reminder->checkup_time)->format('g:i A') }}@endif</small></span>
+                    <span><strong>{{ $reminder->subject }}</strong><small>{{ $reminder->followUp?->scheduled_date?->format('M j, Y') }}@if ($reminder->followUp?->scheduled_time) · {{ \Illuminate\Support\Carbon::parse($reminder->followUp->scheduled_time)->format('g:i A') }}@endif</small></span>
                     @if (!$delivery->is_read)<span class="badge status-pending">New</span>@endif
                 </a>
             @empty
