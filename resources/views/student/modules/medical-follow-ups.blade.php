@@ -68,14 +68,13 @@
             </div>
         </div>
         <div class="table-wrap">
-            <table class="data-table">
+            <table class="data-table follow-up-table">
                 <thead>
                     <tr>
                         <th>Subject</th>
                         <th>Category</th>
                         <th>Status</th>
                         <th>Last activity</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,17 +82,16 @@
                         @php($unread = (int) ($conversation->unread_count ?? 0) > 0)
                         <tr>
                             <td>
-                                <strong>{{ $conversation->subject }}</strong>
+                                <a class="follow-up-title" href="{{ route('student.medical-follow-ups.show', $conversation) }}">{{ $conversation->subject }}</a>
                                 @if ($unread) <span class="badge status-pending">Unread</span> @endif
                                 <br><small class="meta">{{ \Illuminate\Support\Str::limit(strip_tags((string) ($conversation->latestMessage?->message ?? '')), 90) ?: '—' }}</small>
                             </td>
                             <td>{{ $conversation->category }}</td>
                             <td><span class="badge {{ $conversation->statusBadgeClass() }}">{{ $conversation->status }}</span></td>
                             <td>{{ $conversation->updated_at?->format('M j, Y g:i A') }}</td>
-                            <td><a class="text-link" href="{{ route('student.medical-follow-ups.show', $conversation) }}">Open</a></td>
                         </tr>
                     @empty
-                        <tr><td class="empty-cell" colspan="5">You have no medical follow-up messages.</td></tr>
+                        <tr><td class="empty-cell" colspan="4">You have no medical follow-up messages.</td></tr>
                     @endforelse
                 </tbody>
             </table>

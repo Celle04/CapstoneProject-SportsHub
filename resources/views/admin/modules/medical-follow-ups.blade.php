@@ -173,7 +173,7 @@
             <a class="button button-muted" href="{{ route('admin.medical.follow-ups') }}">Reset</a>
         </form>
         <div class="table-wrap">
-            <table class="data-table">
+            <table class="data-table follow-up-table">
                 <thead>
                     <tr>
                         <th>Athlete</th>
@@ -182,7 +182,6 @@
                         <th>Status</th>
                         <th>Latest Message</th>
                         <th>Last Activity</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,17 +193,16 @@
                                 <br><small class="meta">{{ $conversation->athlete?->student_id ?: 'No Student ID' }} · {{ $conversation->athlete?->sport?->name ?? 'Unassigned' }}</small>
                             </td>
                             <td>
-                                {{ $conversation->subject }}
+                                <a class="follow-up-title" href="{{ route('admin.medical.follow-ups.show', $conversation) }}">{{ $conversation->subject }}</a>
                                 @if ($unread) <span class="badge status-pending">New reply</span> @endif
                             </td>
                             <td>{{ $conversation->category }}</td>
                             <td><span class="badge {{ $conversation->statusBadgeClass() }}">{{ $conversation->status }}</span></td>
                             <td><small class="meta">{{ \Illuminate\Support\Str::limit(strip_tags((string) ($conversation->latestMessage?->message ?? '')), 80) ?: '—' }}</small></td>
                             <td>{{ $conversation->updated_at?->format('M j, Y g:i A') }}</td>
-                            <td><a class="text-link" href="{{ route('admin.medical.follow-ups.show', $conversation) }}">Open</a></td>
                         </tr>
                     @empty
-                        <tr><td class="empty-cell" colspan="7">No medical follow-up conversations yet.</td></tr>
+                        <tr><td class="empty-cell" colspan="6">No medical follow-up conversations yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

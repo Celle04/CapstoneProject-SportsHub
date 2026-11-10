@@ -4942,6 +4942,14 @@ html[data-theme="dark"] .portal-topbar {
     background: var(--color-surface-muted);
 }
 
+/* Clickable follow-up rows ------------------------------------------------ */
+.follow-up-table { min-width: 680px; }
+.follow-up-table tbody tr { position: relative; cursor: pointer; }
+.follow-up-title { color: var(--color-primary); font-weight: 700; text-decoration: none; white-space: nowrap; }
+.follow-up-title:hover { color: var(--color-primary-hover); text-decoration: underline; }
+/* The link stretches over the whole row, so any cell opens the conversation. */
+.follow-up-title::after { content: ""; position: absolute; inset: 0; }
+
 .form-control,
 .filters input,
 .filters select,
