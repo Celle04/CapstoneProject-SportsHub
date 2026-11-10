@@ -2669,13 +2669,19 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .athlete-table-wrap { margin-top: 18px; }
 .athlete-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .athlete-list-count { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 13px; background: var(--color-primary-soft); color: var(--color-primary); font-size: 11px; font-weight: 700; }
-.athlete-table { min-width: 980px; }
+.athlete-table { min-width: 1180px; }
+/* The data columns stay on a single line and the athlete column keeps room
+   for the avatar and the longest name, so no label breaks apart. */
+.athlete-table th,
+.athlete-table td { vertical-align: middle; }
+.athlete-table th:nth-child(n+2):nth-child(-n+8),
+.athlete-table td:nth-child(n+2):nth-child(-n+8) { white-space: nowrap; }
 .athlete-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 7px;
-    min-width: 225px;
-    max-width: 270px;
+    min-width: 285px;
+    max-width: 285px;
 }
 .athlete-actions form { margin: 0; }
 .athlete-actions > * {
@@ -2714,6 +2720,9 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     color: var(--color-primary-contrast);
     background: var(--color-primary);
 }
+/* A label longer than one third of the cell gets a row of its own, so it
+   never spills over the button next to it. */
+.athlete-actions .row-action--wide { grid-column: 1 / -1; }
 .athlete-actions .row-action-danger {
     border-color: var(--color-danger-border);
     color: var(--color-danger);
@@ -2724,7 +2733,7 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     background: var(--color-danger-soft);
 }
 .athlete-cell { display: flex; align-items: center; gap: 12px; }
-.athlete-cell-text { display: grid; gap: 2px; min-width: 0; }
+.athlete-cell-text { display: grid; gap: 2px; min-width: 140px; }
 .athlete-cell-text small { color: var(--color-muted); font-size: 10px; }
 .athlete-avatar-sm { background: #fff; }
 .athlete-status-active { color: var(--color-success); background: var(--color-success-soft); }

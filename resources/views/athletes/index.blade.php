@@ -165,10 +165,10 @@
                             <div class="athlete-actions">
                                 <a class="text-link" href="{{ route('athletes.show', $athlete) }}">View</a>
                                 <a class="text-link" href="{{ route('athletes.edit', $athlete) }}">Edit</a>
-                                @if ($athlete->active_medical_records_count === 0)
-                                    <a class="row-action" href="{{ route('admin.medical.create', ['athlete_id' => $athlete->id]) }}">Add Medical Record</a>
-                                @endif
                                 <button class="row-action row-action-danger" type="button" data-confirm-dialog data-confirm-title="Delete Athlete?" data-confirm-message="Are you sure you want to delete this athlete? Athletes with related records will be set to inactive instead of deleted." data-confirm-label="Delete Athlete" data-confirm-method="DELETE" data-confirm-url="{{ route('athletes.destroy', $athlete) }}">Delete</button>
+                                @if ($athlete->active_medical_records_count === 0)
+                                    <a class="row-action row-action--wide" href="{{ route('admin.medical.create', ['athlete_id' => $athlete->id]) }}">Add Medical Record</a>
+                                @endif
                                 <button class="button button-secondary" type="button" data-password-reset data-confirm-title="Reset Athlete Password" data-confirm-message="You are about to reset this athlete's password. A temporary password will be generated for the athlete to use when logging in. The athlete must change this password after their next successful login." data-confirm-label="Reset Password" data-confirm-busy-label="Resetting..." data-confirm-icon="lock" data-confirm-variant="warning" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete, false) }}">Reset Password</button>
                             </div>
                         </td>
