@@ -813,11 +813,12 @@
                     <select class="form-control @error('athlete_id') is-invalid @enderror" id="incident-athlete" name="athlete_id" required>
                         <option value="">Select athlete</option>
                         @foreach ($athletes ?? [] as $option)
-                            <option value="{{ $option->id }}" @selected((string) old('athlete_id', $medicalIncidentFormRecord?->athlete_id ?? '') === (string) $option->id)>
-                                {{ $option->name }}@if ($option->student_id) ({{ $option->student_id }})@endif
+                            <option value="{{ $option->id }}" data-sport-id="{{ $option->sport_id }}" @selected((string) old('athlete_id', $medicalIncidentFormRecord?->athlete_id ?? '') === (string) $option->id)>
+                                {{ $option->name }}@if ($option->student_id) ({{ $option->student_id }})@endif &mdash; {{ $option->sport?->name ?? 'Unassigned' }}
                             </option>
                         @endforeach
                     </select>
+                    <small class="medical-athlete-hint">The assigned sport of the athlete is selected automatically.</small>
                     @error('athlete_id')<small class="form-error">{{ $message }}</small>@enderror
                 </div>
 
@@ -981,3 +982,4 @@
     </section>
 @endif
 </div>
+<script src="{{ asset('js/medical-incidents.js') }}?v={{ filemtime(public_path('js/medical-incidents.js')) }}" defer></script>

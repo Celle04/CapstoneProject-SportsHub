@@ -574,6 +574,20 @@ class MedicalRecordsTest extends TestCase
         Notification::assertSentTo($athlete, MessageReceivedNotification::class);
     }
 
+    public function test_the_incident_form_carries_the_assigned_sport_of_every_athlete(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+
+        $response = $this->actingAs($admin)->get(route('admin.medical'));
+
+        $response->assertOk();
+        // The sport of the athlete travels with the option, so choosing an
+        // athlete can select the sport of that athlete.
+        $response->assertSee('data-sport-id="'.$sport->id.'"', false);
+        $response->assertSee('value="'.$athlete->id.'" data-sport-id="'.$sport->id.'"', false);
+        $response->assertSee('medical-incidents.js', false);
+    }
+
     public function test_a_checkup_reminder_is_not_sent_without_a_next_checkup_date(): void
     {
         Notification::fake();

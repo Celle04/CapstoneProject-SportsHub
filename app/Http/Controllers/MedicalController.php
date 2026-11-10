@@ -428,7 +428,7 @@ class MedicalController extends Controller
             'page' => 'medical',
             'heading' => 'Medical Records',
             'subtitle' => 'Manage athlete health information and clearances',
-            'athletes' => User::where('role', 'Student')->orderBy('name')->get(),
+            'athletes' => User::where('role', 'Student')->with('sport')->orderBy('name')->get(),
             'sports' => Sport::orderBy('name')->get(),
             'medicalRecords' => $records,
             'medicalRecordCount' => $records->total(),
