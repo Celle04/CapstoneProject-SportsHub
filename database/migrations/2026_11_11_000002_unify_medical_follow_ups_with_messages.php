@@ -20,11 +20,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::table('messages')->where('message_type', 'medical_reminder')->update(['category' => 'medical_follow_up']);
+        // The conversion only writes rows, so it runs inside a transaction:
+        // a deployment that stops halfway leaves nothing behind and the
+        // migration can simply be run again.
+        DB::transaction(function (): void {
+            DB::table('messages')->where('message_type', 'medical_reminder')->update(['category' => 'medical_follow_up']);
 
-        $this->migrateMedicalReminders();
-        $conversationMessages = $this->migrateConversations();
-        $this->repointNotifications($conversationMessages);
+            $this->migrateMedicalReminders();
+            $conversationMessages = $this->migrateConversations();
+            $this->repointNotifications($conversationMessages);
+        });
 
         Schema::dropIfExists('medical_messages');
         Schema::dropIfExists('medical_conversations');
@@ -273,11 +278,27 @@ return new class extends Migration
             unset($data['medical_conversation_id']);
             $data['message_id'] = $messageId;
             $data['message_type'] = 'medical_follow_up';
-            $data['url'] = route('student.messages.show', $messageId);
+            $data['url'] = $this->messageUrl($messageId);
 
             DB::table('notifications')->where('id', $notification->id)->update([
                 'data' => json_encode($data),
             ]);
+        }
+    }
+
+    /**
+     * The address of the message that replaced a conversation.
+     *
+     * The route is built when the application can build it, and falls back to
+     * a relative path, so the migration never fails because of a missing
+     * application URL.
+     */
+    private function messageUrl(int $messageId): string
+    {
+        try {
+            return route('student.messages.show', $messageId);
+        } catch (\Throwable) {
+            return '/student/messages/'.$messageId;
         }
     }
 };
