@@ -1,4 +1,4 @@
-
+﻿
 SportsHub: A Progressive Web Application for Athlete Records and Sports Activity Management System
 
 
@@ -47,7 +47,7 @@ In addition, the project benefits the entire school community by improving how s
 1.2	Purpose and Description
 The purpose of this project is to create SportsHub, a Progressive Web Application that helps Surigao del Norte National High School (SNNHS) organize and manage its sports activities by replacing manual recording with a simple digital system. In this document, the terms Sports Coordinator, administrator, and admin refer to the same user role.
 The system has three parts. The public landing page is open to any student without logging in. It shows announcements that the system publishes automatically when an event is scheduled (and withdraws if the event is cancelled or postponed), and it hosts the application form. Applicants submit a medical certificate from a licensed physician, a PSA birth certificate, and a signed parent's or guardian's consent form. Incomplete applications are not processed, and no account is created at this stage.
-The administrator dashboard is accessible only to the Sports Coordinator, who moves each application through Pending, Under Review, Documents Required, Approved, Rejected, or Waitlisted and verifies each document. Review notes and rejection reasons are visible to the student. For approved applicants, the admin creates the athlete account with a one-time temporary password that must be replaced on first login.
+The administrator dashboard is accessible only to the Sports Coordinator, who moves each application through Pending, Under Review, Requires Revision, Approved, or Rejected and verifies each document. Review notes and rejection reasons are visible to the student. For approved applicants, the admin creates the athlete account with a one-time temporary password that must be replaced on first login.
 The athlete dashboard is the personal space of registered athletes. Athletes can view schedules, events, announcements, attendance records, achievements, and coach information; check in to open attendance sessions; request certificates; track their application; and update their profile.
 Overall, the project aims to make sports management at the school more organized, secure, and efficient, and to serve as a foundation for future expansion.
 
@@ -165,7 +165,7 @@ Based on these inputs, the following key requirements were identified for the Sp
 Functional Requirements
 Admin / Sports Coordinator:
 ●	Secure login and authentication for the Administrator or Sports Coordinator, with a self-service password reset link and an automatic warning when a wrong password is entered
-●	View and manage student applications submitted from the landing page, moving each one through Pending, Under Review, Documents Required, Approved, Rejected, or Waitlisted
+●	View and manage student applications submitted from the landing page, moving each one through Pending, Under Review, Requires Revision, Approved, or Rejected
 ●	Verify or reject each uploaded eligibility document individually, request missing documents, and record review notes and rejection reasons that the student can read
 ●	Create official athlete accounts for approved applicants (name, email, student ID, assigned sport, username, and a one-time temporary password)
 ●	Reset an athlete’s password from the Athlete Management module and require the athlete to set a new one on first login
@@ -298,28 +298,22 @@ The results of the evaluation will be used to determine whether the SportsHub me
 5. RESULTS AND DISCUSSION
 This chapter presents the results of each phase of development: project planning, systems design, system implementation, and system evaluation 
 	5.1 Project Planning
-A Gantt chart was used to map the phases, task sequence, overlaps, and milestones of the project (Table 3). The work was divided into six phases:
-●     	 Planning: requirements gathering, stakeholder consultation, and scope definition
-●       System Design: wireframes and system diagrams
-●       Development: frontend, backend, and database implementation
-●       Testing and Feedback: user testing and iterative revisions
-●       Finalization: final revisions and documentation
-●       Presentation: final defense and submission of the capstone document
+A Gantt chart was used to map the phases, task sequence, overlaps, and milestones of the project (Table 3). The work was divided into six phases covering May to November 2026:
+- Planning: requirements gathering, stakeholder consultation, scope definition, and review of the SNNHS sports workflow.
+- Prototype and System Design: interface prototype, conceptual framework, and Use-Case, Class, and Sequence diagrams.
+- Development: frontend, backend (PHP 8.2/Laravel 12), MySQL database, PWA features, and application status tracking/approval-notification enhancements.
+- Testing and Feedback: functional and automated testing, ISO/IEC 25010 evaluation, questionnaire administration, bug fixes, and user-feedback revisions.
+- Finalization: security and deployment checks, final revisions, and completion of the capstone document and diagrams.
+- Presentation: Final Defense rehearsal, presentation, and submission of the capstone document.
 
-
-
-
-
-
-
-Phase	Tasks / Activities	May	Jun	Jul	Aug	Sep	Oct	Nov	Dec
-1. Requirements Planning	Gathering, stakeholder consultation, scope definition	 	 	 	 	 	 	 	 
-2. Prototype & System Design	Prototype (Figma); use-case, class, and sequence diagrams	 	 	 	 	 	 	 	 
-3. Development	Frontend (HTML/CSS/JS/Tailwind), backend (PHP/Laravel), database (MySQL)	 	 	 	 	 	 	 	 
-4. Testing & Feedback	User testing, ISO/IEC 25010 evaluation, questionnaire, bug fixes	 	 	 	 	 	 	 	 
-5. Finalization	Final revisions, documentation, deployment preparation	 	 	 	 	 	 	 	 
-6. Presentation	Final defense, submission of capstone document	 	 	 	 	 	 	 	 
-Table 3. Project Gantt Chart — SportsHub Development Timeline
+Phase	Tasks / Activities	May	Jun	Jul	Aug	Sep	Oct	Nov
+1. Planning Requirements	Requirements gathering, stakeholder consultation, scope definition, SNNHS workflow review	●	●	 	 	 	 	 
+2. Prototype & System Design	UI prototype, conceptual framework, Use-Case/Class/Sequence diagrams, database planning	 	●	●	 	 	 	 
+3. Development	Public/admin/athlete modules, application workflow, attendance, medical, achievements, notifications, status tracking	 	 	●	●	●	●	 
+4. Testing & Feedback	Functional/automated testing, ISO/IEC 25010 evaluation, questionnaire, bug fixes, revisions	 	 	 	 	●	●	●
+5. Finalization	Security/deployment checks, final revisions, documentation, Final Defense manuscript/diagrams	 	 	 	 	 	●	●
+6. Presentation	Final defense rehearsal, presentation, submission of capstone document	 	 	 	 	 	 	●
+Table 3. Project Gantt Chart - SportsHub Development Timeline (May–November 2026)
 The two-member development team shared responsibilities across all phases. Both researchers handled requirements analysis and prototyping; during development one member focused on the frontend and the other on backend logic and database management, and testing and documentation were shared equally. The tools needed were a laptop with internet access, XAMPP, Visual Studio Code, Figma, MySQL, and Microsoft Word, all free or open-source, which kept the project feasible within the limited budget of an academic capstone.
 
 
