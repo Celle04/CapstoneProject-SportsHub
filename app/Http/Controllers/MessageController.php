@@ -202,8 +202,15 @@ class MessageController extends Controller
      * The inbox of the athlete: general messages and medical follow-ups in
      * one list.
      */
-    public function inbox(Request $request): View
+    public function inbox(Request $request): View|RedirectResponse
     {
+        // The sports office follows the same module from the other side, so an
+        // administrator who opens an athlete address is sent to the
+        // administrator list instead of a forbidden page.
+        if (auth()->user()?->role === 'Administrator') {
+            return redirect()->route('admin.messages');
+        }
+
         $student = $this->ensureStudent();
         $tab = $request->query('tab', 'all');
 
@@ -229,8 +236,15 @@ class MessageController extends Controller
      * The detail of a received message, including the medical instructions
      * and the acknowledgment button of a follow-up.
      */
-    public function studentShow(Message $message): View
+    public function studentShow(Message $message): View|RedirectResponse
     {
+        // A notification, a copied address, or a bookmark can send the sports
+        // office to an athlete page. The same message is opened in the
+        // administrator module, where the sports office is allowed.
+        if (auth()->user()?->role === 'Administrator') {
+            return redirect()->route('admin.messages.show', $message);
+        }
+
         $student = $this->ensureStudent();
         $delivery = MessageRecipient::query()
             ->where('recipient_id', $student->id)

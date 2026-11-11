@@ -374,6 +374,37 @@ class MedicalFollowUpTest extends TestCase
         $response->assertDontSee('follow-up-status-read', false);
     }
 
+    public function test_the_sports_office_is_sent_to_the_administrator_view_of_an_athlete_address(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        // A notification, a bookmark, or a copied address can send the sports
+        // office to an athlete page. It is opened in the administrator module.
+        $this->actingAs($admin)->get(route('student.messages.show', $message))
+            ->assertRedirect(route('admin.messages.show', $message));
+
+        $this->actingAs($admin)->get(route('student.messages'))
+            ->assertRedirect(route('admin.messages'));
+    }
+
+    public function test_the_acknowledgment_notification_opens_the_administrator_page(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $this->actingAs($first)->post(route('student.messages.acknowledge', $message))->assertRedirect();
+
+        $notification = $admin->notifications()->firstOrFail();
+        $this->assertSame(route('admin.messages.show', $message), data_get($notification->data, 'url'));
+    }
+
     public function test_an_athlete_cannot_complete_a_follow_up(): void
     {
         [$admin, $first] = $this->context();

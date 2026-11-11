@@ -217,7 +217,9 @@ class MessagesTest extends TestCase
 
         $this->actingAs($first)->get(route('admin.messages'))->assertForbidden();
         $this->actingAs($first)->post(route('admin.messages.store'), $this->payload(['action' => 'send']))->assertForbidden();
-        $this->actingAs($admin)->get(route('student.messages'))->assertForbidden();
+        // The sports office follows the same module from the other side, so an
+        // athlete address is sent to the administrator module.
+        $this->actingAs($admin)->get(route('student.messages'))->assertRedirect(route('admin.messages'));
     }
 
     public function test_admin_message_dashboard_uses_real_recipient_read_counts(): void

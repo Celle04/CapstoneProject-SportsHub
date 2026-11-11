@@ -278,12 +278,30 @@ return new class extends Migration
             unset($data['medical_conversation_id']);
             $data['message_id'] = $messageId;
             $data['message_type'] = 'medical_follow_up';
-            $data['url'] = $this->messageUrl($messageId);
+            $data['url'] = $this->messageUrl((int) $notification->notifiable_id, $messageId);
 
             DB::table('notifications')->where('id', $notification->id)->update([
                 'data' => json_encode($data),
             ]);
         }
+    }
+
+    /**
+     * The page of the account the notification is addressed to.
+     *
+     * A conversation notice went either to the athlete that owns it or to the
+     * sports office that asked the question, so the link has to point at the
+     * page of that person: the athlete opens the message in the athlete
+     * inbox, the sports office opens the same message in the administrator
+     * module.
+     */
+    private function messageUrl(int $notifiableId, int $messageId): string
+    {
+        $role = DB::table('users')->where('id', $notifiableId)->value('role');
+
+        return $role === 'Administrator'
+            ? $this->adminMessageUrl($messageId)
+            : $this->studentMessageUrl($messageId);
     }
 
     /**
@@ -293,12 +311,24 @@ return new class extends Migration
      * a relative path, so the migration never fails because of a missing
      * application URL.
      */
-    private function messageUrl(int $messageId): string
+    private function studentMessageUrl(int $messageId): string
     {
         try {
             return route('student.messages.show', $messageId);
         } catch (\Throwable) {
             return '/student/messages/'.$messageId;
+        }
+    }
+
+    /**
+     * The address of the message for the sports office.
+     */
+    private function adminMessageUrl(int $messageId): string
+    {
+        try {
+            return route('admin.messages.show', $messageId);
+        } catch (\Throwable) {
+            return '/admin/messages/'.$messageId;
         }
     }
 };
