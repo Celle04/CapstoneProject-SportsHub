@@ -22,6 +22,16 @@ The separate **Messages** module and **Medical Follow-ups** module were merged i
 - `messages` gained `category` (`general` / `medical_follow_up`) and `reply_to_message_id`; `message_recipients` keeps the delivery and read tracking shared by both categories.
 - The former `medical_conversations` / `medical_messages` tables were migrated into this unified structure, so no parallel messaging system remains.
 
+### Manual step still open in the Google Doc
+The manuscript text was revised in place with find and replace, but **two rows have to be added to Table 4 (Entities of the SportsHub Class Diagram)** by hand, because a text replacement cannot create table rows. The class diagram now states **seventeen primary entities**, so the table needs the two missing rows:
+
+| Entity | Purpose | Key Attributes |
+|---|---|---|
+| MedicalFollowUp | Medical schedule of a message | id, message_id, follow_up_type, scheduled_date, scheduled_time, location, additional_instructions, response_required, status, completed_at, cancelled_at |
+| MedicalFollowUpRecipient | Acknowledgment and completion of one athlete for a follow-up | id, medical_follow_up_id, recipient_id, read_at, acknowledged_at, completed_at, completed_by, status |
+
+The same two rows are already present in `docs/LatestDocuments_SportsHub_CORRECTED.txt`, which can be copied over.
+
 ## Sources updated in this repository
 
 - `docs/figures/figure1.html` — Conceptual Framework (IPO-E) source updated to include secure application status tracking, reference-number/email status check, revision workflow, status history, admin instructions, and in-app notifications. Regenerate/export `docs/figures/figure1.png` from this HTML for the manuscript/slide figure.
