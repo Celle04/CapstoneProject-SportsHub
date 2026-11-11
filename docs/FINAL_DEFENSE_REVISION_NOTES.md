@@ -2,6 +2,26 @@
 
 This document records the Final Defense documentation revisions aligned with the current implemented SNNHS SportsHub system (Laravel 12, PHP 8.2, MySQL, Blade/Tailwind/PWA). It covers the Conceptual Framework, Project Gantt Chart (May–November 2026), Use Case Diagram, Class Diagram, and Sequence Diagram.
 
+## Revision 2 — Unified Messages & Follow-ups module (current)
+
+The separate **Messages** module and **Medical Follow-ups** module were merged into one **Messages & Follow-ups** module that both dashboards share. The manuscript text below was updated to match the implemented system.
+
+- `docs/SportsHub_Revised.md` — abstract, purpose (1.2), objectives (1.3), scope (1.4), functional requirements (4.1), module list (4.4), deployment note (4.4), use-case actors and class diagram (5.2), the new medical follow-up sequence flow, and the implementation and conclusion sections (5.3, 6.1).
+- `docs/LatestDocuments_SportsHub_CORRECTED.txt` — the same revisions in the plain-text export: scope items 6–12, the new functional requirements, the module table (Table 1), the class diagram entity table (Table 4, now seventeen entities), the relationship paragraph, and the deployment note.
+- `docs/figures/figure1.html` — conceptual framework unchanged; the in-app notification output now also covers general messages and medical follow-ups.
+
+### What the module does now
+- One compose screen with a **category** (General Message or Medical Follow-up), a **priority**, a **recipient type** (one athlete, selected athletes, all active athletes, or by sport), drafts, and per-recipient read tracking.
+- The medical fields appear only for a medical follow-up: follow-up type, date, time, location, additional medical instructions, and whether a response is required.
+- Follow-up statuses: **Scheduled, Sent, Read, Acknowledged, Completed, Overdue, Cancelled**. Only an administrator completes or cancels a follow-up; opening a message is never an acknowledgment.
+- The athlete reads and acknowledges in the same inbox, and the administrator monitors read, acknowledged, completed, and overdue counts per athlete.
+
+### New database entities
+- `medical_follow_ups` — one row per message that is a follow-up: `message_id` (unique FK), `follow_up_type`, `scheduled_date`, `scheduled_time`, `location`, `additional_instructions`, `response_required`, `status`, `completed_by`, `completed_at`, `cancelled_at`.
+- `medical_follow_up_recipients` — one row per athlete per follow-up: `read_at`, `acknowledged_at`, `completed_at`, `completed_by`, `status`.
+- `messages` gained `category` (`general` / `medical_follow_up`) and `reply_to_message_id`; `message_recipients` keeps the delivery and read tracking shared by both categories.
+- The former `medical_conversations` / `medical_messages` tables were migrated into this unified structure, so no parallel messaging system remains.
+
 ## Sources updated in this repository
 
 - `docs/figures/figure1.html` — Conceptual Framework (IPO-E) source updated to include secure application status tracking, reference-number/email status check, revision workflow, status history, admin instructions, and in-app notifications. Regenerate/export `docs/figures/figure1.png` from this HTML for the manuscript/slide figure.
@@ -48,12 +68,12 @@ This document records the Final Defense documentation revisions aligned with the
 
 ### Actors / boundaries
 - **Public (unauthenticated):** landing page only. View announcements, browse sports programs, submit application (receives reference number), securely check application status (reference number + email), reset forgotten password.
-- **Admin/Sports Coordinator (authenticated):** log in/out; manage applications (Pending/Under Review/Requires Revision/Approved/Rejected), verify/reject documents, require explanations for rejection/revision, add office instructions, maintain status history/reviewer/date, create approved athlete accounts with duplicate prevention, reset passwords; manage sports/coaches/events/calendar/attendance/medical/achievements/certificates/certificate requests; send in-app notifications; generate reports.
-- **Athlete (authenticated):** log in, first-login password change as applicable; dashboard, schedules/calendar/events, announcements, attendance records/check-in, achievements/certificate requests, application status/reference/feedback/office instructions, in-app notifications, coach/program info, profile/password, log out.
+- **Admin/Sports Coordinator (authenticated):** log in/out; manage applications (Pending/Under Review/Requires Revision/Approved/Rejected), verify/reject documents, require explanations for rejection/revision, add office instructions, maintain status history/reviewer/date, create approved athlete accounts with duplicate prevention, reset passwords; manage sports/coaches/events/calendar/attendance/medical/achievements/certificates/certificate requests; compose and send general messages and medical follow-ups and monitor their read, acknowledgment, and completion state; send in-app notifications; generate reports.
+- **Athlete (authenticated):** log in, first-login password change as applicable; dashboard, schedules/calendar/events, announcements, attendance records/check-in, achievements/certificate requests, application status/reference/feedback/office instructions, in-app notifications, coach/program info, profile/password, log out; read general messages and medical follow-ups in one inbox and acknowledge a follow-up that requires a response.
 
 ## 4. Class Diagram (revised summary)
 
-Primary entities (14): `User`, `Sport`, `Coach`, `Application`, `ApplicationStatusHistory`, `Announcement`, `Event`, `AttendanceSession`, `Attendance`, `MedicalRecord`, `MedicalIncident`, `Achievement`, `CertificateRequest`, `Notification`.
+Primary entities (18): `User`, `Sport`, `Coach`, `Application`, `ApplicationStatusHistory`, `Announcement`, `Event`, `AttendanceSession`, `Attendance`, `MedicalRecord`, `MedicalIncident`, `Message`, `MessageRecipient`, `MedicalFollowUp`, `MedicalFollowUpRecipient`, `Achievement`, `CertificateRequest`, `Notification`.
 
 ### Key application-related changes
 - **Application:** `id`, `reference_number` (unique), applicant/profile fields, `email`, `sport_id`, eligibility document paths/statuses, `status` (`Pending`, `Under Review`, `Requires Revision`, `Approved`, `Rejected`), `rejection_reason`, `review_notes`, `admin_instructions`, `documents_requested`, `reviewed_by`, `reviewed_at`, `review_history`, `athlete_id`, timestamps.
@@ -82,6 +102,13 @@ Athlete checks into an open same-day/sport-matching session; service validates s
 
 ### D. Certificate request and issuance (existing)
 Athlete requests certificate (Pending, coordinators notified); admin approves/generates/stores PDF privately/releases/issues; athlete downloads issued certificate.
+
+### E. Medical follow-up and acknowledgment (new)
+1. Admin composes a message with the **Medical Follow-up** category; the medical fields (type, date, time, location, instructions, response required) appear only for that category.
+2. `MessageDeliveryService` writes the message, the `MedicalFollowUp`, and one `MessageRecipient` + `MedicalFollowUpRecipient` row per athlete inside one transaction, and raises one in-app notification per recipient with the schedule included.
+3. Athlete opens the follow-up: the delivery record is marked read and the follow-up moves to **Read** — the acknowledgment stays untouched.
+4. Athlete presses **Acknowledge**: `acknowledged_at` is recorded with the exact time, the follow-up moves to **Acknowledged**, and the sports office receives an in-app notification of the confirmation.
+5. Admin monitors the read / acknowledged / completed / overdue counts per athlete and may mark the follow-up (or one athlete's part) **Completed** after verification, or **Cancelled**.
 
 ## Manual follow-up
 - Update Use Case/Class/Sequence diagram drawings in the Word/figure files to match the revised summaries above.
