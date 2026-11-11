@@ -270,6 +270,7 @@ Athlete:
 Public (No Login Required):
 
 - View the public landing page and browse posted announcements and available sports programs
+- Check the status of an application that was already submitted, without an account, using the application reference number together with the email address used on the application
 - Submit a sports application form to express interest in joining a sport, including the required eligibility documents: a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form (no account created at this stage)
 - Eligibility requirements for joining a sport: (1) Medical Certificate — issued by a licensed physician certifying the student is physically fit for sports participation; (2) Birth Certificate — PSA-issued document confirming the student’s age and identity; (3) Parent’s or Guardian’s Consent Form — a signed document authorizing the student to participate in school sports activities. Incomplete submissions were not processed.
 
@@ -365,7 +366,7 @@ Version Control: Git was used for source code versioning, allowing the developme
 
 The finalized system includes the following modules organized by role:
 
-Public Landing Page: The entry point of the system accessible to all students without logging in. It displays active announcements, an overview of available sports programs, and a button to submit a sports application.
+Public Landing Page: The entry point of the system accessible to all students without logging in. It displays active announcements, an overview of available sports programs, a button to submit a sports application, and a button to check the status of an application that was already submitted, using the reference number and the email address of the applicant.
 
 Application Form Module: A public form where interested students can submit their eligibility requirements and personal details including name, student ID, grade level, gender, sport of interest, medical certificate, birth certificate, and signed parent’s or guardian’s consent form. No account is created at this stage — the submission is simply stored and forwarded to the admin for review.
 
@@ -540,7 +541,7 @@ The system was developed using PHP 8.2 and the Laravel 12 framework, with MySQL 
 
 #### Public Interface
 
-The public interface is the first point of contact between the school and the students. It contains the landing page, the application form, the login page, and the password reset page. Any visitor can access these pages without logging in. Figure 6 presents the landing page of the system, which displays the school identity, the calls to action, and the auto-published announcements generated from the scheduled events. Figures 7 and 8 present the application form, which collects the applicant information together with the three required documents: the medical certificate, the PSA birth certificate, and the signed parent or guardian consent. Figure 9 presents the login page, where the selected role determines the portal that is loaded after authentication, and Figure 10 presents the password reset page, which uses the token-based password reset broker of Laravel.
+The public interface is the first point of contact between the school and the students. It contains the landing page, the application form, the application status check, the login page, and the password reset page. Any visitor can access these pages without logging in. Figure 6 presents the landing page of the system, which displays the school identity, the calls to action, and the auto-published announcements generated from the scheduled events. Figures 7 and 8 present the application form, which collects the applicant information together with the three required documents: the medical certificate, the PSA birth certificate, and the signed parent or guardian consent. The status-check page takes the application reference number and the email address used on the application, and shows only the status, the sport applied for, the submission and update dates, the review explanation, and the office instructions, so a reference number alone never opens the record. Figure 9 presents the login page, where the selected role determines the portal that is loaded after authentication, and Figure 10 presents the password reset page, which uses the token-based password reset broker of Laravel.
 
 Figure 6. Landing Page - SportsHub
 
@@ -839,7 +840,7 @@ This appendix records the state of the delivered system for the defense panel: t
 ### A.1 Modules of the delivered system
 
 Module	Used by	Function
-Public Landing Page	Public	Active announcements, sports program overview, and the application entry point
+Public Landing Page	Public	Active announcements, sports program overview, the application entry point, and the secure application status check (reference number and email)
 Application Form	Public	Collects personal details and the three eligibility documents; no account is created
 Login, Authentication, and Password Recovery	All	Single login with role-based redirection; single-use emailed reset link (60-minute expiry, rate-limited); admin-issued one-time temporary password that forces a change on first login
 Applications Management	Admin	Review applications; verify or reject each document; request missing documents; approve, reject, or waitlist; record notes and reasons shown to the student

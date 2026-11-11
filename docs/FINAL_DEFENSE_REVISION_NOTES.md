@@ -63,6 +63,19 @@ Three caption lines have to be typed over in the Google Doc, because the find-an
 
 The sentence above the figures reads `The Sequence Diagram (Figures 12 to 14) documents` and becomes `The Sequence Diagram (Figure 12) documents`.
 
+### The application status check still to be typed into the Google Doc
+
+The public **Check Application Status** page (reference number + email, no account) is described in the manuscript, the use-case diagram, and the sequence diagram, but four sentences of the Google Doc text still leave it out. The browser session signed out before these could be applied, so they are listed here:
+
+| Where | Current text | New text |
+|---|---|---|
+| Public requirements (4.1) | `- View the public landing page and browse posted announcements and available sports programs` | keep the line and add after it: `- Check the status of an application that was already submitted, without an account, using the application reference number together with the email address used on the application` |
+| Public module (4.4) | `...an overview of available sports programs, and a button to submit a sports application.` | `...an overview of available sports programs, a button to submit a sports application, and a button to check the status of an application that was already submitted, using the reference number and the email address of the applicant.` |
+| Public interface (5.3) | `It contains the landing page, the application form, the login page, and the password reset page.` | `It contains the landing page, the application form, the application status check, the login page, and the password reset page.` and add after the sentence about Figures 7 and 8: `The status-check page takes the application reference number and the email address used on the application, and shows only the status, the sport applied for, the submission and update dates, the review explanation, and the office instructions, so a reference number alone never opens the record.` |
+| Module table (Table 1) | `Public Landing Page	Public	Active announcements, sports program overview, and the application entry point` | `Public Landing Page	Public	Active announcements, sports program overview, the application entry point, and the secure application status check (reference number and email)` |
+
+`docs/Capstone_Project_Final_Documentation.md` and `docs/Capstone_Project_Final_Documentation.txt` already carry all four changes.
+
 ## Sources updated in this repository
 
 - `docs/Capstone_Project_Final_Documentation.md` — **the final documentation of the project**: the complete manuscript (title page, abstract, chapters 1 to 8 with the references) with the unified Messages & Follow-ups module, the four regenerated diagrams embedded, and a new *Appendix A. Implemented System Summary* that lists the delivered modules, the seventeen entities of the schema, the follow-up workflow, and the technology, deployment, and verification facts (446 automated tests, ISO/IEC 25010 result 4.46).

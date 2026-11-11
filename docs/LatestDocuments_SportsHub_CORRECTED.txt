@@ -1,4 +1,4 @@
-﻿
+
 SportsHub: A Progressive Web Application for Athlete Records and Sports Activity Management System
 
 
@@ -46,7 +46,7 @@ In addition, the project benefits the entire school community by improving how s
 
 1.2	Purpose and Description
 The purpose of this project is to create SportsHub, a Progressive Web Application that helps Surigao del Norte National High School (SNNHS) organize and manage its sports activities by replacing manual recording with a simple digital system. In this document, the terms Sports Coordinator, administrator, and admin refer to the same user role.
-The system has three parts. The public landing page is open to any student without logging in. It shows announcements that the system publishes automatically when an event is scheduled (and withdraws if the event is cancelled or postponed), and it hosts the application form. Applicants submit a medical certificate from a licensed physician, a PSA birth certificate, and a signed parent's or guardian's consent form. Incomplete applications are not processed, and no account is created at this stage.
+The system has three parts. The public landing page is open to any student without logging in. It shows announcements that the system publishes automatically when an event is scheduled (and withdraws if the event is cancelled or postponed), it hosts the application form, and it lets an applicant check the status of a submitted application with the reference number and the email address used on the application. Applicants submit a medical certificate from a licensed physician, a PSA birth certificate, and a signed parent's or guardian's consent form. Incomplete applications are not processed, and no account is created at this stage.
 The administrator dashboard is accessible only to the Sports Coordinator, who moves each application through Pending, Under Review, Requires Revision, Approved, or Rejected and verifies each document. Review notes and rejection reasons are visible to the student. For approved applicants, the admin creates the athlete account with a one-time temporary password that must be replaced on first login.
 The athlete dashboard is the personal space of registered athletes. Athletes can view schedules, events, announcements, attendance records, achievements, and coach information; check in to open attendance sessions; request certificates; track their application; and update their profile.
 Overall, the project aims to make sports management at the school more organized, secure, and efficient, and to serve as a foundation for future expansion.
@@ -61,7 +61,7 @@ This study aimed to design, develop, and evaluate SportsHub, a web-based Progres
       1.4 Scope and Limitations
 Scope
 1.	The system covers three main user interfaces: a public-facing landing page, an athlete dashboard, and a restricted administrator dashboard accessible only to the Sports Coordinator.
-2.	The landing page allows any student to view announcements, browse the available sports programs, and submit a sports application form. To be eligible to join a sport, students must submit a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form as part of their application. No account is created at this stage. Announcements are published automatically by the portal when a scheduled event is created, and are withdrawn automatically when that event is cancelled or postponed.
+2.	The landing page allows any student to view announcements, browse the available sports programs, submit a sports application form, and check the status of an application that was already submitted with the reference number and the email address used on the application. To be eligible to join a sport, students must submit a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form as part of their application. No account is created at this stage. Announcements are published automatically by the portal when a scheduled event is created, and are withdrawn automatically when that event is cancelled or postponed.
 3.	The administrator can review, approve, reject, waitlist, or return submitted applications for further documents, verify or reject each uploaded document individually, and record review notes and rejection reasons visible to the student.
 4.	Approved applicants are converted into official athlete accounts with an assigned sport, a username, and a one-time temporary password that the athlete must replace on first login.
 5.	Registered athletes can log in to view their schedules, events, calendar, announcements, attendance records, achievements, application status, coach information, notifications, and the members of their own sports program, and can update profile details, check in to open attendance sessions, and request achievement certificates.
@@ -198,6 +198,7 @@ Athlete:
 ●	Update limited profile information and change the account password
 Public (No Login Required):
 ●	View the public landing page and browse posted announcements and available sports programs
+●	Check the status of an application that was already submitted, without an account, using the application reference number together with the email address used on the application
 ●	Submit a sports application form to express interest in joining a sport, including the required eligibility documents: a medical certificate, a birth certificate, and a signed parent’s or guardian’s consent form (no account created at this stage)
 ●	Eligibility requirements for joining a sport: (1) Medical Certificate — issued by a licensed physician certifying the student is physically fit for sports participation; (2) Birth Certificate — PSA-issued document confirming the student’s age and identity; (3) Parent’s or Guardian’s Consent Form — a signed document authorizing the student to participate in school sports activities. Incomplete submissions will not be processed.
 Non-Functional Requirements:
@@ -266,7 +267,7 @@ Feedback focused on clarity and ease of navigation, completeness of features aga
 4.4 Finalize Software
 After incorporating the feedback, the team coded and integrated all modules, conducted internal testing, and prepared the system for user evaluation. The technologies used are described in Chapter 3 (PHP 8.2, Laravel 12, MySQL, Tailwind CSS 4, dompdf, and a PWA manifest with a service worker), and the finalized system comprises the modules in Table 1.
 Module	Used By	Main Functions
-Public Landing Page	Public	Active announcements, sports program overview, and the application entry point
+Public Landing Page	Public	Active announcements, sports program overview, the application entry point, and the secure application status check (reference number and email)
 Application Form	Public	Collects personal details and the three eligibility documents; no account is created
 Login, Authentication, and Password Recovery	All	Single login with role-based redirection; single-use emailed reset link (60-minute expiry, rate-limited); admin-issued one-time temporary password that forces a change on first login
 Applications Management	Admin	Review applications; verify or reject each document; request missing documents; approve, reject, or waitlist; record notes and reasons shown to the student
