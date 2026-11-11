@@ -76,6 +76,28 @@ The public **Check Application Status** page (reference number + email, no accou
 
 `docs/Capstone_Project_Final_Documentation.md` and `docs/Capstone_Project_Final_Documentation.txt` already carry all four changes.
 
+## The revised Word manuscript
+
+`docs/SportsHub_Capstone_Final_Revised.docx` is the Word export of *SportsHub _ Revised 11_11_26* with the system changes applied. The original file in `Downloads` is left untouched.
+
+**Figures replaced**
+
+| Figure | Before | After |
+|---|---|---|
+| Figure 1 — Conceptual Framework | the old IPO-E diagram | `docs/figures/figure1.png` with the unified module, the message and follow-up input data, the follow-up tracking in the output and the unified messaging tables in the database layer |
+| Figure 10 — Use-Case Diagram | the old diagram | `docs/figures/figure10-use-case.png` with the send / monitor / complete / acknowledge use cases |
+| Figure 11 — Class Diagram | the old diagram | `docs/figures/figure11-class.png` with the seventeen entities and the four classes of the unified module highlighted |
+| Figures 12 to 14 — Sequence Diagrams | three separate images | one image, `docs/figures/figure12-sequence.png`, with the panels A to D; the medical follow-up and its acknowledgment is the new panel D, and the two captions that are no longer used were removed |
+| Figure 23 — Messages page (athlete) | the old athlete inbox | `docs/figures/figure23-athlete-inbox.png`, the unified inbox with the follow-up acknowledgment |
+| Figure 37 — Messages page (administrator) | the old administrator Messages screen | `docs/figures/figure37-admin-messages.png`, the unified module with the new tabs and summary cards |
+
+**Text applied**
+
+- the public requirement *"Check the status of an application that was already submitted, without an account, using the application reference number together with the email address used on the application"*
+- the module table cell now reads *"... the application entry point, and the secure application status check (reference number and email)"*
+- the public interface paragraph now lists the status-check page and explains that it only returns the status, the sport, the dates, the explanation and the office instructions
+- *The Sequence Diagram (Figures 12 to 14) documents* became *The Sequence Diagram (Figure 12) documents*, the sequence caption became *Figure 12. Sequence Diagrams — Athlete Check-in, Application Approval and Account Creation, Certificate Request and Issuance, and Medical Follow-up and Acknowledgment*, and the administrator figure caption became *Figure 37. Messages & Follow-ups Page - SportsHub*
+
 ## Sources updated in this repository
 
 - `docs/Capstone_Project_Final_Documentation.md` — **the final documentation of the project**: the complete manuscript (title page, abstract, chapters 1 to 8 with the references) with the unified Messages & Follow-ups module, the four regenerated diagrams embedded, and a new *Appendix A. Implemented System Summary* that lists the delivered modules, the seventeen entities of the schema, the follow-up workflow, and the technology, deployment, and verification facts (446 automated tests, ISO/IEC 25010 result 4.46).
