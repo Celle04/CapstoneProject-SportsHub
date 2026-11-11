@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Figure 11 — Class Diagram (SportsHub)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1700px;
+    background: #ffffff;
+    font-family: "Times New Roman", "Liberation Serif", Times, serif;
+    color: #000000;
+    padding: 22px 22px 26px;
+  }
+  h1 { font-size: 29px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .sub { font-size: 22px; text-align: center; color: #37474f; margin-bottom: 14px; }
+
+  .canvas { position: relative; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px 46px; }
+
+  .entity {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid #37474f;
+    border-radius: 6px;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+  .entity .name {
+    background: #eceff1;
+    border-bottom: 2px solid #37474f;
+    padding: 6px 10px;
+    font-size: 23px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .entity.new .name { background: #fff3e0; border-bottom-color: #e65100; color: #b34700; }
+  .entity ul { list-style: none; padding: 6px 10px 8px; }
+  .entity li {
+    font-size: 19px;
+    line-height: 1.28;
+    padding: 1px 0 1px 16px;
+    position: relative;
+    white-space: nowrap;
+  }
+  .entity li::before { content: "+"; position: absolute; left: 0; color: #607d8b; font-weight: 700; }
+  .entity li.key { font-weight: 700; }
+
+  .entity .badge {
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    background: #e65100;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-bottom-left-radius: 6px;
+  }
+
+  svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  svg.labels { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+  .entity { z-index: 1; }
+</style>
+<script>
+  /*
+   * The relationship lines are drawn from the real box positions, so the
+   * diagram stays correct when a box grows with its attributes.
+   */
+  var RELATIONS = [
+    ['user', 'sport', 'r', 'l', 'assigned sport', '0..1', '1..*'],
+    ['coach', 'sport', 'r', 'l', 'assigned to', '0..*', '1..1'],
+    ['user', 'application', 'r', 'l', 'applies', '1..*', '1..1'],
+    ['application', 'history', 'r', 'l', 'status history', '1..1', '1..*'],
+    ['user', 'history', 'l', 'l', 'changed by', '1..*', '0..1'],
+    ['event', 'sport', 'l', 'r', 'belongs to', '1..*', '1..1'],
+    ['event', 'coach', 'r', 'l', 'conducted by', '1..*', '0..1'],
+    ['session', 'event', 't', 'b', 'sessions', '0..1', '1..*'],
+    ['attendance', 'session', 'l', 'r', 'roster', '1..*', '1..1'],
+    ['attendance', 'user', 'l', 'r', 'athlete', '1..*', '1..1'],
+    ['medicalrecord', 'user', 'l', 'r', 'examinations', '1..*', '1..1'],
+    ['incident', 'medicalrecord', 'l', 'r', 'injuries', '1..1', '1..*'],
+    ['achievement', 'user', 'l', 'r', 'earned by', '1..*', '1..1'],
+    ['achievement', 'event', 't', 'b', 'achievement', '0..1', '1..*'],
+    ['certrequest', 'achievement', 'l', 'r', 'requests', '1..*', '1..1'],
+    ['message', 'user', 'l', 'r', 'sender', '1..*', '1..1'],
+    ['message', 'recipient', 'r', 'l', 'delivered to', '1..1', '1..*'],
+    ['recipient', 'user', 'r', 'l', 'recipient', '1..*', '1..1'],
+    ['followup', 'message', 'l', 'r', 'carried by', '1..1', '1..1'],
+    ['followuprecipient', 'followup', 'l', 'r', 'per athlete', '1..1', '1..*'],
+    ['followuprecipient', 'user', 'l', 'r', 'athlete', '1..*', '1..1'],
+    ['notification', 'user', 'l', 'r', 'notifiable', '1..*', '1..1']
+  ];
+
+  function anchor(box, side) {
+    var r = box.getBoundingClientRect();
+    if (side === 'l') { return { x: r.left, y: r.top + r.height / 2 }; }
+    if (side === 'r') { return { x: r.right, y: r.top + r.height / 2 }; }
+    if (side === 't') { return { x: r.left + r.width / 2, y: r.top }; }
+    return { x: r.left + r.width / 2, y: r.bottom };
+  }
+
+  window.addEventListener('load', function () {
+    var canvas = document.querySelector('.canvas');
+    var svg = canvas.querySelector('svg.lines');
+    var labels = canvas.querySelector('svg.labels');
+    var base = canvas.getBoundingClientRect();
+
+    svg.setAttribute('viewBox', '0 0 ' + canvas.offsetWidth + ' ' + canvas.offsetHeight);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    labels.setAttribute('viewBox', '0 0 ' + canvas.offsetWidth + ' ' + canvas.offsetHeight);
+    labels.setAttribute('preserveAspectRatio', 'none');
+
+    RELATIONS.forEach(function (rel) {
+      var from = document.getElementById(rel[0]);
+      var to = document.getElementById(rel[1]);
+      if (! from || ! to) { return; }
+
+      var a = anchor(from, rel[2]);
+      var b = anchor(to, rel[3]);
+      var ax = a.x - base.left;
+      var ay = a.y - base.top;
+      var bx = b.x - base.left;
+      var by = b.y - base.top;
+
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', ax); line.setAttribute('y1', ay);
+      line.setAttribute('x2', bx); line.setAttribute('y2', by);
+      line.setAttribute('stroke', '#78909c');
+      line.setAttribute('stroke-width', '1.4');
+      svg.appendChild(line);
+
+      var mx = (ax + bx) / 2;
+      var my = (ay + by) / 2;
+
+      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', mx);
+      label.setAttribute('y', my - 6);
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-size', '15');
+      label.setAttribute('font-family', '"Times New Roman", Times, serif');
+      label.setAttribute('font-style', 'italic');
+      label.setAttribute('fill', '#37474f');
+      label.setAttribute('paint-order', 'stroke');
+      label.setAttribute('stroke', '#ffffff');
+      label.setAttribute('stroke-width', '6');
+      label.textContent = rel[4];
+      labels.appendChild(label);
+
+      [['from', ax, ay, rel[5]], ['to', bx, by, rel[6]]].forEach(function (side) {
+        var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', side[1]);
+        t.setAttribute('y', side[2] + (side[0] === 'from' ? -9 : 17));
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('font-size', '14');
+        t.setAttribute('font-family', '"Times New Roman", Times, serif');
+        t.setAttribute('fill', '#546e7a');
+        t.setAttribute('paint-order', 'stroke');
+        t.setAttribute('stroke', '#ffffff');
+        t.setAttribute('stroke-width', '6');
+        t.textContent = side[3];
+        labels.appendChild(t);
+      });
+    });
+  });
+</script>
+</head>
+<body>
+
+<h1>Figure 11. Class Diagram — SportsHub</h1>
+<div class="sub">Seventeen entities of the MySQL schema; the highlighted classes belong to the unified Messages &amp; Follow-ups module.</div>
+
+<div class="canvas">
+  <svg class="lines"></svg>
+  <svg class="labels"></svg>
+
+  <div class="grid">
+
+    <!-- COLUMN 1 -->
+    <div class="entity" id="user">
+      <div class="name">User</div>
+      <ul>
+        <li class="key">id</li>
+        <li class="key">name, email, username, password</li>
+        <li class="key">role (Administrator / Student)</li>
+        <li>status, sport_id, student_id</li>
+        <li>phone, grade_level</li>
+        <li>emergency contact</li>
+        <li>profile_photo_path</li>
+        <li>must_change_password</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="sport">
+      <div class="name">Sport</div>
+      <ul>
+        <li class="key">id</li>
+        <li class="key">name</li>
+        <li>classification, gender</li>
+        <li>description, status</li>
+        <li>logo_path</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="coach">
+      <div class="name">Coach</div>
+      <ul>
+        <li class="key">id</li>
+        <li class="key">name, email, phone</li>
+        <li>specialty, coach_type</li>
+        <li>sport_id, status</li>
+        <li>profile_picture_path</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="application">
+      <div class="name">Application</div>
+      <ul>
+        <li class="key">id, reference_number</li>
+        <li>name, student_id, grade, gender</li>
+        <li>email, sport_id</li>
+        <li>three document paths + statuses</li>
+        <li class="key">status (Pending … Approved)</li>
+        <li>rejection_reason, review_notes</li>
+        <li>admin_instructions</li>
+        <li>reviewed_by, reviewed_at</li>
+        <li>review_history, athlete_id</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="history">
+      <div class="name">ApplicationStatusHistory</div>
+      <ul>
+        <li class="key">id, application_id</li>
+        <li>status, notes</li>
+        <li>admin_instructions</li>
+        <li>changed_by</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="notification">
+      <div class="name">Notification</div>
+      <ul>
+        <li class="key">id, type</li>
+        <li>notifiable_type, notifiable_id</li>
+        <li>data, read_at</li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 2 -->
+    <div class="entity" id="event">
+      <div class="name">Event</div>
+      <ul>
+        <li class="key">id</li>
+        <li class="key">title, description, venue</li>
+        <li>starts_at, ends_at, status</li>
+        <li>sport_id, event_type</li>
+        <li>coach_id, team_name</li>
+        <li>max_participants, notes</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="session">
+      <div class="name">AttendanceSession</div>
+      <ul>
+        <li class="key">id, event_id, sport_id</li>
+        <li>title, venue, description</li>
+        <li>session_date, start_time</li>
+        <li>late_grace_minutes, status</li>
+        <li>created_by, opened_at, closed_at</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="attendance">
+      <div class="name">Attendance</div>
+      <ul>
+        <li class="key">id, attendance_session_id</li>
+        <li>event_id, user_id</li>
+        <li>status (Present, Late, Absent…)</li>
+        <li>attended_on, check_in_time</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="medicalrecord">
+      <div class="name">MedicalRecord</div>
+      <ul>
+        <li class="key">id, athlete_id</li>
+        <li>examination_date, medical_status</li>
+        <li>next_checkup_date</li>
+        <li>findings, restrictions, notes</li>
+        <li>medical_certificate, archived_at</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="incident">
+      <div class="name">MedicalIncident</div>
+      <ul>
+        <li class="key">id, athlete_id, sport_id</li>
+        <li>incident_date, activity</li>
+        <li>injury_type, body_part, severity</li>
+        <li>description, treatment</li>
+        <li>rest_period_days</li>
+        <li>return_to_play_date</li>
+        <li>medical_clearance</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="achievement">
+      <div class="name">Achievement</div>
+      <ul>
+        <li class="key">id, athlete_id, team_name</li>
+        <li>sport_id, event_id</li>
+        <li>title, description</li>
+        <li>achievement_type</li>
+        <li>competition, place</li>
+        <li>date_achieved, certificate_path</li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 3 -->
+    <div class="entity new" id="message">
+      <div class="name">Message</div>
+      <span class="badge">Unified module</span>
+      <ul>
+        <li class="key">id, sender_id</li>
+        <li class="key">subject, content</li>
+        <li class="key">message_type, category</li>
+        <li>priority (Normal, Important, Urgent)</li>
+        <li>status (draft, sent)</li>
+        <li>recipient_type</li>
+        <li>event_id, medical_record_id</li>
+        <li>reply_to_message_id, sent_at</li>
+      </ul>
+    </div>
+
+    <div class="entity new" id="recipient">
+      <div class="name">MessageRecipient</div>
+      <span class="badge">Unified module</span>
+      <ul>
+        <li class="key">id, message_id</li>
+        <li class="key">recipient_id</li>
+        <li>is_read, read_at</li>
+      </ul>
+    </div>
+
+    <div class="entity new" id="followup">
+      <div class="name">MedicalFollowUp</div>
+      <span class="badge">Unified module</span>
+      <ul>
+        <li class="key">id, message_id</li>
+        <li class="key">follow_up_type</li>
+        <li>scheduled_date, scheduled_time</li>
+        <li>location</li>
+        <li>additional_instructions</li>
+        <li>response_required</li>
+        <li>status (Scheduled … Cancelled)</li>
+        <li>completed_by, completed_at, cancelled_at</li>
+      </ul>
+    </div>
+
+    <div class="entity new" id="followuprecipient">
+      <div class="name">MedicalFollowUpRecipient</div>
+      <span class="badge">Unified module</span>
+      <ul>
+        <li class="key">id, medical_follow_up_id</li>
+        <li class="key">recipient_id</li>
+        <li>read_at</li>
+        <li>acknowledged_at</li>
+        <li>completed_at, completed_by</li>
+        <li>status</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="certrequest">
+      <div class="name">CertificateRequest</div>
+      <ul>
+        <li class="key">id, achievement_id</li>
+        <li>student_id</li>
+        <li>status (Pending, Approved, Issued)</li>
+        <li>remarks, handled_by, handled_at</li>
+        <li>certificate_path</li>
+        <li>certificate_generated_at</li>
+        <li>certificate_reference</li>
+      </ul>
+    </div>
+
+    <div class="entity" id="announcement">
+      <div class="name">Announcement</div>
+      <ul>
+        <li class="key">id</li>
+        <li class="key">title, body</li>
+        <li>published_at, status</li>
+        <li>event_id</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

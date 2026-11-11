@@ -233,6 +233,15 @@
             <li>Parent's/guardian's consent form</li>
           </ul>
         </div>
+        <div class="box">
+          <div class="title">Messages and Follow-ups Data</div>
+          <ul>
+            <li>Subject, content, category, priority</li>
+            <li>Recipient group and delivery record</li>
+            <li>Follow-up type, schedule, location</li>
+            <li>Acknowledgment and completion state</li>
+          </ul>
+        </div>
         <div class="note">No account is created at this stage. After submission, the system issues a unique reference number so the applicant can securely check their application status.</div>
       </div>
     </div>
@@ -263,7 +272,7 @@
             <li>Dashboard, schedules, calendar</li>
             <li>Attendance check-in and records</li>
             <li>Achievements and certificates</li>
-            <li>Application status and notifications</li>
+            <li>Inbox, follow-up acknowledgment</li>
           </ul>
         </div>
         <div class="box">
@@ -272,7 +281,8 @@
             <li>Review, approve, reject, or request revision</li>
             <li>Status history, notes, and office instructions</li>
             <li>Sports, coaches, events, attendance</li>
-            <li>Medical records, certificates, notifications</li>
+            <li>Medical records and certificates</li>
+            <li>Messages and follow-ups: send, monitor, complete</li>
           </ul>
         </div>
         <div class="note">Modules run on PHP 8.2 and Laravel 12 (MVC) with role-based access, validation, and audit-oriented status tracking.</div>
@@ -296,6 +306,7 @@
             <li>Athlete registry and coach directory</li>
             <li>Application records and status history</li>
             <li>Attendance, medical, and participation records</li>
+            <li>Message and follow-up tracking</li>
           </ul>
         </div>
         <div class="box">
@@ -305,6 +316,7 @@
             <li>CSV and PDF export options</li>
             <li>Official achievement certificates</li>
             <li>Application reference/status feedback</li>
+            <li>Follow-up read and acknowledgment counts</li>
           </ul>
         </div>
         <div class="box">
@@ -312,6 +324,7 @@
           <ul>
             <li>Public landing page and status check page</li>
             <li>Athlete dashboard and application view</li>
+            <li>Unified messages and follow-ups inbox</li>
             <li>Administrator command centre</li>
             <li>In-app notification feed</li>
           </ul>
@@ -345,7 +358,7 @@
             <li>5-point Likert scale</li>
             <li>Validated by the adviser</li>
             <li>Direct observation</li>
-            <li>Automated test suite</li>
+            <li>Automated test suite (446 tests)</li>
           </ul>
         </div>
         <div class="box">
@@ -405,7 +418,7 @@
   <!-- Database layer -->
   <div class="dbbar">
     <div class="name">DATABASE LAYER (MySQL)</div>
-    <div class="detail">Eloquent ORM relationships &bull; versioned migrations &bull; foreign-key constraints &bull; private storage for eligibility documents and issued certificates</div>
+    <div class="detail">Eloquent ORM relationships &bull; versioned migrations &bull; foreign-key constraints &bull; unified messaging tables (messages, message_recipients, medical_follow_ups, medical_follow_up_recipients) &bull; private storage for eligibility documents and issued certificates</div>
   </div>
 
   <!-- Feedback loop: Evaluation back to Input -->

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Figure 12. Sequence Diagrams (SportsHub)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1700px;
+    background: #ffffff;
+    font-family: "Times New Roman", "Liberation Serif", Times, serif;
+    color: #000000;
+    padding: 22px 22px 26px;
+  }
+  h1 { font-size: 29px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .sub { font-size: 22px; text-align: center; color: #37474f; margin-bottom: 16px; }
+
+  .panel { margin-bottom: 14px; }
+  .panel .head {
+    background: #eceff1;
+    border: 2px solid #37474f;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 6px 14px;
+    font-size: 23px;
+    font-weight: 700;
+  }
+  .panel.new .head { background: #fff3e0; border-color: #e65100; color: #b34700; }
+  .panel .body { border: 2px solid #37474f; border-radius: 0 0 8px 8px; padding: 6px 10px 4px; }
+
+  .legend { display: flex; gap: 28px; justify-content: center; font-size: 19px; color: #37474f; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 34px; height: 0; border-top: 2px solid #37474f; display: inline-block; }
+  .legend i.ret { border-top: 2px dashed #607d8b; }
+</style>
+<script>
+  /*
+   * Each flow is drawn from its data: the actor boxes, the lifelines, the
+   * messages and the returns are all placed by the script, so the diagram
+   * stays aligned when a label gets longer.
+   */
+  var FLOWS = [
+    {
+      title: 'A. Athlete Check-in',
+      actors: ['Athlete', 'Student Portal', 'AttendanceSessionService', 'Database', 'Sports Coordinator'],
+      steps: [
+        [0, 1, 'opens the Attendance Record page'],
+        [1, 2, 'resolve the sessions visible to the athlete sport'],
+        [2, 3, 'query the open sessions dated today'],
+        [3, 2, 'session is open, not cancelled, sport matches', 1],
+        [1, 2, 'submit the check-in'],
+        [2, 3, 'save the record as Present or Late'],
+        [2, 4, 'notify the coordinator so the roster updates', 1],
+        [3, 1, 'record saved, confirmation shown', 1]
+      ]
+    },
+    {
+      title: 'B. Application Approval and Account Creation',
+      actors: ['Applicant', 'Public Portal', 'Application Controller', 'Database', 'Administrator', 'Student Account'],
+      steps: [
+        [0, 1, 'submits the application and the documents'],
+        [1, 2, 'validate, store the files privately, issue the reference number'],
+        [2, 3, 'create the application (Pending) and the status history'],
+        [4, 1, 'opens the application and verifies the documents'],
+        [4, 1, 'approves, adds notes, records reviewer and date'],
+        [1, 3, 'update the status, the notes and the history'],
+        [1, 5, 'create the athlete account with a one-time temporary password'],
+        [5, 0, 'notify in-app and force the password change on first login', 1]
+      ]
+    },
+    {
+      title: 'C. Certificate Request and Issuance',
+      actors: ['Athlete', 'Student Portal', 'Certificate Service', 'Database', 'Sports Coordinator'],
+      steps: [
+        [0, 1, 'requests a certificate for an achievement'],
+        [1, 2, 'assemble the payload and render the PDF'],
+        [2, 3, 'store the request (Pending) and notify the coordinators'],
+        [4, 1, 'approves the request'],
+        [1, 2, 'release and issue the certificate'],
+        [2, 3, 'store the PDF on private storage, mark the request Issued'],
+        [3, 0, 'the certificate becomes downloadable', 1]
+      ]
+    },
+    {
+      title: 'D. Medical Follow-up and Acknowledgment',
+      new: true,
+      actors: ['Sports Coordinator', 'Messages & Follow-ups Module', 'Database', 'Athlete', 'Notification Bell'],
+      steps: [
+        [0, 1, 'composes a medical follow-up for the recipient group'],
+        [1, 2, 'write the message, the follow-up, and one delivery row per athlete'],
+        [1, 4, 'raise one in-app notification with the schedule'],
+        [3, 1, 'opens the follow-up in the inbox'],
+        [1, 2, 'mark the delivery read (the acknowledgment stays open)', 1],
+        [3, 1, 'presses Acknowledge'],
+        [1, 2, 'store acknowledged_at and set the follow-up to Acknowledged'],
+        [1, 0, 'notify the sports office that the follow-up was acknowledged', 1],
+        [0, 1, 'marks the verified follow-up Completed, or Cancels it']
+      ]
+    }
+  ];
+
+  function draw(flow, index) {
+    var wrap = document.createElement('div');
+    wrap.className = 'panel' + (flow.new ? ' new' : '');
+    var head = document.createElement('div');
+    head.className = 'head';
+    head.textContent = flow.title;
+    var body = document.createElement('div');
+    body.className = 'body';
+
+    // The panel is attached first, so the body can be measured.
+    wrap.appendChild(head);
+    wrap.appendChild(body);
+    document.querySelector('#flows').appendChild(wrap);
+
+    var width = body.clientWidth - 20;
+    var rowHeight = 52;
+    var top = 60;
+    var height = top + flow.steps.length * rowHeight + 16;
+    var count = flow.actors.length;
+    var step = width / count;
+    var cols = flow.actors.map(function (a, i) { return { x: step * i + step / 2, label: a }; });
+
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+    function el(name, attrs, text) {
+      var node = document.createElementNS('http://www.w3.org/2000/svg', name);
+      Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+      if (text !== undefined) { node.textContent = text; }
+      svg.appendChild(node);
+      return node;
+    }
+
+    // actor boxes and lifelines
+    cols.forEach(function (col) {
+      el('rect', { x: col.x - 78, y: 4, width: 156, height: 34, rx: 6, fill: '#ffffff', stroke: '#37474f', 'stroke-width': 1.6 });
+      var t = el('text', { x: col.x, y: 27, 'text-anchor': 'middle', 'font-size': 17, 'font-family': '"Times New Roman", Times, serif', 'font-weight': 700, fill: '#000000' }, col.label);
+      t.setAttribute('paint-order', 'stroke');
+      t.setAttribute('stroke', '#ffffff');
+      t.setAttribute('stroke-width', 4);
+      el('line', { x1: col.x, y1: 38, x2: col.x, y2: height - 6, stroke: '#90a4ae', 'stroke-width': 1.6, 'stroke-dasharray': '7 5' });
+    });
+
+    flow.steps.forEach(function (s, i) {
+      var y = top + i * rowHeight;
+      var from = cols[s[0]];
+      var to = cols[s[1]];
+      var back = s[3] === 1;
+      var x1 = from.x;
+      var x2 = to.x;
+      var dir = x2 >= x1 ? 1 : -1;
+
+      el('line', {
+        x1: x1, y1: y, x2: x2, y2: y,
+        stroke: back ? '#607d8b' : '#37474f',
+        'stroke-width': back ? 1.6 : 1.8,
+        'stroke-dasharray': back ? '7 5' : 'none'
+      });
+      el('polygon', {
+        points: (x2 - dir * 11) + ',' + (y - 5) + ' ' + x2 + ',' + y + ' ' + (x2 - dir * 11) + ',' + (y + 5),
+        fill: back ? '#607d8b' : '#37474f'
+      });
+
+      var label = el('text', {
+        x: (x1 + x2) / 2, y: y - 8, 'text-anchor': 'middle',
+        'font-size': 17, 'font-family': '"Times New Roman", Times, serif',
+        fill: '#263238'
+      }, s[2]);
+      label.setAttribute('paint-order', 'stroke');
+      label.setAttribute('stroke', '#ffffff');
+      label.setAttribute('stroke-width', 5);
+    });
+
+    body.appendChild(svg);
+  }
+
+  window.addEventListener('load', function () {
+    FLOWS.forEach(draw);
+    document.documentElement.setAttribute('data-ready', '1');
+  });
+</script>
+</head>
+<body>
+
+<h1>Figure 12. Sequence Diagrams — SportsHub</h1>
+<div class="sub">The order of the messages exchanged between the actors, the Laravel request handlers, the services, the models, and the data store.</div>
+
+<div id="flows"></div>
+
+<div class="legend">
+  <span><i></i> Request / call</span>
+  <span><i class="ret"></i> Return / notification</span>
+</div>
+
+</body>
+</html>
