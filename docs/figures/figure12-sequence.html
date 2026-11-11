@@ -178,7 +178,23 @@
   }
 
   window.addEventListener('load', function () {
-    FLOWS.forEach(draw);
+    /* One panel can be rendered on its own with ?flow=1 … 4, which is how the
+       separate figures for the manuscript are produced. */
+    var requested = new URLSearchParams(window.location.search).get('flow');
+    var flows = FLOWS;
+
+    if (requested !== null && requested !== 'all') {
+      var index = parseInt(requested, 10) - 1;
+      flows = [FLOWS[index]].filter(Boolean);
+    }
+
+    flows.forEach(draw);
+
+    if (flows.length === 1) {
+      document.querySelector('h1').textContent = 'Sequence Diagram — ' + flows[0].title.replace(/^[A-Z]\.\s*/, '');
+      document.querySelector('.sub').textContent = 'The order of the messages exchanged between the actors, the Laravel request handlers, the services, the models, and the data store.';
+    }
+
     document.documentElement.setAttribute('data-ready', '1');
   });
 </script>

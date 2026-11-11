@@ -41,7 +41,7 @@ Every diagram was rebuilt as an HTML source that renders itself, so the figures 
 | Conceptual Framework (IPO-E) | `docs/figures/figure1.html` | `docs/figures/figure1.png` | new input box (message and follow-up data), the unified module in the athlete and administrator processes, follow-up tracking and the unified inbox in the output, 446 automated tests in the evaluation tools, and the unified messaging tables in the database layer |
 | Use-Case Diagram | `docs/figures/figure10-use-case.html` | `docs/figures/figure10-use-case.png` | new use cases for sending a general message or medical follow-up, monitoring read / acknowledged / completed / overdue, completing or cancelling a follow-up, reading the inbox, acknowledging a follow-up, and replying to the sports office |
 | Class Diagram | `docs/figures/figure11-class.html` | `docs/figures/figure11-class.png` | seventeen entities; the four classes of the unified module are highlighted; the new relationships (message to delivery records, follow-up to message, follow-up to per-athlete rows) are drawn |
-| Sequence Diagrams | `docs/figures/figure12-sequence.html` | `docs/figures/figure12-sequence.png` | four panels, the fourth one being the medical follow-up and its acknowledgment: one transaction for message, follow-up and delivery rows, the read state recorded on opening, the acknowledgment stored only when the athlete confirms it, and the completion or cancellation by the sports office |
+| Sequence Diagrams | `docs/figures/figure12-sequence.html` | `docs/figures/figure12a-athlete-checkin.png`, `figure12b-application-approval.png`, `figure12c-certificate-issuance.png`, `figure12d-medical-followup.png` | four separate diagrams; the fourth one is the medical follow-up and its acknowledgment: one transaction for message, follow-up and delivery rows, the read state recorded on opening, the acknowledgment stored only when the athlete confirms it, and the completion or cancellation by the sports office |
 
 Render a figure again with Chrome, for example:
 
@@ -51,17 +51,19 @@ chrome --headless=new --disable-gpu --hide-scrollbars --force-device-scale-facto
   file:///C:/xampp/htdocs/SportsHub/docs/figures/figure11-class.html
 ```
 
-**In the Google Doc**, replace the three sequence images with `figure12-sequence.png` (one image with the panels A–D) and delete the two captions that are no longer used. The Use-Case and Class Diagram images are replaced one for one.
+**In the Google Doc**, the three sequence images are replaced by the four separate ones (`figure12a-…` to `figure12d-…`), the two captions that are no longer used are deleted, and the figures after them move one number up. The Use-Case and Class Diagram images are replaced one for one.
 
-Three caption lines have to be typed over in the Google Doc, because the find-and-replace bar stopped responding while the figures were rendered:
+The caption lines of the Google Doc, because the find-and-replace bar stopped responding while the figures were rendered:
 
 | Current caption | New caption |
 |---|---|
-| Figure 12 - Athlete Check-in | Figure 12. Sequence Diagrams — Athlete Check-in, Application Approval and Account Creation, Certificate Request and Issuance, and Medical Follow-up and Acknowledgment |
-| Figure 13 - Application Approval and Account Creation | *(delete the line)* |
-| Figure 14 - Certificate Request and Issuance | *(delete the line)* |
+| Figure 12 - Athlete Check-in | Figure 12. Athlete Check-in |
+| Figure 13 - Application Approval and Account Creation | Figure 13. Application Approval and Account Creation |
+| Figure 14 - Certificate Request and Issuance | Figure 14. Certificate Request and Issuance |
+| *(new)* | Figure 15. Medical Follow-up and Acknowledgment |
+| Figure 15 … Figure 40 | Figure 16 … Figure 41 |
 
-The sentence above the figures reads `The Sequence Diagram (Figures 12 to 14) documents` and becomes `The Sequence Diagram (Figure 12) documents`.
+The sentence above the figures reads `The Sequence Diagram (Figures 12 to 14) documents` and becomes `The Sequence Diagrams (Figures 12 to 15) document`.
 
 ### The application status check still to be typed into the Google Doc
 
@@ -87,23 +89,23 @@ The public **Check Application Status** page (reference number + email, no accou
 | Figure 1 — Conceptual Framework | the old IPO-E diagram | `docs/figures/figure1.png` with the unified module, the message and follow-up input data, the follow-up tracking in the output and the unified messaging tables in the database layer |
 | Figure 10 — Use-Case Diagram | the old diagram | `docs/figures/figure10-use-case.png` with the send / monitor / complete / acknowledge use cases |
 | Figure 11 — Class Diagram | the old diagram | `docs/figures/figure11-class.png` with the seventeen entities and the four classes of the unified module highlighted |
-| Figures 12 to 14 — Sequence Diagrams | three separate images | one image, `docs/figures/figure12-sequence.png`, with the panels A to D; the medical follow-up and its acknowledgment is the new panel D, and the two captions that are no longer used were removed |
-| Figure 23 — Messages page (athlete) | the old athlete inbox | `docs/figures/figure23-athlete-inbox.png`, the unified inbox with the follow-up acknowledgment |
-| Figure 37 — Messages page (administrator) | the old administrator Messages screen | `docs/figures/figure37-admin-messages.png`, the unified module with the new tabs and summary cards |
+| Figures 12 to 15 — Sequence Diagrams | three separate images | four separate images, `figure12a-athlete-checkin.png`, `figure12b-application-approval.png`, `figure12c-certificate-issuance.png` and `figure12d-medical-followup.png`; the medical follow-up and its acknowledgment is the new Figure 15, and every figure after it moved one number up |
+| Figure 24 — Messages page (athlete) | the old athlete inbox | `docs/figures/figure23-athlete-inbox.png`, the unified inbox with the follow-up acknowledgment |
+| Figure 38 — Messages page (administrator) | the old administrator Messages screen | `docs/figures/figure37-admin-messages.png`, the unified module with the new tabs and summary cards |
 
 **Text applied**
 
 - the public requirement *"Check the status of an application that was already submitted, without an account, using the application reference number together with the email address used on the application"*
 - the module table cell now reads *"... the application entry point, and the secure application status check (reference number and email)"*
 - the public interface paragraph now lists the status-check page and explains that it only returns the status, the sport, the dates, the explanation and the office instructions
-- *The Sequence Diagram (Figures 12 to 14) documents* became *The Sequence Diagram (Figure 12) documents*, the sequence caption became *Figure 12. Sequence Diagrams — Athlete Check-in, Application Approval and Account Creation, Certificate Request and Issuance, and Medical Follow-up and Acknowledgment*, and the administrator figure caption became *Figure 37. Messages & Follow-ups Page - SportsHub*
+- *The Sequence Diagram (Figures 12 to 14) documents* became *The Sequence Diagrams (Figures 12 to 15) document*, the sequence figures were split into four captioned figures, the figures from 15 to 40 were renumbered to 16 to 41, and the administrator figure caption became *Figure 38. Messages & Follow-ups Page - SportsHub*
 
 ## Sources updated in this repository
 
 - `docs/Capstone_Project_Final_Documentation.md` — **the final documentation of the project**: the complete manuscript (title page, abstract, chapters 1 to 8 with the references) with the unified Messages & Follow-ups module, the four regenerated diagrams embedded, and a new *Appendix A. Implemented System Summary* that lists the delivered modules, the seventeen entities of the schema, the follow-up workflow, and the technology, deployment, and verification facts (446 automated tests, ISO/IEC 25010 result 4.46).
 - `docs/Capstone_Project_Final_Documentation.txt` — the same document as plain text with the tables converted to tab separated rows, ready to paste into the Google Doc or a Word template.
 - `docs/figures/figure1.html` — Conceptual Framework (IPO-E) source updated with the unified Messages & Follow-ups module: the message and follow-up input data, the module in the athlete and administrator processes, the follow-up tracking and unified inbox in the output, the 446 automated tests, and the unified messaging tables in the database layer. Regenerate/export `docs/figures/figure1.png` from this HTML for the manuscript/slide figure.
-- `docs/figures/figure10-use-case.html`, `docs/figures/figure11-class.html`, `docs/figures/figure12-sequence.html` — new sources for the Use-Case Diagram, the Class Diagram, and the Sequence Diagrams, each with the unified module. Their rendered images are `docs/figures/figure10-use-case.png`, `docs/figures/figure11-class.png`, and `docs/figures/figure12-sequence.png`.
+- `docs/figures/figure10-use-case.html`, `docs/figures/figure11-class.html`, `docs/figures/figure12-sequence.html` — new sources for the Use-Case Diagram, the Class Diagram, and the Sequence Diagrams, each with the unified module. Their rendered images are `docs/figures/figure10-use-case.png`, `docs/figures/figure11-class.png`, and the four sequence figures `figure12a-athlete-checkin.png` to `figure12d-medical-followup.png` (the sequence source renders one panel at a time with `?flow=1` to `?flow=4`).
 - `docs/SportsHub_Revised.md` — Revised text for conceptual framework, Gantt (May–Nov), use case, class diagram, and sequence diagrams; application workflow/status model aligned to current implementation.
 - `docs/LatestDocuments_SportsHub_CORRECTED.txt` — Gantt chart (Table 3) updated to May–November 2026; key modeling sections should be cross-checked against `SportsHub_Revised.md` and the implemented system.
 - `docs/SportsHub_Capstone_Final.docx` and `docs/SportsHub_Final.docx` — Binary Word documents; diagram images and formatted tables inside these files must be updated manually using the content below and the revised figure/text sources.

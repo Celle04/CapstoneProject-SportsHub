@@ -517,7 +517,7 @@ The Class Diagram serves as the primary reference for structuring the MySQL data
 
 #### c.) Sequence Diagram
 
-The Sequence Diagram describes the order of messages exchanged between the actors, the Laravel request handlers, services, models, and the data store for the system's most frequent and most sensitive interactions. The representative flows are: application submission and secure status checking, application review/status tracking and approval notifications, athlete check-in, and certificate request and issuance. Each flow shows validation/authorization, the business rule owner, database writes, notification behavior, and the user-visible result.
+The Sequence Diagram describes the order of messages exchanged between the actors, the Laravel request handlers, services, models, and the data store for the system's most frequent and most sensitive interactions. The representative flows are: application submission and secure status checking, application review/status tracking and approval notifications, athlete check-in, certificate request and issuance, and the medical follow-up with its acknowledgment. Each flow shows validation/authorization, the business rule owner, database writes, notification behavior, and the user-visible result.
 
 In the application submission and secure status check flow, an unauthenticated applicant opens the public application form and submits personal details, selected sport, policy acceptance, and the three eligibility documents. The application controller validates the request, stores the uploaded files in private storage, creates the Application record with status Pending, generates a unique reference number, and inserts an initial ApplicationStatusHistory entry. The system redirects the applicant to a confirmation view that displays the reference number and a link to the status-check page. Later, the applicant opens the public status page and submits the reference number and the email address used on the application. The controller verifies that both values match the same application record, then returns only non-sensitive status information: current status, sport applied for, submission date, last updated date, status explanation, revision/rejection explanation when applicable, and admin instructions. A reference number alone does not expose application details.
 
@@ -530,7 +530,18 @@ In the certificate request and issuance flow, the athlete requests a certificate
 In the medical follow-up flow, the Sports Coordinator composes a message in the unified Messages & Follow-ups module and selects the Medical Follow-up category. The compose form then asks for the follow-up type, the date and time of the checkup, the location, the additional medical instructions, and whether a response is required, while the recipient group is resolved to the active athletes of the chosen sport or selection. The delivery service writes the message, the follow-up, and one recipient record per athlete inside a single database transaction, so a follow-up can never exist without the message that carries it, and it raises one in-app notification per recipient with the schedule already included. When the athlete opens the follow-up, the read state of that athlete's delivery record is updated and the follow-up moves to Read, but the acknowledgment is left untouched. Only when the athlete presses the acknowledgment button is the acknowledgment time recorded and the follow-up moved to Acknowledged, and the sports office is notified of the confirmation. The administrator sees the read, acknowledgment, completion, and overdue counts of every follow-up in the monitoring table, and may mark the follow-up, or a single athlete's part of it, as completed after verification, or cancel it.
 
 
-Figure 5. Sequence Diagrams — Application Submission/Status Check, Application Review and Notification, Athlete Check-In, Certificate Issuance, and the Medical Follow-up Acknowledgment
+Figure 5a. Athlete Check-in — SportsHub
+
+
+Figure 5b. Application Approval and Account Creation — SportsHub
+
+
+Figure 5c. Certificate Request and Issuance — SportsHub
+
+
+Figure 5d. Medical Follow-up and Acknowledgment — SportsHub
+
+The four sequence diagrams show the application submission and secure status check, the application review with approval and notification, the athlete check-in, the certificate request and issuance, and the medical follow-up with its acknowledgment.
 
 ### 5.3 System Implementation
 
