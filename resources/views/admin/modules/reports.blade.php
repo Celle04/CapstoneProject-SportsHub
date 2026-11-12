@@ -204,7 +204,8 @@
 
 			<div class="report-filter-actions">
 				<button class="button" type="submit">Apply Filters</button>
-				<a class="button button-secondary" href="{{ route('reports.index') }}">Reset</a>
+				{{-- The reset clears the filters of the open report and stays on that report. --}}
+				<a class="button button-secondary" href="{{ route('reports.index', ['report' => $report]) }}">Reset</a>
 			</div>
 		</form>
 	</section>

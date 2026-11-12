@@ -319,6 +319,25 @@ class ReportsManagementTest extends TestCase
             ->assertDontSee('Coach Reyes');
     }
 
+    public function test_resetting_the_filters_keeps_the_report_open(): void
+    {
+        $admin = $this->admin();
+        $sport = $this->sport('Badminton');
+
+        Coach::create(['name' => 'Coach Reyes', 'email' => 'reyes@example.com', 'specialty' => 'Smash Play', 'sport_id' => $sport->id, 'coach_type' => 'Head Coach', 'status' => 'Active']);
+
+        $response = $this->actingAs($admin)
+            ->get(route('reports.index', ['report' => 'coaches', 'coach_type' => 'Head Coach']));
+
+        $response->assertOk()->assertSee('OFFICIAL COACH LIST');
+
+        // The reset clears the filters of the open report and stays on it.
+        $response->assertSee(
+            '<a class="button button-secondary" href="'.route('reports.index', ['report' => 'coaches']).'">Reset</a>',
+            false
+        );
+    }
+
     public function test_report_filters_are_validated(): void
     {
         $this->actingAs($this->admin())
