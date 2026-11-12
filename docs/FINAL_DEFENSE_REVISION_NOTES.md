@@ -17,11 +17,12 @@ Section 1.4 now describes the project as it is actually built and deployed. The 
 
 **Limitations added, each tied to a real boundary of the system**
 1. Notifications are in-app only; no SMS, email, or push, so an athlete who does not open the portal is not alerted.
-2. Only two account roles exist; coaches are records and cannot sign in, and there is no finer permission level for a sports adviser or medical officer.
-3. There is no parent or guardian portal; the consent form and the medical certificate are scanned documents verified by hand.
-4. The clearance status depends on the uploaded certificate and the coordinator's entry; the system does not verify fitness to play against the school clinic.
-5. The system runs as a single hosted instance with one database, without an automated backup and restore routine, multi-school support, or high availability.
-6. The evaluation rests on fifteen respondents at one school, and the automated test suite proves the behaviour of the software but cannot stand in for a longer period of actual use.
+2. Only two account roles exist; there is no finer permission level for a faculty sports adviser, a medical officer, or a team leader.
+3. Coaches have no accounts. A coach is a record (name, email, phone, specialty, type, assigned sport, status) that the Sports Coordinator maintains; a coach cannot sign in, cannot receive a message or a medical follow-up, and cannot open, close, or confirm a session, an achievement, or a certificate, so every action that involves a coach is carried out by the Sports Coordinator.
+4. There is no parent or guardian portal; the consent form and the medical certificate are scanned documents verified by hand.
+5. The clearance status depends on the uploaded certificate and the coordinator's entry; the system does not verify fitness to play against the school clinic.
+6. The system runs as a single hosted instance with one database, without an automated backup and restore routine, multi-school support, or high availability.
+7. The evaluation rests on fifteen respondents at one school, and the automated test suite proves the behaviour of the software but cannot stand in for a longer period of actual use.
 
 The old limitations that were kept are unchanged: no financial management, no grading, no external system integration, no native mobile application, the generalizability of the evaluation, the dependence on manual data entry, and the limits of the offline caching.
 
@@ -29,7 +30,7 @@ The old limitations that were kept are unchanged: no financial management, no gr
 - `docs/SportsHub_Revised.md` — section 1.4 replaced.
 - `docs/Capstone_Project_Final_Documentation.md` and `.txt` — section 1.4 replaced.
 - `docs/LatestDocuments_SportsHub_CORRECTED.txt` — section 1.4 replaced with the same wording in the numbered layout of that export.
-- `docs/SportsHub_Capstone_Final_Revised.docx` — the twelve scope bullets and the ten limitation bullets of the Word manuscript were rewritten in place; the numbering and the run formatting of the list are unchanged.
+- `docs/SportsHub_Capstone_Final_Revised.docx` — the twelve scope bullets and the eleven limitation bullets of the Word manuscript were rewritten in place; the numbering and the run formatting of the list are unchanged.
 
 **Manual step still open in the Google Doc**
 The Google copy of the manuscript has to receive the same section by hand: delete the current scope and limitation bullets of 1.4 and paste the new ones from `docs/SportsHub_Revised.md` (lines 96 to 118). The section is the only part that changed, so nothing else in the Google Doc has to be touched.
