@@ -21,6 +21,40 @@ class EventSchedulingTest extends TestCase
         $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
+    public function test_the_calendar_opens_the_events_it_shows(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'School basketball program']);
+        $athlete = User::factory()->create(['role' => 'Student', 'status' => 'Active', 'sport_id' => $sport->id]);
+
+        $this->actingAs($admin)->post(route('events.store'), [
+            'title' => 'Basketball practice',
+            'sport_id' => $sport->id,
+            'event_type' => 'Practice',
+            'starts_at' => now()->addDay()->format('Y-m-d\TH:i'),
+            'ends_at' => now()->addDay()->addHour()->format('Y-m-d\TH:i'),
+            'venue' => 'Main Court',
+            'status' => 'Scheduled',
+        ])->assertRedirect();
+
+        $event = Event::query()->where('title', 'Basketball practice')->firstOrFail();
+
+        // The calendar of the sports office opens the event.
+        $this->actingAs($admin)->get(route('admin.calendar'))
+            ->assertOk()
+            ->assertSee('href="'.route('events.show', $event).'"', false);
+
+        // The calendar of the athlete opens the event as well.
+        $this->actingAs($athlete)->get(route('student.calendar'))
+            ->assertOk()
+            ->assertSee('href="'.route('student.events.show', $event).'"', false);
+
+        // And the page it opens really is the event.
+        $this->actingAs($athlete)->get(route('student.events.show', $event))
+            ->assertOk()
+            ->assertSee('Basketball practice');
+    }
+
     public function test_a_new_event_reaches_the_athlete_even_when_it_is_already_running(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);

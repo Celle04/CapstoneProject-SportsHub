@@ -26,10 +26,10 @@
 					<div class="calendar-day student-calendar-day {{ $day->month !== $calendarMonth->month ? 'outside-month' : '' }} {{ $day->isToday() ? 'today' : '' }} {{ $dayEvents->isNotEmpty() ? 'has-event' : '' }}">
 						<div class="day-number">{{ $day->day }}</div>
 						@foreach ($dayEvents->take(2) as $event)
-							<span class="calendar-event" title="{{ $event->title }}">{{ $event->title }}</span>
+							<a class="calendar-event student-calendar-event" href="{{ route('student.events.show', $event) }}" title="{{ $event->title }} &middot; {{ $event->starts_at->format('g:i A') }}">{{ $event->title }}</a>
 						@endforeach
 						@if ($dayEvents->count() > 2)
-							<span class="calendar-more">+{{ $dayEvents->count() - 2 }} more</span>
+							<a class="calendar-more" href="{{ route('student.schedule') }}">+{{ $dayEvents->count() - 2 }} more</a>
 						@endif
 					</div>
 				@endforeach

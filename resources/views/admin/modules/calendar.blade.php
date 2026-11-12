@@ -137,7 +137,7 @@
                     @endforeach
 
                     @if ($hiddenCount > 0)
-                        <span class="calendar-more">+{{ $hiddenCount }} more</span>
+                        <a class="calendar-more" href="{{ route('events.index', array_filter(['date' => $dateString, 'sport_id' => request('sport_id'), 'event_type' => request('event_type'), 'venue' => request('venue'), 'status' => request('status')])) }}">+{{ $hiddenCount }} more</a>
                     @endif
                 </div>
             @endforeach
