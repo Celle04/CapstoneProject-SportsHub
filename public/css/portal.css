@@ -2066,6 +2066,71 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .row-action:hover { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-hover); text-decoration: none; }
 .row-action-danger { color: var(--color-danger); border-color: var(--color-danger-border); background: var(--color-danger-soft); }
 .row-action-danger:hover { border-color: var(--color-danger); background: var(--color-danger-soft); color: var(--color-danger); }
+
+/* The three dots of a row, and the panel with the actions of that row. */
+.row-menu { position: relative; display: inline-flex; }
+.row-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--color-muted);
+    background: transparent;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.row-menu-trigger:hover,
+.row-menu-trigger[aria-expanded="true"] {
+    border-color: var(--color-border);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+.row-menu-trigger svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+.row-menu-panel {
+    position: absolute;
+    right: 0;
+    z-index: 40;
+    display: grid;
+    gap: 2px;
+    min-width: 176px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--surface, #fff);
+    box-shadow: 0 12px 28px rgba(23, 24, 43, .14);
+    text-align: left;
+}
+.row-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 6px;
+    color: var(--color-text);
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+.row-menu-item:hover,
+.row-menu-item:focus-visible { background: var(--color-primary-soft); color: var(--color-primary-hover); text-decoration: none; }
+.row-menu-item-danger { color: var(--color-danger); }
+.row-menu-item-danger:hover,
+.row-menu-item-danger:focus-visible { background: var(--color-danger-soft); color: var(--color-danger); }
+
+/* A row that opens its record when it is clicked. */
+.data-table tbody tr[data-row-link] { cursor: pointer; }
+.data-table tbody tr[data-row-link]:hover { background: rgba(16, 6, 159, .04); }
+.data-table tbody tr[data-row-link] .row-menu-trigger { cursor: pointer; }
 .medical-search { flex: 1 1 200px; min-width: 180px; max-width: none; }
 
 /* Deadlines & clearance trackers -------------------------------------------- */

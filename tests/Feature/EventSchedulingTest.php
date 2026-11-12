@@ -21,6 +21,68 @@ class EventSchedulingTest extends TestCase
         $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
+    public function test_a_new_event_reaches_the_athlete_even_when_it_is_already_running(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'School basketball program']);
+        $athlete = User::factory()->create(['role' => 'Student', 'status' => 'Active', 'sport_id' => $sport->id]);
+
+        // The event is running right now: the athlete still has to see it.
+        $this->actingAs($admin)->post(route('events.store'), [
+            'title' => 'Ongoing tournament',
+            'sport_id' => $sport->id,
+            'event_type' => 'Tournament',
+            'starts_at' => now()->subHours(2)->format('Y-m-d\TH:i'),
+            'ends_at' => now()->addHour()->format('Y-m-d\TH:i'),
+            'venue' => 'Gym',
+            'status' => 'Ongoing',
+        ])->assertRedirect();
+
+        $this->actingAs($athlete)->get(route('student.schedule'))
+            ->assertOk()
+            ->assertSee('Ongoing tournament');
+
+        $this->actingAs($athlete)->get(route('student.calendar'))
+            ->assertOk()
+            ->assertSee('Ongoing tournament');
+
+        $this->actingAs($athlete)->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Ongoing tournament');
+
+        $this->assertSame(1, $athlete->notifications()->count());
+    }
+
+    public function test_a_settled_event_is_left_out_of_the_upcoming_lists(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'School basketball program']);
+        $athlete = User::factory()->create(['role' => 'Student', 'status' => 'Active', 'sport_id' => $sport->id]);
+
+        // The event is already over.
+        $this->actingAs($admin)->post(route('events.store'), [
+            'title' => 'Earlier today',
+            'sport_id' => $sport->id,
+            'event_type' => 'Practice',
+            'starts_at' => now()->subHours(3)->format('Y-m-d\TH:i'),
+            'ends_at' => now()->subHours(2)->format('Y-m-d\TH:i'),
+            'venue' => 'Main Court',
+            'status' => 'Scheduled',
+        ])->assertRedirect();
+
+        // It is history: it does not belong to what is coming, but the month
+        // of the calendar still shows it.
+        $this->actingAs($athlete)->get(route('student.schedule'))
+            ->assertOk()
+            ->assertDontSee('Earlier today');
+
+        $this->actingAs($athlete)->get(route('student.calendar'))
+            ->assertOk()
+            ->assertSee('Earlier today');
+
+        $this->assertSame(0, $athlete->notifications()->count());
+    }
+
     public function test_administrator_can_create_and_view_an_event(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);

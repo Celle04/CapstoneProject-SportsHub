@@ -56,6 +56,7 @@ class MessageController extends Controller
 
         $followUps = MedicalFollowUp::query()
             ->with(['message.sender', 'message.sport', 'recipients.recipient'])
+            ->archived($request->boolean('archived'))
             ->when($request->filled('search'), function (Builder $query) use ($request): void {
                 $search = trim((string) $request->input('search'));
                 $query->where(function (Builder $matching) use ($search): void {
@@ -77,6 +78,7 @@ class MessageController extends Controller
             'followUps' => $followUps,
             'messageTab' => $tab,
             'messageSummary' => $this->summary(),
+            'showArchivedFollowUps' => $request->boolean('archived'),
         ]);
     }
 

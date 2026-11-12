@@ -208,6 +208,7 @@
     <script src="{{ asset('js/achievement-form.js') }}" defer></script>
     <script src="{{ asset('js/medical-records.js') }}?v={{ filemtime(public_path('js/medical-records.js')) }}" defer></script>
     <script src="{{ asset('js/portal-ui.js') }}" defer></script>
+    <script src="{{ asset('js/row-menu.js') }}?v={{ filemtime(public_path('js/row-menu.js')) }}" defer></script>
     <script src="{{ asset('js/notifications.js') }}?v={{ filemtime(public_path('js/notifications.js')) }}" defer></script>
 </body>
 </html>

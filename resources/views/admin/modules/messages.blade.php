@@ -380,7 +380,7 @@
                                 $recipientNames = $followUp->recipients->pluck('recipient.name')->filter()->implode(', ');
                                 $overdueCount = $followUp->recipients->filter(fn ($recipient) => $followUp->isOverdue() && ! $recipient->isCompleted())->count();
                             @endphp
-                            <tr>
+                            <tr @if ($followUp->message) data-row-link="{{ route('admin.messages.show', $followUp->message) }}" @endif>
                                 <td><strong>{{ $followUp->message?->subject ?: 'Untitled follow-up' }}</strong></td>
                                 <td>{{ $followUp->follow_up_type }}</td>
                                 <td>{{ $recipientNames ?: '—' }}</td>
@@ -390,10 +390,23 @@
                                 <td>{{ $followUp->acknowledgedCount() }}/{{ $followUp->recipientCount() }}</td>
                                 <td>{{ $followUp->completedCount() }}/{{ $followUp->recipientCount() }}</td>
                                 <td>{{ $overdueCount }}</td>
-                                <td><span class="badge follow-up-status follow-up-status-{{ strtolower($followUp->effectiveStatus()) }}">{{ $followUp->effectiveStatus() }}</span></td>
                                 <td>
+                                    <span class="badge follow-up-status follow-up-status-{{ strtolower($followUp->effectiveStatus()) }}">{{ $followUp->effectiveStatus() }}</span>
+                                    @if ($followUp->isArchived())
+                                        <br><small class="meta">Archived</small>
+                                    @endif
+                                </td>
+                                <td class="actions-col">
                                     @if ($followUp->message)
-                                        <a class="text-link" href="{{ route('admin.messages.show', $followUp->message) }}">View Details</a>
+                                        <x-row-menu :label="'Actions for '.($followUp->message->subject ?: 'this follow-up')">
+                                            <a class="row-menu-item" role="menuitem" href="{{ route('admin.messages.show', $followUp->message) }}">View Details</a>
+                                            @if ($followUp->isArchived())
+                                                <button class="row-menu-item" role="menuitem" type="button" data-confirm-dialog data-confirm-title="Restore Follow-up?" data-confirm-message="Bring this follow-up back into the active list?" data-confirm-label="Restore" data-confirm-icon="check" data-confirm-variant="success" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.follow-ups.restore', $followUp->message) }}">Restore</button>
+                                            @else
+                                                <button class="row-menu-item" role="menuitem" type="button" data-confirm-dialog data-confirm-title="Archive Follow-up?" data-confirm-message="Archive this follow-up? It will be removed from the active list, but its record stays complete." data-confirm-label="Archive" data-confirm-icon="warning" data-confirm-variant="warning" data-confirm-method="PATCH" data-confirm-url="{{ route('admin.follow-ups.archive', $followUp->message) }}">Archive</button>
+                                            @endif
+                                            <button class="row-menu-item row-menu-item-danger" role="menuitem" type="button" data-confirm-dialog data-confirm-title="Delete Follow-up?" data-confirm-message="Delete this follow-up and the message it belongs to? This cannot be undone." data-confirm-label="Delete" data-confirm-icon="warning" data-confirm-variant="danger" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.follow-ups.destroy', $followUp->message) }}">Delete</button>
+                                        </x-row-menu>
                                     @endif
                                 </td>
                             </tr>
@@ -403,6 +416,14 @@
                     </tbody>
                 </table>
             </div>
+            <div class="report-export-options" role="group" aria-label="Follow-up list">
+                @if ($showArchivedFollowUps ?? false)
+                    <a class="report-export-option is-active" href="{{ route('admin.messages', ['tab' => 'medical']) }}">Active follow-ups</a>
+                    <a class="report-export-option" href="{{ route('admin.messages', ['tab' => 'medical', 'archived' => 1]) }}">Archived follow-ups</a>
+                @else
+                    <a class="report-export-option" href="{{ route('admin.messages', ['tab' => 'medical', 'archived' => 1]) }}">Show archived follow-ups</a>
+                @endif
+            </div>
             {{ $followUps->links() }}
         @else
             <div class="table-wrap">
@@ -410,7 +431,7 @@
                     <thead><tr><th>Subject</th><th>Category</th><th>Recipient Type</th><th>Recipients</th><th>Date Sent</th><th>Read</th><th>Unread</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         @forelse ($messages as $row)
-                            <tr>
+                            <tr data-row-link="{{ $row->status === 'sent' ? route('admin.messages.show', $row) : route('admin.messages.edit', $row) }}">
                                 <td><strong>{{ $row->subject ?: 'Untitled draft' }}</strong>@if ($row->event)<br><small class="meta">{{ $row->event->title }}</small>@endif</td>
                                 <td><span class="badge {{ $row->category === 'medical_follow_up' ? 'medical-status-pending' : '' }}">{{ \App\Models\Message::categoryName($row->category) }}</span><br><small class="meta">{{ \App\Models\Message::categoryLabel($row->message_type) }}</small></td>
                                 <td>{{ ucfirst($row->recipient_type) }}@if ($row->sport) · {{ $row->sport->name }}@endif</td>
@@ -419,13 +440,15 @@
                                 <td>{{ $row->status === 'sent' ? $row->read_recipients_count : '—' }}</td>
                                 <td>{{ $row->status === 'sent' ? $row->recipients_count - $row->read_recipients_count : '—' }}</td>
                                 <td><span class="badge {{ $row->status === 'sent' ? 'status-approved' : 'status-pending' }}">{{ ucfirst($row->status) }}</span></td>
-                                <td>
-                                    @if ($row->status === 'sent')
-                                        <a class="text-link" href="{{ route('admin.messages.show', $row) }}">View Details</a>
-                                    @else
-                                        <a class="text-link" href="{{ route('admin.messages.edit', $row) }}">Edit Draft</a>
-                                        <button class="row-action row-action-danger message-delete-form" type="button" data-confirm-dialog data-confirm-title="Delete Draft?" data-confirm-message="This draft will be permanently deleted. No athletes have received it." data-confirm-label="Delete Draft" data-confirm-icon="warning" data-confirm-variant="danger" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.messages.destroy', $row) }}">Delete</button>
-                                    @endif
+                                <td class="actions-col">
+                                    <x-row-menu :label="'Actions for '.($row->subject ?: 'this message')">
+                                        @if ($row->status === 'sent')
+                                            <a class="row-menu-item" role="menuitem" href="{{ route('admin.messages.show', $row) }}">View Details</a>
+                                        @else
+                                            <a class="row-menu-item" role="menuitem" href="{{ route('admin.messages.edit', $row) }}">Edit Draft</a>
+                                            <button class="row-menu-item row-menu-item-danger" role="menuitem" type="button" data-confirm-dialog data-confirm-title="Delete Draft?" data-confirm-message="This draft will be permanently deleted. No athletes have received it." data-confirm-label="Delete Draft" data-confirm-icon="warning" data-confirm-variant="danger" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.messages.destroy', $row) }}">Delete</button>
+                                        @endif
+                                    </x-row-menu>
                                 </td>
                             </tr>
                         @empty

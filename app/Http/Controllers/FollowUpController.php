@@ -6,6 +6,7 @@ use App\Models\MedicalFollowUp;
 use App\Models\MedicalFollowUpRecipient;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\MessageReceivedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,78 @@ class FollowUpController extends Controller
         });
 
         return back()->with('success', 'Follow-up cancelled.');
+    }
+
+    /**
+     * Archives a follow-up.
+     *
+     * The record and its history stay complete; the follow-up only leaves the
+     * list of the ones that still need work.
+     */
+    public function archive(Request $request, Message $message): RedirectResponse
+    {
+        $this->authorizeAdmin();
+        $followUp = $this->followUp($message);
+
+        if ($followUp->isArchived()) {
+            return back()->with('success', 'This follow-up is already archived.');
+        }
+
+        $followUp->forceFill(['archived_at' => now()])->save();
+
+        return back()->with('success', 'Follow-up archived. It is no longer listed among the active follow-ups.');
+    }
+
+    /**
+     * Brings an archived follow-up back into the list.
+     */
+    public function restore(Request $request, Message $message): RedirectResponse
+    {
+        $this->authorizeAdmin();
+        $followUp = $this->followUp($message);
+
+        if (! $followUp->isArchived()) {
+            return back()->with('success', 'This follow-up is not archived.');
+        }
+
+        $followUp->forceFill(['archived_at' => null])->save();
+
+        return back()->with('success', 'Follow-up restored to the active list.');
+    }
+
+    /**
+     * Deletes a follow-up with the message it belongs to.
+     *
+     * The notifications that point at the message go with it, so no bell in
+     * the portal can lead to a message that no longer exists.
+     */
+    public function destroy(Request $request, Message $message): RedirectResponse
+    {
+        $this->authorizeAdmin();
+        $followUp = $this->followUp($message);
+
+        DB::transaction(function () use ($followUp, $message): void {
+            $messageId = (int) $message->id;
+
+            // The notifications that point at the message go with it, so no
+            // bell in the portal can lead to a message that no longer exists.
+            DB::table('notifications')
+                ->where('type', MessageReceivedNotification::class)
+                ->get()
+                ->each(function (object $notification) use ($messageId): void {
+                    $data = json_decode($notification->data ?? '{}', true) ?: [];
+
+                    if ((int) data_get($data, 'message_id') === $messageId) {
+                        DB::table('notifications')->where('id', $notification->id)->delete();
+                    }
+                });
+
+            $followUp->recipients()->delete();
+            $followUp->delete();
+            $message->delete();
+        });
+
+        return back()->with('success', 'Follow-up deleted.');
     }
 
     private function followUp(Message $message): MedicalFollowUp

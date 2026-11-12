@@ -184,7 +184,7 @@ $calendarData = function (?string $month = null): array {
     $studentSportIds = auth()->user()?->role === 'Student' ? auth()->user()->sportIds() : null;
 
     $eventsQuery = Event::with(['sport', 'coach'])
-        ->when($studentSportIds !== null, fn ($query) => $query->where('status', 'Scheduled'))
+        ->when($studentSportIds !== null, fn ($query) => $query->whereIn('status', Event::OPEN_STATUSES))
         ->when(request('sport_id'), fn ($query, $sportId) => $query->where('sport_id', $sportId))
         ->when(request('venue'), fn ($query, $venue) => $query->where('venue', $venue))
         ->when(request('event_type'), fn ($query, $eventType) => $query->where('event_type', $eventType))
@@ -235,14 +235,21 @@ $calendarData = function (?string $month = null): array {
         ->groupBy('day')
         ->map(fn ($dayPlacements) => $dayPlacements->pluck('event')->values());
 
+    /*
+     * The calendar of an athlete holds the events of their own sports. The
+     * events that are settled are left out, but an event that is running or
+     * that was postponed is still shown, because the athlete has to know
+     * about it.
+     */
     $studentEvents = Event::query()
         ->when($studentSportIds !== null, function ($query) use ($studentSportIds) {
-            $query->where('status', 'Scheduled')->where(function ($sportQuery) use ($studentSportIds) {
-                $sportQuery->whereNull('sport_id');
-                if ($studentSportIds !== []) {
-                    $sportQuery->orWhereIn('sport_id', $studentSportIds);
-                }
-            });
+            $query->whereIn('status', Event::OPEN_STATUSES)
+                ->where(function ($sportQuery) use ($studentSportIds) {
+                    $sportQuery->whereNull('sport_id');
+                    if ($studentSportIds !== []) {
+                        $sportQuery->orWhereIn('sport_id', $studentSportIds);
+                    }
+                });
         });
 
     return [
@@ -258,13 +265,8 @@ $calendarData = function (?string $month = null): array {
         'venues' => Event::query()->whereNotNull('venue')->distinct()->orderBy('venue')->pluck('venue'),
         'eventTypes' => EventController::eventTypes(),
         'statuses' => EventController::statuses(),
-        'upcomingEvents' => Event::with('sport')->where('status', 'Scheduled')->where('starts_at', '>=', now())->when($studentSportIds !== null, function ($query) use ($studentSportIds) {
-            $query->where(function ($sportQuery) use ($studentSportIds) {
-                $sportQuery->whereNull('sport_id');
-                if ($studentSportIds !== []) {
-                    $sportQuery->orWhereIn('sport_id', $studentSportIds);
-                }
-            });
+        'upcomingEvents' => Event::with('sport')->open()->when($studentSportIds !== null, function ($query) use ($studentSportIds) {
+            $query->forAthleteSports($studentSportIds);
         })->orderBy('starts_at')->limit(5)->get(),
     ];
 };
@@ -275,14 +277,8 @@ $studentPage = function (string $page, array $data = []) use ($studentNav) {
     $studentApplication = $athlete->applications()->with('sportCategory')->latest()->first();
     $studentSportIds = $athlete->sportIds();
     $upcomingStudentEventsQuery = Event::with(['sport', 'coach'])
-        ->where('status', 'Scheduled')
-        ->where('starts_at', '>=', now())
-        ->where(function ($query) use ($studentSportIds) {
-            $query->whereNull('sport_id');
-            if ($studentSportIds !== []) {
-                $query->orWhereIn('sport_id', $studentSportIds);
-            }
-        })
+        ->open()
+        ->forAthleteSports($studentSportIds)
         ->orderBy('starts_at');
     $upcomingStudentEvents = (clone $upcomingStudentEventsQuery)->limit(5)->get();
     $dashboardData = [];
@@ -572,15 +568,8 @@ Route::get('/student/sports/{sport}/members', [SportController::class, 'studentM
 Route::get('/student/sports/{sport}/members/{athlete}', [SportController::class, 'studentMemberProfile'])->middleware('auth')->name('student.sports.member-profile');
 Route::get('/student/calendar', fn () => $studentPage('calendar', $calendarData(request('month'))))->middleware('auth')->name('student.calendar');
 Route::get('/student/schedule', fn () => $studentPage('schedule', [
-    'events' => Event::where('status', 'Scheduled')
-        ->where('starts_at', '>=', now())
-        ->where(function ($query) {
-            $sportIds = auth()->user()->sportIds();
-            $query->whereNull('sport_id');
-            if ($sportIds !== []) {
-                $query->orWhereIn('sport_id', $sportIds);
-            }
-        })
+    'events' => Event::open()
+        ->forAthleteSports(auth()->user()->sportIds())
         ->orderBy('starts_at')
         ->get(),
 ]))->middleware('auth')->name('student.schedule');
@@ -952,7 +941,7 @@ Route::get('/dashboard', function () use ($adminPage) {
         ],
         'achievementsBySport' => $achievementsBySport,
         'recentAchievements' => $recentAchievements,
-        'upcomingEvents' => Event::with('sport')->where('status', 'Scheduled')->where('starts_at', '>=', now())->orderBy('starts_at')->limit(5)->get(),
+        'upcomingEvents' => Event::with('sport')->open()->orderBy('starts_at')->limit(5)->get(),
         'athletesBySport' => Sport::withCount(['athletes' => fn ($query) => $query->where('role', 'Student')])->orderBy('name')->get(),
         'medicalStatusCounts' => [
             'Cleared' => (int) ($medicalStatusCounts->get('Cleared') ?? 0),
@@ -1070,6 +1059,9 @@ Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy']
 
 Route::patch('/admin/messages/{message}/follow-up/complete', [FollowUpController::class, 'complete'])->middleware('auth')->name('admin.follow-ups.complete');
 Route::patch('/admin/messages/{message}/follow-up/cancel', [FollowUpController::class, 'cancel'])->middleware('auth')->name('admin.follow-ups.cancel');
+Route::patch('/admin/messages/{message}/follow-up/archive', [FollowUpController::class, 'archive'])->middleware('auth')->name('admin.follow-ups.archive');
+Route::patch('/admin/messages/{message}/follow-up/restore', [FollowUpController::class, 'restore'])->middleware('auth')->name('admin.follow-ups.restore');
+Route::delete('/admin/messages/{message}/follow-up', [FollowUpController::class, 'destroy'])->middleware('auth')->name('admin.follow-ups.destroy');
 Route::patch('/admin/messages/{message}/follow-up/recipients/{recipient}/complete', [FollowUpController::class, 'completeRecipient'])->middleware('auth')->name('admin.follow-ups.recipient.complete');
 
 /*
@@ -1078,6 +1070,9 @@ Route::patch('/admin/messages/{message}/follow-up/recipients/{recipient}/complet
  */
 Route::get('/admin/messages/{message}/follow-up/complete', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.complete.form');
 Route::get('/admin/messages/{message}/follow-up/cancel', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.cancel.form');
+Route::get('/admin/messages/{message}/follow-up/archive', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.archive.form');
+Route::get('/admin/messages/{message}/follow-up/restore', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.restore.form');
+Route::get('/admin/messages/{message}/follow-up', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.destroy.form');
 Route::get('/admin/messages/{message}/follow-up/recipients/{recipient}/complete', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.recipient.complete.form');
 
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');

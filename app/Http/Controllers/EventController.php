@@ -91,7 +91,15 @@ class EventController extends Controller
                     : 'Event created successfully.').' Review and send the event notification below.');
         }
 
-        if ($event->status === 'Scheduled' && $event->starts_at?->isFuture()) {
+        /*
+         * The athletes are told about the event when there is still something
+         * to attend: an event that is scheduled, one that is running right
+         * now, or one that was postponed. An event that already ended is
+         * history and needs no notice.
+         */
+        $endsLater = ($event->ends_at ?? $event->starts_at)?->isFuture() ?? false;
+
+        if (in_array($event->status, Event::OPEN_STATUSES, true) && $endsLater) {
             app(StudentUpdateNotifier::class)->notifyStudents(
                 $event->sport_id ? [$event->sport_id] : null,
                 'New sports event',

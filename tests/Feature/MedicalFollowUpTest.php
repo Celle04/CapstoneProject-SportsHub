@@ -547,6 +547,86 @@ class MedicalFollowUpTest extends TestCase
         );
     }
 
+    public function test_a_follow_up_can_be_archived_and_restored(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $followUp = MedicalFollowUp::query()->where('message_id', $message->id)->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.follow-ups.archive', $message))
+            ->assertRedirect();
+
+        $this->assertTrue($followUp->fresh()->isArchived());
+
+        // An archived follow-up leaves the active list.
+        $this->actingAs($admin)
+            ->get(route('admin.messages', ['tab' => 'medical']))
+            ->assertOk()
+            ->assertDontSee('Medical Checkup Reminder');
+
+        $this->actingAs($admin)
+            ->get(route('admin.messages', ['tab' => 'medical', 'archived' => 1]))
+            ->assertOk()
+            ->assertSee('Medical Checkup Reminder');
+
+        $this->actingAs($admin)
+            ->patch(route('admin.follow-ups.restore', $message))
+            ->assertRedirect();
+
+        $this->assertFalse($followUp->fresh()->isArchived());
+    }
+
+    public function test_a_follow_up_can_be_deleted_with_its_message(): void
+    {
+        Notification::fake();
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $followUp = MedicalFollowUp::query()->where('message_id', $message->id)->firstOrFail();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.follow-ups.destroy', $message))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('medical_follow_ups', ['id' => $followUp->id]);
+        $this->assertDatabaseMissing('medical_follow_up_recipients', ['medical_follow_up_id' => $followUp->id]);
+        $this->assertDatabaseMissing('messages', ['id' => $message->id]);
+        $this->assertDatabaseMissing('message_recipients', ['message_id' => $message->id]);
+
+        // The bell of the athlete no longer leads to a message that is gone.
+        $this->assertSame(0, $first->notifications()->count());
+    }
+
+    public function test_the_follow_up_row_uses_the_actions_menu(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $response = $this->actingAs($admin)->get(route('admin.messages', ['tab' => 'medical']));
+
+        $response->assertOk()
+            // The three dots of the row.
+            ->assertSee('data-row-menu', false)
+            ->assertSee('data-row-menu-trigger', false)
+            ->assertSee('icon-more-horizontal', false)
+            // The row itself opens the record.
+            ->assertSee('data-row-link="'.route('admin.messages.show', $message).'"', false)
+            // The actions of the row.
+            ->assertSee(route('admin.follow-ups.archive', $message), false)
+            ->assertSee(route('admin.follow-ups.destroy', $message), false);
+    }
+
     public function test_the_old_follow_up_links_point_to_the_unified_module(): void
     {
         [$admin, $first] = $this->context();

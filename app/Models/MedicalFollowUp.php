@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,6 +59,7 @@ class MedicalFollowUp extends Model
         'completed_by',
         'completed_at',
         'cancelled_at',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -67,7 +69,26 @@ class MedicalFollowUp extends Model
             'response_required' => 'boolean',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Whether the follow-up was archived and therefore left the list.
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * The follow-ups that are still in the list, or only the archived ones.
+     */
+    public function scopeArchived(Builder $query, bool $archived = false): Builder
+    {
+        return $archived
+            ? $query->whereNotNull('archived_at')
+            : $query->whereNull('archived_at');
     }
 
     public function message(): BelongsTo
