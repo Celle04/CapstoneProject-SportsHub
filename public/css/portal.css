@@ -2194,7 +2194,7 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 }
 @media print {
     body { background: #fff; }
-    .portal-sidebar, .module-header, .notice, .report-filter-panel, .report-type-panel, .report-actions, .report-low-attendance, .report-application-summary { display: none !important; }
+    .portal-sidebar, .portal-sidebar-backdrop, .portal-topbar, .module-header, .notice, .report-filter-panel, .report-type-panel, .report-actions, .report-low-attendance, .report-application-summary { display: none !important; }
     .portal-main { padding: 0; }
     .table-wrap { overflow: visible; border: 0; }
     .report-table, .data-table { min-width: 0 !important; }
