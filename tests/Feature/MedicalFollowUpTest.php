@@ -531,6 +531,48 @@ class MedicalFollowUpTest extends TestCase
             ->assertRedirect(route('student.messages', ['tab' => 'medical']));
     }
 
+    public function test_a_pasted_action_address_lands_on_the_message_instead_of_an_error(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $this->actingAs($first)->get(route('student.messages.reply.form', $message))
+            ->assertRedirect(route('student.messages.show', $message));
+
+        $this->actingAs($first)->get(route('student.messages.acknowledge.form', $message))
+            ->assertRedirect(route('student.messages.show', $message));
+
+        $this->actingAs($admin)->get(route('admin.follow-ups.complete.form', $message))
+            ->assertRedirect(route('admin.messages.show', $message));
+
+        $this->actingAs($admin)->get(route('admin.follow-ups.cancel.form', $message))
+            ->assertRedirect(route('admin.messages.show', $message));
+
+        // The message is untouched: only the explicit action changes it.
+        $this->assertDatabaseHas('messages', ['id' => $message->id, 'status' => 'sent']);
+        $this->assertDatabaseMissing('messages', ['reply_to_message_id' => $message->id]);
+    }
+
+    public function test_an_empty_reply_is_returned_to_the_message_with_a_reason(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $this->actingAs($first)
+            ->from(route('student.messages.show', $message))
+            ->post(route('student.messages.reply', $message), ['content' => ''])
+            ->assertRedirect(route('student.messages.show', $message))
+            ->assertSessionHasErrors('content');
+
+        $this->assertDatabaseMissing('messages', ['reply_to_message_id' => $message->id]);
+    }
+
     public function test_the_navigation_shows_one_entry_for_messages_and_follow_ups(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);

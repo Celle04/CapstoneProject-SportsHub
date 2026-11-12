@@ -2,6 +2,13 @@
 
 This document records the Final Defense documentation revisions aligned with the current implemented SNNHS SportsHub system (Laravel 12, PHP 8.2, MySQL, Blade/Tailwind/PWA). It covers the Conceptual Framework, Project Gantt Chart (May–November 2026), Use Case Diagram, Class Diagram, and Sequence Diagram.
 
+## Revision 3 — Clearer headings and forgiving action addresses (current)
+
+- **Repeated headings removed.** The athlete pages no longer print their own title twice: *My Application* now carries the section *Application details*, *Messages & Follow-ups* carries *Received messages*, and *Sports Programs* carries *Enrolled programs*. On the administrator side the records sections carry *Examination records*, *Recorded accomplishments*, and *Sent messages and drafts*.
+- **Action addresses no longer return an error page.** Acknowledging, replying, completing, and cancelling are form actions that only accept a POST or PATCH. A pasted or bookmarked address now sends the visitor back to the message itself instead of showing "405 Method Not Allowed".
+- **An empty reply explains itself.** The reply field shows the reason when the athlete sends nothing, instead of a silent reload.
+- The reply and acknowledgment flows were re-run against a real MySQL server (`phpunit.mysql.xml`) to prove the driver behaviour, not only the in-memory database.
+
 ## Revision 2 — Unified Messages & Follow-ups module (current)
 
 The separate **Messages** module and **Medical Follow-ups** module were merged into one **Messages & Follow-ups** module that both dashboards share. The manuscript text below was updated to match the implemented system.

@@ -71,6 +71,9 @@
                 @csrf
                 <label for="student-follow-up-reply">Reply to the sports office</label>
                 <textarea class="form-control" id="student-follow-up-reply" name="content" rows="4" maxlength="5000" placeholder="Add an update for the sports office"></textarea>
+                @error('content')
+                    <div class="notice notice-error" role="alert">{{ $message }}</div>
+                @enderror
                 <button class="button button-secondary" type="submit">Send Reply</button>
             </form>
         @endif

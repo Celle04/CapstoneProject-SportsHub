@@ -26,6 +26,7 @@ use App\Models\AttendanceSession;
 use App\Models\CertificateRequest;
 use App\Models\Event;
 use App\Models\MedicalRecord;
+use App\Models\Message;
 use App\Models\MessageRecipient;
 use App\Models\Sport;
 use App\Models\User;
@@ -447,6 +448,14 @@ Route::middleware(['force.password.change'])->group(function () use ($studentPag
     Route::get('/student/messages/{message}', [MessageController::class, 'studentShow'])->middleware('auth')->name('student.messages.show');
     Route::post('/student/messages/{message}/acknowledge', [MessageController::class, 'acknowledge'])->middleware('auth')->name('student.messages.acknowledge');
     Route::post('/student/messages/{message}/reply', [MessageController::class, 'reply'])->middleware('auth')->name('student.messages.reply');
+
+    /*
+     * Acknowledging and replying are form actions and only accept a POST.
+     * A pasted or bookmarked address lands on the message itself instead of
+     * an error page.
+     */
+    Route::get('/student/messages/{message}/acknowledge', fn (Message $message) => redirect()->route('student.messages.show', $message))->middleware('auth')->name('student.messages.acknowledge.form');
+    Route::get('/student/messages/{message}/reply', fn (Message $message) => redirect()->route('student.messages.show', $message))->middleware('auth')->name('student.messages.reply.form');
 
     /*
      * The medical follow-ups live in the unified module now. The old links
@@ -1017,6 +1026,14 @@ Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy']
 Route::patch('/admin/messages/{message}/follow-up/complete', [FollowUpController::class, 'complete'])->middleware('auth')->name('admin.follow-ups.complete');
 Route::patch('/admin/messages/{message}/follow-up/cancel', [FollowUpController::class, 'cancel'])->middleware('auth')->name('admin.follow-ups.cancel');
 Route::patch('/admin/messages/{message}/follow-up/recipients/{recipient}/complete', [FollowUpController::class, 'completeRecipient'])->middleware('auth')->name('admin.follow-ups.recipient.complete');
+
+/*
+ * The follow-up actions are form actions and only accept a PATCH. A pasted
+ * or bookmarked address lands on the message itself instead of an error page.
+ */
+Route::get('/admin/messages/{message}/follow-up/complete', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.complete.form');
+Route::get('/admin/messages/{message}/follow-up/cancel', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.cancel.form');
+Route::get('/admin/messages/{message}/follow-up/recipients/{recipient}/complete', fn (Message $message) => redirect()->route('admin.messages.show', $message))->middleware('auth')->name('admin.follow-ups.recipient.complete.form');
 
 Route::get('/admin/achievements', [AchievementController::class, 'index'])->middleware('auth')->name('admin.achievements');
 Route::get('/admin/achievements/create', [AchievementController::class, 'create'])->middleware('auth')->name('admin.achievements.create');
