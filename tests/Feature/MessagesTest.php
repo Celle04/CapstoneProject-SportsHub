@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Event;
 use App\Models\Message;
 use App\Models\MessageRecipient;
 use App\Models\MedicalRecord;
@@ -58,6 +59,41 @@ class MessagesTest extends TestCase
             'priority' => 'Normal',
             'recipient_type' => 'individual',
         ], $overrides);
+    }
+
+    public function test_the_event_scope_of_the_message_list_survives_the_search(): void
+    {
+        [$admin, $first] = $this->context();
+        $event = Event::create([
+            'title' => 'Basketball Finals',
+            'venue' => 'Main Court',
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDay()->addHour(),
+            'status' => 'Scheduled',
+        ]);
+
+        $scoped = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+            'event_id' => $event->id,
+            'subject' => 'Finals schedule',
+        ]));
+
+        app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+            'subject' => 'Unrelated notice',
+        ]));
+
+        $response = $this->actingAs($admin)->get(route('admin.messages', ['event_id' => $event->id]));
+
+        $response->assertOk()->assertSee('Finals schedule')->assertDontSee('Unrelated notice');
+
+        // The search keeps the event in view.
+        $response->assertSee('<input type="hidden" name="event_id" value="'.$event->id.'">', false);
+
+        // The tabs keep the event in view as well.
+        $response->assertSee(e(route('admin.messages', ['event_id' => $event->id, 'tab' => 'general'])), false);
     }
 
     public function test_admin_can_send_a_message_to_an_individual_athlete(): void

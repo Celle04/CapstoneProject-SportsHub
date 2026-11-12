@@ -114,6 +114,14 @@
 		</div>
 	</header>
 	<form method="GET" action="{{ route('admin.attendance') }}" class="attendance-filters-form">
+		@if (request('session_id'))
+			{{-- The open session stays open while the list is filtered. --}}
+			<input type="hidden" name="session_id" value="{{ request('session_id') }}">
+		@endif
+		@if (request('event_id'))
+			{{-- The event the list belongs to stays in view while it is filtered. --}}
+			<input type="hidden" name="event_id" value="{{ request('event_id') }}">
+		@endif
 		<div class="attendance-filters-grid">
 			<div class="attendance-filter-field">
 				<label>Sport</label>
@@ -148,7 +156,11 @@
 		</div>
 		<div class="attendance-filter-actions">
 			<button class="button" type="submit">Apply</button>
-			<a class="button button-muted" href="{{ route('admin.attendance') }}">Reset</a>
+			@php($attendanceScope = array_filter([
+				'session_id' => request('session_id'),
+				'event_id' => request('event_id'),
+			]))
+			<a class="button button-muted" href="{{ route('admin.attendance', $attendanceScope) }}">Reset</a>
 		</div>
 	</form>
 </section>
@@ -161,6 +173,14 @@
 			<h2 class="attendance-sessions-title">Attendance Sessions</h2>
 			<p class="attendance-sessions-subtitle">Sessions reference a sport; rosters follow the athlete sport assignment.</p>
 		</div>
+		@if (! empty($attendanceEvent))
+			{{-- The list was opened from an event, so it says which one. --}}
+			<div class="attendance-sessions-scope">
+				<span>Showing the attendance of</span>
+				<strong>{{ $attendanceEvent->title }}</strong>
+				<a class="text-link" href="{{ route('events.show', $attendanceEvent) }}">Open the event</a>
+			</div>
+		@endif
 	</header>
 
 	<div class="table-wrap attendance-table-wrap">

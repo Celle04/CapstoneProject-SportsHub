@@ -29,7 +29,7 @@
                 <svg class="button-icon" aria-hidden="true"><use href="#icon-activity"></use></svg>
                 Edit Athlete
             </a>
-            <button class="button button-secondary" type="button" data-confirm-dialog data-confirm-title="Assist with Password Reset?" data-confirm-message="Send a secure password reset link to this athlete's registered email address?" data-confirm-label="Send Reset Link" data-confirm-busy-label="Sending..." data-confirm-icon="mail" data-confirm-variant="info" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete, false) }}">Assist with Password Reset</button>
+            <button class="button button-secondary" type="button" data-password-reset data-confirm-title="Reset Athlete Password" data-confirm-message="You are about to reset this athlete's password. A temporary password will be generated for the athlete to use when logging in. The athlete must change this password after their next successful login." data-confirm-label="Reset Password" data-confirm-busy-label="Resetting..." data-confirm-icon="lock" data-confirm-variant="warning" data-confirm-method="POST" data-confirm-url="{{ route('athletes.password.reset', $athlete, false) }}" data-athlete-name="{{ $athlete->name }}">Reset Password</button>
         </div>
     </div>
 
@@ -233,4 +233,6 @@
             <p class="empty-state">No event participation recorded.</p>
         @endforelse
     </section>
+
+    @include('partials.password-reset-modal')
 @endsection

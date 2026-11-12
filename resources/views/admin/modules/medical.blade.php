@@ -619,6 +619,10 @@
         </div>
 
         <form method="GET" action="{{ route('admin.medical') }}" class="filters medical-filters">
+            @if (request('incident'))
+                {{-- The injury being edited stays open while the list is searched. --}}
+                <input type="hidden" name="incident" value="{{ request('incident') }}">
+            @endif
             <input class="form-control medical-search" name="search" value="{{ $search ?? '' }}" placeholder="Search athlete name or Student ID..." aria-label="Search by athlete name or Student ID">
             <select class="form-control" name="sport_id" aria-label="Filter by sport">
                 <option value="">All Sports</option>
@@ -644,7 +648,7 @@
                 Show archived only
             </label>
             <button class="button" type="submit">Search</button>
-            <a class="button button-secondary" href="{{ route('admin.medical') }}">Reset</a>
+            <a class="button button-secondary" href="{{ route('admin.medical', request('incident') ? ['incident' => request('incident')] : []) }}">Reset</a>
         </form>
 
         <div class="table-wrap">
@@ -808,7 +812,7 @@
             <span class="medical-disclosure-toggle" aria-hidden="true"></span>
         </summary>
 
-        <form method="POST" action="{{ $medicalIncidentFormMode === 'edit' ? route('admin.medical.incidents.update', $medicalIncidentFormRecord) : route('admin.medical.incidents.store') }}" class="medical-form-body">
+        <form method="POST" action="{{ ($medicalIncidentFormMode === 'edit' ? route('admin.medical.incidents.update', $medicalIncidentFormRecord) : route('admin.medical.incidents.store')) }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}" class="medical-form-body">
             @csrf
             @if ($medicalIncidentFormMode === 'edit') @method('PUT') @endif
 
@@ -973,8 +977,8 @@
                             <td>{{ $incident->returnToPlayLabel() }}</td>
                             <td>
                                 <div class="medical-actions">
-                                        <a class="row-action" href="{{ route('admin.medical').'?incident='.$incident->id }}">Edit</a>
-                                        <button class="row-action row-action-danger" type="button" data-confirm-dialog data-confirm-title="Delete Medical Incident?" data-confirm-message="Delete this injury / medical incident?" data-confirm-label="Delete" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.medical.incidents.destroy', $incident) }}">Delete</button>
+                                        <a class="row-action" href="{{ route('admin.medical', array_merge(request()->query(), ['incident' => $incident->id])) }}">Edit</a>
+                                        <button class="row-action row-action-danger" type="button" data-confirm-dialog data-confirm-title="Delete Medical Incident?" data-confirm-message="Delete this injury / medical incident?" data-confirm-label="Delete" data-confirm-method="DELETE" data-confirm-url="{{ route('admin.medical.incidents.destroy', $incident) }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}">Delete</button>
                                     </div>
                             </td>
                         </tr>

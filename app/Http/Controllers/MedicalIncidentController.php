@@ -27,7 +27,8 @@ class MedicalIncidentController extends Controller
 
         MedicalIncident::create($this->incidentAttributes($validated, $athlete));
 
-        return redirect()->route('admin.medical')->with('success', 'Injury / medical incident recorded successfully.');
+        return redirect()->route('admin.medical', $this->context($request))
+            ->with('success', 'Injury / medical incident recorded successfully.');
     }
 
     public function update(Request $request, MedicalIncident $incident): RedirectResponse
@@ -39,16 +40,34 @@ class MedicalIncidentController extends Controller
 
         $incident->update($this->incidentAttributes($validated, $athlete));
 
-        return redirect()->route('admin.medical')->with('success', 'Injury / medical incident updated successfully.');
+        /*
+         * The incident stays open after the save, so the sports office can
+         * check what was written instead of being dropped on the list.
+         */
+        return redirect()->route('admin.medical', array_merge($this->context($request), ['incident' => $incident->id]))
+            ->with('success', 'Injury / medical incident updated successfully.');
     }
 
-    public function destroy(MedicalIncident $incident): RedirectResponse
+    public function destroy(Request $request, MedicalIncident $incident): RedirectResponse
     {
         $this->ensureMedicalAccess();
 
         $incident->delete();
 
-        return redirect()->route('admin.medical')->with('success', 'Injury / medical incident deleted.');
+        $context = $this->context($request);
+        unset($context['incident']);
+
+        return redirect()->route('admin.medical', $context)->with('success', 'Injury / medical incident deleted.');
+    }
+
+    /**
+     * The filters of the medical module, so a redirect lands on the same list.
+     *
+     * @return array<string, mixed>
+     */
+    private function context(Request $request): array
+    {
+        return array_filter($request->query(), fn ($value) => ! is_array($value));
     }
 
     /**

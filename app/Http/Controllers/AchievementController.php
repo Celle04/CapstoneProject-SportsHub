@@ -109,7 +109,7 @@ class AchievementController extends Controller
 
         $achievement->update($this->achievementAttributes($validated, $achievement));
 
-        return redirect()->route('admin.achievements')->with('success', 'Achievement updated successfully.');
+        return redirect()->route('admin.achievements.show', $achievement)->with('success', 'Achievement updated successfully.');
     }
 
     public function destroy(Achievement $achievement): RedirectResponse

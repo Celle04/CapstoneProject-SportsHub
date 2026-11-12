@@ -44,6 +44,7 @@ class AttendanceController extends Controller
             'sessionStatuses' => config('attendance.session_statuses'),
             'recordStatuses' => config('attendance.record_statuses'),
             'filters' => $filters,
+            'attendanceEvent' => ! empty($filters['event_id']) ? Event::find($filters['event_id']) : null,
             'summary' => $this->summary($filters['date'] ?? today()->toDateString()),
             'attendanceSessions' => $this->sessions($filters),
             'selectedAttendanceSession' => $this->selectedSession($request),
@@ -273,6 +274,7 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'sport_id' => ['nullable', 'integer', 'exists:sports,id'],
+            'event_id' => ['nullable', 'integer', 'exists:events,id'],
             'date' => ['nullable', 'date'],
             'status' => ['nullable', 'in:Open,Closed,Cancelled'],
             'record_status' => ['nullable', 'in:Pending,Present,Late,Absent,Excused'],
@@ -297,6 +299,7 @@ class AttendanceController extends Controller
                 'attendanceRecords as excused_count' => fn ($query) => $query->where('status', 'Excused'),
             ])
             ->forSport($filters['sport_id'] ?? null)
+            ->forEvent($filters['event_id'] ?? null)
             ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('session_date', $date))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['record_status'] ?? null, fn ($query, $status) => $query->whereHas(

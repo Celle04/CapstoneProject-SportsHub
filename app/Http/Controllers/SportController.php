@@ -309,7 +309,7 @@ class SportController extends Controller
             $message .= ' '.$note;
         }
 
-        return redirect()->route('sports.index')->with('success', $message);
+        return redirect()->route('sports.show', $sport)->with('success', $message);
     }
 
     public function destroy(Sport $sport): RedirectResponse

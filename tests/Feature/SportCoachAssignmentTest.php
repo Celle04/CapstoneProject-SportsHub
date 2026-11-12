@@ -64,7 +64,7 @@ class SportCoachAssignmentTest extends TestCase
 
         $this->actingAs($admin)
             ->put(route('sports.update', $sport), $this->sportPayload(['coach_id' => $secondCoach->id]))
-            ->assertRedirect(route('sports.index'));
+            ->assertRedirect(route('sports.show', $sport));
 
         $this->assertSame($sport->id, $secondCoach->fresh()->sport_id);
         $this->assertNull($firstCoach->fresh()->sport_id, 'The replaced coach should be unassigned, never deleted.');
@@ -116,7 +116,7 @@ class SportCoachAssignmentTest extends TestCase
 
         $this->actingAs($admin)
             ->put(route('sports.update', $basketball), $this->sportPayload(['coach_id' => $coach->id]))
-            ->assertRedirect(route('sports.index'))
+            ->assertRedirect(route('sports.show', $basketball))
             ->assertSessionHas('success');
 
         $this->assertSame($basketball->id, $coach->fresh()->sport_id);

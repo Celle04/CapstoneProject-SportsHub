@@ -251,4 +251,69 @@ class AttendanceManagementTest extends TestCase
         // The card carries the id the link scrolls to.
         $this->assertStringContainsString('id="attendance-session-detail"', $detail);
     }
+
+    public function test_the_open_session_stays_open_while_the_list_is_filtered(): void
+    {
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'Basketball']);
+        $admin = User::factory()->create(['role' => 'Administrator']);
+
+        $session = AttendanceSession::create([
+            'title' => 'Basketball Training',
+            'sport_id' => $sport->id,
+            'session_date' => today()->toDateString(),
+            'status' => 'Open',
+            'created_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.attendance', ['session_id' => $session->id]))
+            ->assertOk();
+
+        // The filter form carries the open session, so applying a filter does
+        // not close the roster that is being edited.
+        $response->assertSee('<input type="hidden" name="session_id" value="'.$session->id.'">', false);
+        $response->assertSee(e(route('admin.attendance', ['session_id' => $session->id])), false);
+    }
+
+    public function test_the_attendance_of_one_event_can_be_opened_from_the_event(): void
+    {
+        $sport = Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'Basketball']);
+        $admin = User::factory()->create(['role' => 'Administrator']);
+
+        $event = Event::create([
+            'title' => 'Basketball Finals',
+            'sport_id' => $sport->id,
+            'venue' => 'Main Court',
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDay()->addHours(2),
+            'status' => 'Scheduled',
+        ]);
+
+        AttendanceSession::create([
+            'title' => 'Finals Session',
+            'event_id' => $event->id,
+            'sport_id' => $sport->id,
+            'session_date' => today()->toDateString(),
+            'status' => 'Open',
+            'created_by' => $admin->id,
+        ]);
+
+        AttendanceSession::create([
+            'title' => 'Other Training',
+            'sport_id' => $sport->id,
+            'session_date' => today()->toDateString(),
+            'status' => 'Open',
+            'created_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.attendance', ['event_id' => $event->id]))
+            ->assertOk();
+
+        $response->assertSee('Finals Session')
+            ->assertDontSee('Other Training')
+            // The list says which event it belongs to.
+            ->assertSee('Showing the attendance of')
+            ->assertSee('Basketball Finals');
+    }
 }

@@ -117,7 +117,7 @@ class AchievementsTest extends TestCase
             'title' => 'Silver Medal - 200 Meter Sprint',
             'achievement_type' => 'Silver Medal',
         ]))
-            ->assertRedirect(route('admin.achievements'));
+            ->assertRedirect(route('admin.achievements.show', $achievement));
 
         $this->assertDatabaseHas('achievements', [
             'id' => $achievement->id,
@@ -508,7 +508,7 @@ class AchievementsTest extends TestCase
 
         $this->actingAs($admin)
             ->put(route('admin.achievements.update', $achievement), $this->payload($athlete, ['sport_id' => $sport->id, 'title' => 'Revised Title']))
-            ->assertRedirect(route('admin.achievements'));
+            ->assertRedirect(route('admin.achievements.show', $achievement));
 
         Notification::assertNothingSent();
     }

@@ -261,10 +261,10 @@ class EventController extends Controller
                     'message_type' => 'event_update',
                     'priority' => $event->status === 'Cancelled' ? 'Important' : 'Normal',
                 ]));
-                return redirect()->route('events.index')->with('success', 'Event updated and affected athletes were notified.');
+                return redirect()->route('events.show', $event)->with('success', 'Event updated and affected athletes were notified.');
             } catch (\Throwable $exception) {
                 report($exception);
-                return redirect()->route('events.index')->with('success', 'Event updated, but the notification could not be sent. You can send it from the event details page.');
+                return redirect()->route('events.show', $event)->with('success', 'Event updated, but the notification could not be sent. You can send it from the event details page.');
             }
         }
 
@@ -288,7 +288,7 @@ class EventController extends Controller
             );
         }
 
-        return redirect()->route('events.index')->with('success', 'Event updated successfully.');
+        return redirect()->route('events.show', $event)->with('success', 'Event updated successfully.');
     }
 
     public function cancel(Request $request, Event $event): RedirectResponse

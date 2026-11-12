@@ -101,6 +101,19 @@ class AttendanceSession extends Model
     }
 
     /**
+     * Restricts the sessions to the ones that belong to one event, so the
+     * attendance of an event can be opened directly from the event page.
+     */
+    public function scopeForEvent(Builder $query, ?int $eventId): Builder
+    {
+        if (! $eventId) {
+            return $query;
+        }
+
+        return $query->where('event_id', $eventId);
+    }
+
+    /**
      * Restricts sessions to those the athlete is entitled to see, based on the
      * athlete's assigned sport. A session with no sport at all is an
      * "All Sports" session and is visible to every athlete.

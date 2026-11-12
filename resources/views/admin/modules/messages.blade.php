@@ -353,14 +353,21 @@
             </div>
         </div>
         <nav class="message-filter-tabs" aria-label="Message filters">
-            <a href="{{ route('admin.messages', ['tab' => 'all']) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All</a>
-            <a href="{{ route('admin.messages', ['tab' => 'general']) }}" class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages</a>
-            <a href="{{ route('admin.messages', ['tab' => 'medical']) }}" class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups</a>
-            <a href="{{ route('admin.messages', ['tab' => 'sent']) }}" class="{{ $messageTab === 'sent' ? 'is-active' : '' }}">Sent</a>
-            <a href="{{ route('admin.messages', ['tab' => 'drafts']) }}" class="{{ $messageTab === 'drafts' ? 'is-active' : '' }}">Drafts</a>
+            @php
+                $messageScope = request('event_id') ? ['event_id' => request('event_id')] : [];
+            @endphp
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'all'])) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'general'])) }}" class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'medical'])) }}" class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'sent'])) }}" class="{{ $messageTab === 'sent' ? 'is-active' : '' }}">Sent</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'drafts'])) }}" class="{{ $messageTab === 'drafts' ? 'is-active' : '' }}">Drafts</a>
         </nav>
-        <form method="GET" class="filters message-search-form">
+        <form method="GET" action="{{ route('admin.messages') }}" class="filters message-search-form">
             <input type="hidden" name="tab" value="{{ $messageTab }}">
+            @if (request('event_id'))
+                {{-- The messages of one event stay in view while the list is searched. --}}
+                <input type="hidden" name="event_id" value="{{ request('event_id') }}">
+            @endif
             <input class="form-control" type="search" name="search" value="{{ request('search') }}" placeholder="Search subject, message or athlete">
             <select class="form-control" name="sort"><option value="newest" @selected(request('sort') !== 'oldest')>Newest first</option><option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option></select>
             <button class="button button-secondary" type="submit">Apply</button>

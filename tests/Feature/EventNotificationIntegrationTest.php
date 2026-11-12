@@ -164,7 +164,7 @@ class EventNotificationIntegrationTest extends TestCase
             'venue' => 'Court B',
             'status' => 'Scheduled',
             'notify_changes' => '1',
-        ])->assertRedirect(route('events.index'));
+        ])->assertRedirect(route('events.show', $event));
 
         $this->assertDatabaseHas('messages', [
             'event_id' => $event->id,

@@ -171,7 +171,7 @@ class MedicalController extends Controller
             $this->deleteCertificatePath($previousCertificate);
         }
 
-        return redirect()->route('admin.medical')->with('success', 'Medical record updated successfully.');
+        return redirect()->route('admin.medical.show', $medical)->with('success', 'Medical record updated successfully.');
     }
 
     public function sendCheckupReminder(MedicalRecord $medical, MessageDeliveryService $delivery): RedirectResponse

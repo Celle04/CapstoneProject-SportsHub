@@ -343,4 +343,23 @@ class AdminAssistedPasswordResetTest extends TestCase
             ->assertSee('id="password-reset-admin-password"', false)
             ->assertSee('Reset Password');
     }
+
+    public function test_the_athlete_profile_carries_the_whole_reset_flow(): void
+    {
+        $admin = $this->createAdmin();
+        $student = $this->createStudent();
+
+        $response = $this->actingAs($admin)->get(route('athletes.show', $student));
+
+        $response->assertOk()
+            // The button opens the reset flow, not the generic confirm dialog.
+            ->assertSee('data-password-reset', false)
+            ->assertDontSee('data-confirm-dialog', false)
+            // The modals that show the temporary password are on the page.
+            ->assertSee('data-app-modal-fetch-excluded', false)
+            ->assertSee('data-password-confirm-url="/confirm-password"', false)
+            ->assertSee('id="password-reset-admin-password"', false)
+            ->assertSee('id="password-reset-secret-value"', false)
+            ->assertSee('id="password-reset-success-modal"', false);
+    }
 }

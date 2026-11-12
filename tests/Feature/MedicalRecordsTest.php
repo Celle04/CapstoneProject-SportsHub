@@ -339,7 +339,7 @@ class MedicalRecordsTest extends TestCase
                 'sport_id' => $sport->id,
                 'medical_certificate' => UploadedFile::fake()->create('new.pdf', 90, 'application/pdf'),
             ]))
-            ->assertRedirect(route('admin.medical'));
+            ->assertRedirect(route('admin.medical.show', $record));
 
         Storage::disk('private')->assertMissing('medical-certificates/old.pdf');
         Storage::disk('private')->assertExists($record->fresh()->medical_certificate);
@@ -356,7 +356,7 @@ class MedicalRecordsTest extends TestCase
                 'medical_status' => 'Restricted',
                 'next_checkup_date' => today()->addDays(10)->format('Y-m-d'),
             ]))
-            ->assertRedirect(route('admin.medical'));
+            ->assertRedirect(route('admin.medical.show', $record));
 
         $this->assertDatabaseHas('medical_records', [
             'id' => $record->id,
@@ -404,7 +404,7 @@ class MedicalRecordsTest extends TestCase
             'height_cm' => '172.5',
             'weight_kg' => '68.2',
             'blood_type' => 'O+',
-        ]))->assertRedirect(route('admin.medical'));
+        ]))->assertRedirect(route('admin.medical.show', $record));
 
         $this->assertSame('Restricted Participation', $record->fresh()->effectiveStatus());
         $this->assertSame($admin->id, $record->fresh()->updated_by);
@@ -855,7 +855,7 @@ class MedicalRecordsTest extends TestCase
                 'description' => 'Confirmed strain after x-ray.',
                 'medical_clearance' => 'Not Cleared',
             ])
-            ->assertRedirect(route('admin.medical'));
+            ->assertRedirect(route('admin.medical', ['incident' => $incident->id]));
 
         $this->assertDatabaseHas('medical_incidents', [
             'id' => $incident->id,
@@ -869,6 +869,34 @@ class MedicalRecordsTest extends TestCase
             ->assertRedirect(route('admin.medical'));
 
         $this->assertDatabaseMissing('medical_incidents', ['id' => $incident->id]);
+    }
+
+    public function test_the_open_incident_stays_open_while_the_records_are_searched(): void
+    {
+        [$admin, $sport, $athlete] = $this->context();
+        $incident = MedicalIncident::create([
+            'athlete_id' => $athlete->id,
+            'sport_id' => $sport->id,
+            'incident_date' => '2026-08-20',
+            'injury_type' => 'Ankle sprain',
+            'severity' => 'Moderate',
+            'description' => 'Rolled the ankle.',
+            'medical_clearance' => 'Pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.medical', ['incident' => $incident->id]))
+            ->assertOk();
+
+        // The search form carries the incident, so the injury being edited is
+        // not thrown away when the list is searched.
+        $response->assertSee('<input type="hidden" name="incident" value="'.$incident->id.'">', false);
+
+        // The edit link of the row keeps the filters that are in use.
+        $response->assertSee(
+            e(route('admin.medical', array_merge(request()->query(), ['incident' => $incident->id]))),
+            false
+        );
     }
 
     public function test_athletes_under_recovery_are_counted_in_the_summary(): void

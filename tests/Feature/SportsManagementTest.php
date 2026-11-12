@@ -54,7 +54,7 @@ class SportsManagementTest extends TestCase
             'classification' => 'Individual',
             'gender' => 'Boys',
             'description' => 'Updated swimming events',
-        ])->assertRedirect(route('sports.index'));
+        ])->assertRedirect(route('sports.show', $sport));
         $this->assertDatabaseHas('sports', ['name' => 'Swimming and Diving', 'gender' => 'Boys']);
 
         $this->delete(route('sports.destroy', $sport->fresh()))->assertRedirect(route('sports.index'));
