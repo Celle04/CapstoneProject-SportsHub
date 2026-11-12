@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     refresh();
 
+    // A list that was replaced on the screen asks for its timestamps again.
+    document.addEventListener('relative-time:refresh', refresh);
+
     // Keep the copy honest while the page stays open. Document visibility is
     // checked so a backgrounded tab is not repainted pointlessly.
     window.setInterval(() => {

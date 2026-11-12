@@ -126,11 +126,12 @@
             <div><span class="admin-dashboard-kicker">YOUR INBOX</span><h2>Received messages</h2></div>
         </div>
         <nav class="message-filter-tabs" aria-label="Message filters">
-            <a href="{{ route('student.messages', ['tab' => 'all']) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All ({{ $messageSummary['total'] }})</a>
-            <a href="{{ route('student.messages', ['tab' => 'general']) }}" class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages ({{ $messageSummary['general'] }})</a>
-            <a href="{{ route('student.messages', ['tab' => 'medical']) }}" class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups ({{ $messageSummary['medical'] }})</a>
-            <a href="{{ route('student.messages', ['tab' => 'unread']) }}" class="{{ $messageTab === 'unread' ? 'is-active' : '' }}">Unread ({{ $messageSummary['unread'] }})</a>
+            <a href="{{ route('student.messages', ['tab' => 'all']) }}" data-tab-link class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All ({{ $messageSummary['total'] }})</a>
+            <a href="{{ route('student.messages', ['tab' => 'general']) }}" data-tab-link class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages ({{ $messageSummary['general'] }})</a>
+            <a href="{{ route('student.messages', ['tab' => 'medical']) }}" data-tab-link class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups ({{ $messageSummary['medical'] }})</a>
+            <a href="{{ route('student.messages', ['tab' => 'unread']) }}" data-tab-link class="{{ $messageTab === 'unread' ? 'is-active' : '' }}">Unread ({{ $messageSummary['unread'] }})</a>
         </nav>
+        <div data-tab-panel>
         <div class="student-message-items">
             @forelse ($messages as $delivery)
                 @php($item = $delivery->message)
@@ -161,5 +162,6 @@
             @endforelse
         </div>
         {{ $messages->links() }}
+        </div>
     </section>
 @endif

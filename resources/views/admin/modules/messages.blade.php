@@ -354,11 +354,11 @@
             @php
                 $messageScope = request('event_id') ? ['event_id' => request('event_id')] : [];
             @endphp
-            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'all'])) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All</a>
-            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'general'])) }}" class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages</a>
-            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'medical'])) }}" class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups</a>
-            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'sent'])) }}" class="{{ $messageTab === 'sent' ? 'is-active' : '' }}">Sent</a>
-            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'drafts'])) }}" class="{{ $messageTab === 'drafts' ? 'is-active' : '' }}">Drafts</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'all'])) }}" data-tab-link class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'general'])) }}" data-tab-link class="{{ $messageTab === 'general' ? 'is-active' : '' }}">General Messages</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'medical'])) }}" data-tab-link class="{{ $messageTab === 'medical' ? 'is-active' : '' }}">Medical Follow-ups</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'sent'])) }}" data-tab-link class="{{ $messageTab === 'sent' ? 'is-active' : '' }}">Sent</a>
+            <a href="{{ route('admin.messages', array_merge($messageScope, ['tab' => 'drafts'])) }}" data-tab-link class="{{ $messageTab === 'drafts' ? 'is-active' : '' }}">Drafts</a>
         </nav>
         <form method="GET" action="{{ route('admin.messages') }}" class="filters message-search-form">
             <input type="hidden" name="tab" value="{{ $messageTab }}">
@@ -370,6 +370,7 @@
             <select class="form-control" name="sort"><option value="newest" @selected(request('sort') !== 'oldest')>Newest first</option><option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option></select>
             <button class="button button-secondary" type="submit">Apply</button>
         </form>
+        <div data-tab-panel>
         @if ($messageTab === 'medical')
             <div class="table-wrap">
                 <table class="data-table">
@@ -459,5 +460,6 @@
             </div>
             {{ $messages->links() }}
         @endif
+        </div>
     </section>
 @endif

@@ -404,6 +404,30 @@ class MessagesTest extends TestCase
             ->assertSee('Unread');
     }
 
+    public function test_the_tabs_switch_without_reloading_the_page(): void
+    {
+        [$admin, $first] = $this->context();
+
+        app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        // The administrator tabs carry the switch and the panel they replace.
+        $this->actingAs($admin)->get(route('admin.messages', ['tab' => 'medical']))
+            ->assertOk()
+            ->assertSee('data-tab-link', false)
+            ->assertSee('data-tab-panel', false)
+            ->assertSee('js/tabs.js', false);
+
+        // The same goes for the inbox of the athlete.
+        $this->actingAs($first)->get(route('student.messages'))
+            ->assertOk()
+            ->assertSee('data-tab-link', false)
+            ->assertSee('data-tab-panel', false)
+            ->assertSee('js/tabs.js', false);
+    }
+
     public function test_the_confirmation_of_an_action_is_shown_once(): void
     {
         [$admin, $first] = $this->context();
