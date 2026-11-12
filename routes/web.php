@@ -36,6 +36,7 @@ use App\Services\FailedPasswordAttemptService;
 use App\Services\MedicalClearanceNotifier;
 use App\Support\PortalNavigation;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -652,7 +653,7 @@ Route::get('/student/change-password', [ChangePasswordController::class, 'show']
 Route::post('/student/change-password', [ChangePasswordController::class, 'update'])->middleware('auth')->name('student.change-password.update');
 });
 
-Route::post('/notifications/{notification}/read', function (string $notification) {
+Route::post('/notifications/{notification}/read', function (Request $request, string $notification) {
     abort_unless(auth()->check(), 403);
     $record = auth()->user()->notifications()->whereKey($notification)->firstOrFail();
     $record->markAsRead();
@@ -660,8 +661,43 @@ Route::post('/notifications/{notification}/read', function (string $notification
         MessageRecipient::markReadFor((int) $messageId, (int) auth()->id());
     }
 
+    if ($request->wantsJson()) {
+        return response()->json([
+            'ok' => true,
+            'unread' => auth()->user()->unreadNotifications()->count(),
+        ]);
+    }
+
     return back();
 })->middleware('auth')->name('notifications.read');
+
+/**
+ * The live state of the notification bell.
+ *
+ * The portal asks for it now and then, so a new notification shows up in the
+ * bell without the page having to be reloaded. The panel is rendered by the
+ * same partial the page uses, so both look the same.
+ *
+ * This route is declared before the one that opens a single notification, so
+ * "feed" is never read as a notification id.
+ */
+Route::get('/notifications/feed', function () {
+    abort_unless(auth()->check(), 403);
+
+    $user = auth()->user();
+    $unread = $user->unreadNotifications()->count();
+    $recent = $user->notifications()->latest()->limit(10)->get();
+
+    return response()->json([
+        'unread' => $unread,
+        'badge' => $unread > 99 ? '99+' : (string) $unread,
+        'latest_id' => $recent->first()?->id,
+        'panel' => view('partials.notifications.menu', [
+            'unreadNotificationCount' => $unread,
+            'recentNotifications' => $recent,
+        ])->render(),
+    ]);
+})->middleware('auth')->name('notifications.feed');
 
 /**
  * Open a notification: marks it read and forwards the user to whatever the
@@ -690,7 +726,7 @@ Route::get('/notifications/{notification}', function (string $notification) {
     return redirect()->to($target);
 })->middleware('auth')->name('notifications.open');
 
-Route::post('/notifications/read-all', function () {
+Route::post('/notifications/read-all', function (Request $request) {
     abort_unless(auth()->check(), 403);
     auth()->user()->unreadNotifications->each(function ($notification): void {
         $notification->markAsRead();
@@ -699,8 +735,16 @@ Route::post('/notifications/read-all', function () {
         }
     });
 
+    if ($request->wantsJson()) {
+        return response()->json([
+            'ok' => true,
+            'unread' => auth()->user()->unreadNotifications()->count(),
+        ]);
+    }
+
     return back();
 })->middleware('auth')->name('notifications.read-all');
+
 
 $adminNav = PortalNavigation::admin();
 

@@ -1,10 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const elements = Array.from(document.querySelectorAll('[data-posted-at]'));
-
-    if (!elements.length) {
-        return;
-    }
-
     const UNITS = [
         { limit: 3600, seconds: 60, single: 'minute', plural: 'minutes' },
         { limit: 86400, seconds: 3600, single: 'hour', plural: 'hours' },
@@ -35,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const refresh = () => {
-        elements.forEach((element) => {
+        // The elements are looked up again every time: the notification panel
+        // can be replaced while the page stays open.
+        document.querySelectorAll('[data-posted-at]').forEach((element) => {
             const text = label(element.dataset.postedAt, element.dataset.postedPrefix ?? '');
 
             if (text !== null && element.textContent !== text) {

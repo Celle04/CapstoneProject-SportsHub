@@ -71,6 +71,79 @@ class StudentNotificationsTest extends TestCase
         $this->assertSame(0, $student->unreadNotifications()->count());
     }
 
+    public function test_the_bell_asks_the_server_for_new_notifications(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification('Schedule update', 'Practice time changed.', route('student.schedule')));
+
+        // The bell on the page carries the live feed and a badge to update.
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('data-notification-feed="'.route('notifications.feed').'"', false)
+            ->assertSee('data-notification-badge', false)
+            ->assertSee('data-notification-panel', false)
+            ->assertSee('js/notifications.js', false);
+
+        $feed = $this->actingAs($student)->get(route('notifications.feed'));
+
+        $feed->assertOk()
+            ->assertJsonPath('unread', 1)
+            ->assertJsonPath('badge', '1');
+
+        $this->assertStringContainsString('Schedule update', $feed->json('panel'));
+        $this->assertStringContainsString('1 unread', $feed->json('panel'));
+    }
+
+    public function test_a_new_notification_shows_up_in_the_feed_without_a_page_reload(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification('First update', 'The first one.', route('student.schedule')));
+
+        $before = $this->actingAs($student)->get(route('notifications.feed'));
+        $before->assertOk()->assertJsonPath('unread', 1);
+
+        // A notification arrives while the page is open.
+        $student->notify(new StudentUpdateNotification('Second update', 'The second one.', route('student.schedule')));
+
+        $after = $this->actingAs($student)->get(route('notifications.feed'));
+        $after->assertOk()->assertJsonPath('unread', 2);
+
+        $this->assertStringContainsString('Second update', $after->json('panel'));
+        $this->assertStringContainsString('2 unread', $after->json('panel'));
+    }
+
+    public function test_the_feed_only_shows_the_notifications_of_the_signed_in_user(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $otherStudent = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification('Own update', 'For this athlete.', route('student.schedule')));
+        $otherStudent->notify(new StudentUpdateNotification('Foreign update', 'For another athlete.', route('student.schedule')));
+
+        $feed = $this->actingAs($student)->get(route('notifications.feed'));
+
+        $feed->assertOk()->assertJsonPath('unread', 1);
+        $this->assertStringContainsString('Own update', $feed->json('panel'));
+        $this->assertStringNotContainsString('Foreign update', $feed->json('panel'));
+    }
+
+    public function test_marking_a_notification_as_read_answers_the_bell_without_a_reload(): void
+    {
+        $student = User::factory()->create(['role' => 'Student']);
+        $student->notify(new StudentUpdateNotification('Schedule update', 'Practice time changed.', route('student.schedule')));
+        $notification = $student->notifications()->firstOrFail();
+
+        $this->actingAs($student)
+            ->postJson(route('notifications.read', $notification->id))
+            ->assertOk()
+            ->assertJsonPath('unread', 0);
+
+        $this->actingAs($student)
+            ->postJson(route('notifications.read-all'))
+            ->assertOk()
+            ->assertJsonPath('unread', 0);
+    }
+
     public function test_opening_a_notification_never_redirects_to_an_external_host(): void
     {
         $student = User::factory()->create(['role' => 'Student']);

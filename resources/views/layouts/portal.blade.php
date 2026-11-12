@@ -168,64 +168,18 @@
                     $badgeCount = $unreadNotificationCount > 99 ? '99+' : (string) $unreadNotificationCount;
                     $recentNotifications = $notificationUser->notifications()->latest()->limit(10)->get();
                 @endphp
-                <div class="portal-notifications" aria-label="Notifications">
+                <div class="portal-notifications" aria-label="Notifications" data-notification-feed="{{ route('notifications.feed') }}" data-notification-unread="{{ $unreadNotificationCount }}" data-notification-latest="{{ $recentNotifications->first()?->id }}">
                     <button type="button" class="portal-notification-trigger" id="portal-notification-trigger" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="portal-notification-menu" data-notification-toggle>
                         <svg class="portal-notification-icon" aria-hidden="true"><use href="#icon-bell"></use></svg>
                         <span class="portal-notification-label visually-hidden">Notifications</span>
-                        @if ($unreadNotificationCount > 0)
-                            <span class="portal-notification-badge" aria-label="{{ $badgeCount }} unread notifications">{{ $badgeCount }}</span>
-                        @endif
+                        <span class="portal-notification-badge{{ $unreadNotificationCount > 0 ? '' : ' is-empty' }}" data-notification-badge aria-label="{{ $badgeCount }} unread notifications">{{ $badgeCount }}</span>
                     </button>
                     <div id="portal-notification-menu" class="portal-notification-menu" role="menu" aria-labelledby="portal-notification-trigger" hidden>
-                        <header class="portal-notification-header">
-                            <div class="portal-notification-header-info">
-                                <h2 class="portal-notification-header-title">Notifications</h2>
-                                @if ($unreadNotificationCount > 0)
-                                    <span class="portal-notification-header-count">{{ $unreadNotificationCount }} unread</span>
-                                @endif
-                            </div>
-                            <div class="portal-notification-header-actions">
-                                @if ($unreadNotificationCount > 0)
-                                    <form method="POST" action="{{ route('notifications.read-all') }}" class="portal-notification-mark-all">
-                                        @csrf
-                                        <button class="portal-notification-mark-all-btn" type="submit" title="Mark all as read"><svg class="portal-notification-mark-all-icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="portal-notification-mark-all-label">Mark all as read</span></button>
-                                    </form>
-                                @endif
-                                <button type="button" class="portal-notification-close" data-notification-close aria-label="Close notifications"><svg aria-hidden="true"><use href="#icon-x"></use></svg></button>
-                            </div>
-                        </header>
-                        <div class="portal-notification-list" role="menu">
-                            @forelse ($recentNotifications as $notification)
-                                <article class="portal-notification-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}">
-                                    <a class="portal-notification-content" role="menuitem" href="{{ route('notifications.open', $notification->id) }}">
-                                        <span class="portal-notification-icon-wrap"><svg aria-hidden="true"><use href="#icon-bell"></use></svg></span>
-                                        <span class="portal-notification-copy">
-                                            <span class="portal-notification-title-row">
-                                                <strong class="portal-notification-title">{{ data_get($notification->data, 'title', 'SportsHub update') }}</strong>
-                                                @if (! $notification->read_at)
-                                                    <span class="portal-notification-unread-dot" aria-hidden="true"></span>
-                                                @endif
-                                            </span>
-                                            <span class="portal-notification-message">{{ data_get($notification->data, 'message', 'You have a new update.') }}</span>
-                                            <small class="portal-notification-time relative-time" data-posted-at="{{ \App\Support\RelativeTime::machine($notification->created_at) }}">{{ \App\Support\RelativeTime::of($notification->created_at) }}</small>
-                                        </span>
-                                    </a>
-                                    <div class="portal-notification-actions">
-                                        @if (! $notification->read_at)
-                                            <form method="POST" action="{{ route('notifications.read', $notification->id) }}" class="portal-notification-mark-read">
-                                                @csrf
-                                                <button class="text-link" type="submit">Mark as read</button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </article>
-                            @empty
-                                <div class="portal-notification-empty">
-                                    <span class="portal-notification-empty-icon" aria-hidden="true"><svg><use href="#icon-bell"></use></svg></span>
-                                    <strong class="portal-notification-empty-title">You're all caught up.</strong>
-                                    <p class="portal-notification-empty-subtitle">New updates will appear here.</p>
-                                </div>
-                            @endforelse
+                        <div data-notification-panel>
+                            @include('partials.notifications.menu', [
+                                'unreadNotificationCount' => $unreadNotificationCount,
+                                'recentNotifications' => $recentNotifications,
+                            ])
                         </div>
                         <footer class="portal-notification-footer">
                             <a class="text-link" href="{{ route('notifications.index') }}">View all notifications</a>
@@ -254,5 +208,6 @@
     <script src="{{ asset('js/achievement-form.js') }}" defer></script>
     <script src="{{ asset('js/medical-records.js') }}?v={{ filemtime(public_path('js/medical-records.js')) }}" defer></script>
     <script src="{{ asset('js/portal-ui.js') }}" defer></script>
+    <script src="{{ asset('js/notifications.js') }}?v={{ filemtime(public_path('js/notifications.js')) }}" defer></script>
 </body>
 </html>
