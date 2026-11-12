@@ -162,6 +162,9 @@ class MessagesTest extends TestCase
 
         $this->actingAs($second)->get(route('student.messages'))->assertOk()->assertDontSee('Training Update');
         $this->actingAs($second)->get(route('student.messages.show', $message))->assertNotFound();
+        $this->actingAs($second)->post(route('student.messages.reply', $message), [
+            'content' => 'This message was not addressed to me.',
+        ])->assertNotFound();
 
         $this->actingAs($first)->get(route('student.messages.show', $message))
             ->assertOk()
@@ -174,6 +177,110 @@ class MessagesTest extends TestCase
             'is_read' => true,
         ]);
         $this->assertSame(0, $first->fresh()->unreadNotifications()->count());
+    }
+
+    public function test_student_can_reply_to_a_general_message_and_notify_the_sports_office(): void
+    {
+        [$admin, $first, $second] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'selected',
+            'recipient_ids' => [$first->id, $second->id],
+        ]));
+
+        $this->actingAs($first)
+            ->post(route('student.messages.reply', $message), ['content' => 'Can I confirm the practice time?'])
+            ->assertRedirect(route('student.messages.show', $message))
+            ->assertSessionHas('success', 'Reply sent to the sports office.');
+
+        $reply = Message::query()->where('reply_to_message_id', $message->id)->firstOrFail();
+        $this->assertSame($first->id, $reply->sender_id);
+        $this->assertDatabaseHas('message_recipients', [
+            'message_id' => $reply->id,
+            'recipient_id' => $admin->id,
+        ]);
+        $this->assertDatabaseMissing('message_recipients', [
+            'message_id' => $reply->id,
+            'recipient_id' => $second->id,
+        ]);
+
+        $notification = $admin->notifications()
+            ->where('type', MessageReceivedNotification::class)
+            ->latest()
+            ->firstOrFail();
+        $this->assertSame(route('admin.messages.show', $message), $notification->data['url']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.messages.show', $message))
+            ->assertOk()
+            ->assertSee('Can I confirm the practice time?')
+            ->assertSee('Reply to an athlete');
+    }
+
+    public function test_admin_can_reply_privately_to_one_recipient_of_a_general_message(): void
+    {
+        Notification::fake();
+        [$admin, $first, $second] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'selected',
+            'recipient_ids' => [$first->id, $second->id],
+        ]));
+
+        $this->actingAs($admin)
+            ->post(route('admin.messages.reply', $message), [
+                'recipient_id' => $first->id,
+                'content' => 'Practice starts at 3:30 PM.',
+            ])
+            ->assertRedirect(route('admin.messages.show', $message))
+            ->assertSessionHas('success', 'Reply sent to '.$first->name.'.');
+
+        $reply = Message::query()->where('reply_to_message_id', $message->id)->firstOrFail();
+        $this->assertSame($admin->id, $reply->sender_id);
+        $this->assertDatabaseHas('message_recipients', [
+            'message_id' => $reply->id,
+            'recipient_id' => $first->id,
+        ]);
+        $this->assertDatabaseMissing('message_recipients', [
+            'message_id' => $reply->id,
+            'recipient_id' => $second->id,
+        ]);
+        Notification::assertSentTo($first, MessageReceivedNotification::class);
+
+        $this->actingAs($first)
+            ->get(route('student.messages.show', $reply))
+            ->assertOk()
+            ->assertSee('Training starts at 3 PM.')
+            ->assertSee('Practice starts at 3:30 PM.');
+
+        $this->actingAs($second)
+            ->get(route('student.messages.show', $reply))
+            ->assertNotFound();
+
+        $this->actingAs($second)
+            ->get(route('student.messages.show', $message))
+            ->assertOk()
+            ->assertDontSee('Practice starts at 3:30 PM.');
+    }
+
+    public function test_admin_cannot_reply_to_a_student_who_did_not_receive_the_general_message(): void
+    {
+        [$admin, $first, $second] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $this->actingAs($admin)
+            ->from(route('admin.messages.show', $message))
+            ->post(route('admin.messages.reply', $message), [
+                'recipient_id' => $second->id,
+                'content' => 'This should not be delivered.',
+            ])
+            ->assertSessionHasErrors('recipient_id');
+
+        $this->assertDatabaseMissing('messages', [
+            'reply_to_message_id' => $message->id,
+            'content' => 'This should not be delivered.',
+        ]);
     }
 
     public function test_medical_reminder_is_delivered_as_an_in_app_message_with_schedule_details(): void

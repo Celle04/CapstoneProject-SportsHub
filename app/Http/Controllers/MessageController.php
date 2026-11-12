@@ -8,6 +8,7 @@ use App\Models\MessageRecipient;
 use App\Models\Sport;
 use App\Models\User;
 use App\Notifications\FollowUpAcknowledgedNotification;
+use App\Notifications\MessageReceivedNotification;
 use App\Services\MessageDeliveryService;
 use App\Support\PortalNavigation;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +35,7 @@ class MessageController extends Controller
 
         $messages = Message::query()
             ->where('sender_id', auth()->id())
+            ->whereNull('reply_to_message_id')
             ->with(['event', 'sport'])
             ->withCount('recipients')
             ->withCount(['recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)])
@@ -149,15 +151,78 @@ class MessageController extends Controller
     public function show(Message $message): View
     {
         $this->ensureAdministrator();
+        $message = $message->replyTo ?? $message;
         abort_unless($message->status === 'sent', 404);
 
-        $message->load(['sender', 'sport', 'event', 'recipients.recipient.sport', 'followUp.recipients.recipient.sport', 'replies.sender'])
+        $message->load(['sender', 'sport', 'event', 'recipients.recipient.sport', 'followUp.recipients.recipient.sport', 'replies.sender', 'replies.recipients.recipient'])
             ->loadCount(['recipients', 'recipients as read_recipients_count' => fn (Builder $recipients) => $recipients->where('is_read', true)]);
+        $message->setRelation('replies', $message->replies->sortBy('sent_at')->values());
 
         return $this->adminView('show', [
             'messageRecord' => $message,
             'followUpRecord' => $message->followUp,
         ]);
+    }
+
+    /**
+     * The sports office replies to one recipient of a general message.
+     * The reply is attached to the original message but delivered only to
+     * the selected recipient.
+     */
+    public function adminReply(Request $request, Message $message): RedirectResponse
+    {
+        $this->ensureAdministrator();
+
+        $message = $message->replyTo ?? $message;
+        abort_unless(
+            $message->status === 'sent'
+                && $message->category === Message::CATEGORY_GENERAL
+                && ! $message->event_id
+                && $message->sender?->role === 'Administrator',
+            404,
+        );
+
+        $validated = $request->validate([
+            'recipient_id' => [
+                'required',
+                'integer',
+                Rule::exists('message_recipients', 'recipient_id')->where('message_id', $message->id),
+            ],
+            'content' => ['required', 'string', 'max:5000'],
+        ], [
+            'recipient_id.exists' => 'Choose an athlete who received this message.',
+            'content.required' => 'Write a reply before sending it.',
+        ]);
+
+        $recipient = $message->recipients()
+            ->where('recipient_id', $validated['recipient_id'])
+            ->with('recipient')
+            ->firstOrFail()
+            ->recipient;
+
+        abort_unless($recipient?->role === 'Student', 404);
+
+        $reply = DB::transaction(function () use ($validated, $message, $recipient): Message {
+            $reply = new Message([
+                'sender_id' => auth()->id(),
+                'subject' => $message->subject,
+                'content' => $validated['content'],
+                'message_type' => 'general',
+                'category' => Message::CATEGORY_GENERAL,
+                'priority' => 'Normal',
+                'status' => 'sent',
+                'recipient_type' => 'individual',
+                'reply_to_message_id' => $message->id,
+                'sent_at' => now(),
+            ]);
+            $reply->save();
+            $reply->recipients()->create(['recipient_id' => $recipient->id]);
+            $recipient->notify(new MessageReceivedNotification($reply));
+
+            return $reply;
+        });
+
+        return redirect()->route('admin.messages.show', $message)->with('success', 'Reply sent to '.$recipient->name.'.');
     }
 
     public function edit(Message $message): View
@@ -250,13 +315,32 @@ class MessageController extends Controller
             ->where('recipient_id', $student->id)
             ->whereHas('message', fn (Builder $messages) => $messages->where('status', 'sent'))
             ->where('message_id', $message->id)
-            ->with('message.sender', 'message.event', 'message.followUp')
+            ->with('message.replyTo')
+            ->firstOrFail();
+        $rootMessage = $delivery->message->replyTo ?? $delivery->message;
+        $rootDelivery = MessageRecipient::query()
+            ->where('recipient_id', $student->id)
+            ->where('message_id', $rootMessage->id)
             ->firstOrFail();
 
-        DB::transaction(function () use ($delivery, $student, $message): void {
-            MessageRecipient::markReadFor($message->id, $student->id);
+        $rootMessage->load([
+            'sender',
+            'event',
+            'followUp',
+            'replies.sender',
+            'replies.recipients',
+        ]);
+        $threadReplies = $rootMessage->replies
+            ->filter(fn (Message $reply) => $reply->sender_id === $student->id
+                || $reply->recipients->contains('recipient_id', $student->id))
+            ->sortBy('sent_at')
+            ->values();
 
-            $followUp = $message->followUp;
+        DB::transaction(function () use ($delivery, $rootDelivery, $rootMessage, $student): void {
+            MessageRecipient::markReadFor($delivery->message_id, $student->id);
+            MessageRecipient::markReadFor($rootDelivery->message_id, $student->id);
+
+            $followUp = $rootMessage->followUp;
             if ($followUp) {
                 $recipient = $followUp->recipients()->where('recipient_id', $student->id)->first();
                 if ($recipient && ! $recipient->isRead()) {
@@ -267,14 +351,18 @@ class MessageController extends Controller
             }
 
             $student->unreadNotifications
-                ->filter(fn ($notification) => (int) data_get($notification->data, 'message_id') === $message->id)
+                ->filter(fn ($notification) => in_array((int) data_get($notification->data, 'message_id'), [
+                    $delivery->message_id,
+                    $rootDelivery->message_id,
+                ], true))
                 ->each->markAsRead();
         });
 
         return $this->studentView('show', [
-            'message' => $delivery->message,
-            'messageRecipient' => $delivery->fresh(),
-            'followUpRecipient' => $message->followUp?->recipients()->where('recipient_id', $student->id)->first(),
+            'message' => $rootMessage,
+            'messageRecipient' => $rootDelivery->fresh(),
+            'followUpRecipient' => $rootMessage->followUp?->recipients()->where('recipient_id', $student->id)->first(),
+            'threadReplies' => $threadReplies,
         ]);
     }
 
@@ -328,6 +416,7 @@ class MessageController extends Controller
     public function reply(Request $request, Message $message): RedirectResponse
     {
         $student = $this->ensureStudent();
+        $message = $message->replyTo ?? $message;
 
         $delivery = MessageRecipient::query()
             ->where('recipient_id', $student->id)
@@ -342,7 +431,33 @@ class MessageController extends Controller
         ]);
 
         $followUp = $message->followUp;
-        abort_unless($followUp, 404);
+        if (! $followUp) {
+            abort_unless($message->category === Message::CATEGORY_GENERAL && ! $message->event_id, 404);
+            abort_unless($message->sender?->role === 'Administrator', 404);
+
+            $reply = DB::transaction(function () use ($validated, $student, $message): Message {
+                $reply = new Message([
+                    'sender_id' => $student->id,
+                    'subject' => $message->subject,
+                    'content' => $validated['content'],
+                    'message_type' => 'general',
+                    'category' => Message::CATEGORY_GENERAL,
+                    'priority' => 'Normal',
+                    'status' => 'sent',
+                    'recipient_type' => 'individual',
+                    'reply_to_message_id' => $message->id,
+                    'sent_at' => now(),
+                ]);
+                $reply->save();
+                $reply->recipients()->create(['recipient_id' => $message->sender_id]);
+                $message->sender->notify(new MessageReceivedNotification($reply));
+
+                return $reply;
+            });
+
+            return redirect()->route('student.messages.show', $message)->with('success', 'Reply sent to the sports office.');
+        }
+
         abort_if($followUp->status === MedicalFollowUp::STATUS_CANCELLED, 422, 'This medical follow-up was cancelled by the sports office.');
 
         DB::transaction(function () use ($validated, $student, $message, $followUp, $delivery): void {
@@ -463,7 +578,7 @@ class MessageController extends Controller
      */
     private function summary(): array
     {
-        $sent = Message::where('sender_id', auth()->id())->where('status', 'sent');
+        $sent = Message::where('sender_id', auth()->id())->where('status', 'sent')->whereNull('reply_to_message_id');
 
         return [
             'sent' => (clone $sent)->count(),
@@ -473,17 +588,20 @@ class MessageController extends Controller
                 ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
                 ->where('messages.sender_id', auth()->id())
                 ->where('messages.status', 'sent')
+                ->whereNull('messages.reply_to_message_id')
                 ->count(),
             'read' => DB::table('message_recipients')
                 ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
                 ->where('messages.sender_id', auth()->id())
                 ->where('messages.status', 'sent')
+                ->whereNull('messages.reply_to_message_id')
                 ->where('message_recipients.is_read', true)
                 ->count(),
             'unread' => DB::table('message_recipients')
                 ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
                 ->where('messages.sender_id', auth()->id())
                 ->where('messages.status', 'sent')
+                ->whereNull('messages.reply_to_message_id')
                 ->where('message_recipients.is_read', false)
                 ->count(),
             'drafts' => Message::where('sender_id', auth()->id())->where('status', 'draft')->count(),

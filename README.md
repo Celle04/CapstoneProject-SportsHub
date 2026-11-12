@@ -79,7 +79,11 @@ use SMTP, Resend, or SMS. The messages migration creates `messages` and
 `message_recipients`; apply it through the normal Railway migration step (or
 run `php artisan migrate --force` after confirming the production database and
 backup). Students see only messages addressed to their own account, and
-opening a message records its read timestamp.
+opening a message records its read timestamp. Students can reply to general
+messages, and administrators can respond privately to an original recipient;
+replies stay within that recipient's conversation even when the original
+message was sent to a group. Medical follow-up replies continue to use their
+existing acknowledgment flow.
 
 ### Administrator profile
 

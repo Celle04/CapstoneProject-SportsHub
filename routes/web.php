@@ -1020,6 +1020,7 @@ Route::get('/admin/messages/compose', [MessageController::class, 'create'])->mid
 Route::post('/admin/messages', [MessageController::class, 'store'])->middleware('auth')->name('admin.messages.store');
 Route::get('/admin/messages/{message}/edit', [MessageController::class, 'edit'])->middleware('auth')->name('admin.messages.edit');
 Route::get('/admin/messages/{message}', [MessageController::class, 'show'])->middleware('auth')->name('admin.messages.show');
+Route::post('/admin/messages/{message}/reply', [MessageController::class, 'adminReply'])->middleware('auth')->name('admin.messages.reply');
 Route::put('/admin/messages/{message}', [MessageController::class, 'update'])->middleware('auth')->name('admin.messages.update');
 Route::delete('/admin/messages/{message}', [MessageController::class, 'destroy'])->middleware('auth')->name('admin.messages.destroy');
 

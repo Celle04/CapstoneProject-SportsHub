@@ -716,10 +716,10 @@
             </div>
             <div class="medical-tracker-list">
                 @forelse ($expiringCertificates as $record)
-                    <div class="medical-tracker-row">
+                    <a class="medical-tracker-row medical-tracker-row-link" href="{{ route('admin.medical.show', $record) }}">
                         <span class="avatar avatar-initials medical-avatar" aria-hidden="true">{{ filled($record->athlete?->name ?? '') ? $initials($record->athlete->name) : '?' }}</span>
                         <div class="medical-tracker-main">
-                            <a class="text-link" href="{{ route('admin.medical.show', $record) }}">{{ $record->athlete?->name ?? 'Unknown athlete' }}</a>
+                            <strong>{{ $record->athlete?->name ?? 'Unknown athlete' }}</strong>
                             <small class="meta">
                                 {{ $record->sportName() }}
                                 @if ($record->athlete?->student_id) &middot; {{ $record->athlete->student_id }} @endif
@@ -729,7 +729,7 @@
                             <strong>{{ $record->nextCheckupLabel() }}</strong>
                             <span class="{{ $record->certificateBadgeClass() }}">{{ $record->certificateState() }}</span>
                         </div>
-                    </div>
+                    </a>
                 @empty
                     <p class="empty-state">No medical certificates are expiring soon.</p>
                 @endforelse
@@ -747,17 +747,17 @@
             </div>
             <div class="medical-tracker-list">
                 @forelse ($upcomingCheckups as $record)
-                    <div class="medical-tracker-row">
+                    <a class="medical-tracker-row medical-tracker-row-link" href="{{ route('admin.medical.show', $record) }}">
                         <span class="avatar avatar-initials medical-avatar" aria-hidden="true">{{ filled($record->athlete?->name ?? '') ? $initials($record->athlete->name) : '?' }}</span>
                         <div class="medical-tracker-main">
-                            <a class="text-link" href="{{ route('admin.medical.show', $record) }}">{{ $record->athlete?->name ?? 'Unknown athlete' }}</a>
+                            <strong>{{ $record->athlete?->name ?? 'Unknown athlete' }}</strong>
                             <small class="meta">{{ $record->sportName() }}</small>
                         </div>
                         <div class="medical-tracker-right">
                             <strong>{{ $record->nextCheckupLabel() }}</strong>
                             <span class="{{ $record->statusBadgeClass() }}">{{ $record->effectiveStatus() }}</span>
                         </div>
-                    </div>
+                    </a>
                 @empty
                     <p class="empty-state">No upcoming checkups.</p>
                 @endforelse
@@ -775,17 +775,17 @@
             </div>
             <div class="medical-tracker-list">
                 @forelse ($overdueCheckups as $record)
-                    <div class="medical-tracker-row">
+                    <a class="medical-tracker-row medical-tracker-row-link" href="{{ route('admin.medical.show', $record) }}">
                         <span class="avatar avatar-initials medical-avatar" aria-hidden="true">{{ filled($record->athlete?->name ?? '') ? $initials($record->athlete->name) : '?' }}</span>
                         <div class="medical-tracker-main">
-                            <a class="text-link" href="{{ route('admin.medical.show', $record) }}">{{ $record->athlete?->name ?? 'Unknown athlete' }}</a>
+                            <strong>{{ $record->athlete?->name ?? 'Unknown athlete' }}</strong>
                             <small class="meta">{{ $record->sportName() }}</small>
                         </div>
                         <div class="medical-tracker-right">
                             <strong>{{ $record->nextCheckupLabel() }}</strong>
                             <span class="{{ $record->statusBadgeClass() }}">{{ $record->effectiveStatus() }}</span>
                         </div>
-                    </div>
+                    </a>
                 @empty
                     <p class="empty-state">No overdue checkups.</p>
                 @endforelse

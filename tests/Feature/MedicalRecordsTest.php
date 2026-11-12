@@ -746,7 +746,7 @@ class MedicalRecordsTest extends TestCase
     public function test_the_expiring_upcoming_and_overdue_panels_are_rendered(): void
     {
         [$admin, $sport, $athlete] = $this->context();
-        MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id, 'next_checkup_date' => today()->addDays(5)->format('Y-m-d')]));
+        $upcomingRecord = MedicalRecord::create($this->payload($athlete, ['sport_id' => $sport->id, 'next_checkup_date' => today()->addDays(5)->format('Y-m-d')]));
 
         $other = User::factory()->create(['role' => 'Student', 'name' => 'Luis Tan', 'sport_id' => $sport->id, 'status' => 'Active']);
         MedicalRecord::create($this->payload($other, ['sport_id' => $sport->id, 'medical_status' => 'Pending', 'next_checkup_date' => today()->addDays(45)->format('Y-m-d')]));
@@ -761,7 +761,8 @@ class MedicalRecordsTest extends TestCase
             ->assertSee('Upcoming Checkups')
             ->assertSee('Overdue Checkups')
             ->assertSee('Luis Tan')
-            ->assertSee('Nina Cruz');
+            ->assertSee('Nina Cruz')
+            ->assertSee('class="medical-tracker-row medical-tracker-row-link" href="'.route('admin.medical.show', $upcomingRecord).'"', false);
     }
 
     public function test_the_module_shows_an_empty_state_when_there_are_no_records(): void

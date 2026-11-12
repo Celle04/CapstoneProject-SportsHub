@@ -22,9 +22,17 @@ class MessageReceivedNotification extends Notification
     {
         $this->message->loadMissing('event');
         $this->message->loadMissing('followUp');
+        $this->message->loadMissing('replyTo');
 
         $description = trim(strip_tags((string) $this->message->content));
         $title = $this->message->subject ?: 'New SportsHub message';
+        $threadRoot = $this->message->replyTo;
+
+        if ($threadRoot) {
+            $title = $notifiable->role === 'Administrator'
+                ? 'New athlete reply'
+                : 'Sports Office replied';
+        }
 
         if ($this->message->isMedicalFollowUp()) {
             $followUp = $this->message->followUp;
@@ -64,8 +72,10 @@ class MessageReceivedNotification extends Notification
             $description = trim($details.'. '.$description);
         }
 
-        $url = route('student.messages.show', $this->message);
-        if ($event && \Illuminate\Support\Facades\Route::has('student.events.show')) {
+        $url = $notifiable->role === 'Administrator'
+            ? route('admin.messages.show', $threadRoot ?? $this->message)
+            : route('student.messages.show', $this->message);
+        if ($event && $notifiable->role !== 'Administrator' && \Illuminate\Support\Facades\Route::has('student.events.show')) {
             $url = route('student.events.show', $event);
         }
 

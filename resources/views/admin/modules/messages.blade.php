@@ -178,6 +178,18 @@
         $detailCategory = \App\Models\Message::categoryName($messageRecord->category);
     @endphp
     <section class="card message-detail-card">
+        @if (session('success'))
+            <div class="notice" role="status">{{ session('success') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="admin-profile-errors" role="alert">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="section-heading">
             <div>
                 <span class="admin-dashboard-kicker">{{ strtoupper($detailCategory) }}</span>
@@ -273,21 +285,53 @@
             </div>
         @endif
         @if ($messageRecord->replies->isNotEmpty())
-            <h3>Replies</h3>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead><tr><th>From</th><th>Reply</th><th>Sent</th></tr></thead>
-                    <tbody>
-                        @foreach ($messageRecord->replies as $reply)
-                            <tr>
-                                <td>{{ $reply->sender?->name ?? 'Unknown' }}</td>
-                                <td>{{ \Illuminate\Support\Str::limit($reply->content, 160) }}</td>
-                                <td>{{ $reply->sent_at?->format('M j, Y g:i A') ?? '—' }}</td>
-                            </tr>
+            <section class="message-thread">
+                <h3>Conversation</h3>
+                @foreach ($messageRecord->replies as $reply)
+                    <article class="message-thread-item {{ $reply->sender_id === auth()->id() ? 'is-outgoing' : 'is-incoming' }}">
+                        <div class="message-thread-meta">
+                            <strong>{{ $reply->sender?->name ?? 'Unknown' }}</strong>
+                            <span>
+                                @if ($reply->sender_id === auth()->id())
+                                    To {{ $reply->recipients->first()?->recipient?->name ?? 'Original recipient' }}
+                                @else
+                                    Athlete reply
+                                @endif
+                                · {{ $reply->sent_at?->format('M j, Y g:i A') ?? '—' }}
+                            </span>
+                        </div>
+                        <p>{{ $reply->content }}</p>
+                    </article>
+                @endforeach
+            </section>
+        @endif
+
+        @if ($messageRecord->category === \App\Models\Message::CATEGORY_GENERAL && ! $messageRecord->event_id)
+            <form method="POST" action="{{ route('admin.messages.reply', $messageRecord) }}" class="message-reply-form">
+                @csrf
+                <h3>Reply to an athlete</h3>
+                <p class="meta">Replies are private to the selected recipient, even when the original message was sent to a group.</p>
+                <div class="form-group">
+                    <label for="message-reply-recipient">Recipient</label>
+                    <select class="form-control" id="message-reply-recipient" name="recipient_id" required>
+                        <option value="">Choose an athlete</option>
+                        @foreach ($messageRecord->recipients as $delivery)
+                            @if ($delivery->recipient)
+                                <option value="{{ $delivery->recipient_id }}" @selected((string) old('recipient_id') === (string) $delivery->recipient_id)>
+                                    {{ $delivery->recipient->name }}{{ $delivery->recipient->student_id ? ' · '.$delivery->recipient->student_id : '' }}
+                                </option>
+                            @endif
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    </select>
+                    @error('recipient_id')<small class="form-error">{{ $message }}</small>@enderror
+                </div>
+                <div class="form-group">
+                    <label for="admin-message-reply">Your reply</label>
+                    <textarea class="form-control" id="admin-message-reply" name="content" rows="4" maxlength="5000" required>{{ old('content') }}</textarea>
+                    @error('content')<small class="form-error">{{ $message }}</small>@enderror
+                </div>
+                <button class="button" type="submit">Send Reply</button>
+            </form>
         @endif
     </section>
 @else

@@ -7,6 +7,18 @@
     @php($category = \App\Models\Message::categoryName($message->category))
     @php($followUp = $message->followUp)
     <section class="card student-message-detail">
+        @if (session('success'))
+            <div class="notice" role="status">{{ session('success') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="admin-profile-errors" role="alert">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="section-heading">
             <div>
                 <span class="admin-dashboard-kicker">{{ strtoupper($category) }}</span>
@@ -58,6 +70,21 @@
 
         <div class="message-content">{{ $message->content }}</div>
 
+        @if (($threadReplies ?? collect())->isNotEmpty())
+            <section class="message-thread">
+                <h3>Conversation</h3>
+                @foreach ($threadReplies as $reply)
+                    <article class="message-thread-item {{ $reply->sender_id === auth()->id() ? 'is-outgoing' : 'is-incoming' }}">
+                        <div class="message-thread-meta">
+                            <strong>{{ $reply->sender?->name ?? 'Sports Office' }}</strong>
+                            <span>{{ $reply->sent_at?->format('M j, Y g:i A') ?? '—' }}</span>
+                        </div>
+                        <p>{{ $reply->content }}</p>
+                    </article>
+                @endforeach
+            </section>
+        @endif
+
         @if ($followUp && $followUp->response_required && $followUpRecipient && ! $followUpRecipient->isAcknowledged() && ! $followUpRecipient->isCompleted())
             <form method="POST" action="{{ route('student.messages.acknowledge', $message) }}" class="student-follow-up-actions">
                 @csrf
@@ -74,6 +101,16 @@
                 @error('content')
                     <div class="notice notice-error" role="alert">{{ $message }}</div>
                 @enderror
+                <button class="button button-secondary" type="submit">Send Reply</button>
+            </form>
+        @endif
+
+        @if (! $followUp && $message->category === \App\Models\Message::CATEGORY_GENERAL && ! $event)
+            <form method="POST" action="{{ route('student.messages.reply', $message) }}" class="student-follow-up-actions message-reply-form">
+                @csrf
+                <label for="student-general-reply">Reply to the Sports Office</label>
+                <textarea class="form-control" id="student-general-reply" name="content" rows="4" maxlength="5000" placeholder="Write a reply" required>{{ old('content') }}</textarea>
+                @error('content')<small class="form-error">{{ $message }}</small>@enderror
                 <button class="button button-secondary" type="submit">Send Reply</button>
             </form>
         @endif
@@ -104,7 +141,7 @@
                     <span class="student-message-icon" aria-hidden="true">{{ $item->event_id ? 'E' : ($item->isMedicalFollowUp() ? 'M' : 'S') }}</span>
                     <span class="student-message-copy">
                         <strong>{{ $item->subject }}</strong>
-                        <small>{{ $itemCategory }} · From {{ $item->sender?->name ?? 'Sports Office' }} · {{ $item->sent_at?->format('M j, Y g:i A') }}</small>
+                        <small>{{ $item->reply_to_message_id ? 'Reply · ' : '' }}{{ $itemCategory }} · From {{ $item->sender?->name ?? 'Sports Office' }} · {{ $item->sent_at?->format('M j, Y g:i A') }}</small>
                         @if ($item->followUp)
                             <small>{{ $item->followUp->follow_up_type }} · {{ $item->followUp->scheduleLabel() }}</small>
                         @endif

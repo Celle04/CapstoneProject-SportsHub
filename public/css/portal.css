@@ -2055,8 +2055,12 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .medical-tracker-list { display: grid; gap: 2px; margin-top: 4px; }
 .medical-tracker-row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--color-border); }
 .medical-tracker-row:last-child { border-bottom: 0; }
+.medical-tracker-row-link { border-radius: 6px; color: inherit; text-decoration: none; transition: background .15s ease, box-shadow .15s ease; }
+.medical-tracker-row-link:hover { background: var(--color-surface-raised); color: inherit; }
+.medical-tracker-row-link:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
+.medical-tracker-row-link .medical-tracker-main > strong { color: var(--color-primary); font-size: 12px; }
 .medical-tracker-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
-.medical-tracker-main a { overflow-wrap: anywhere; }
+.medical-tracker-main > strong { overflow-wrap: anywhere; }
 .medical-tracker-right { flex: 0 0 auto; display: grid; justify-items: end; gap: 4px; }
 .medical-tracker-right strong { font-size: 11px; white-space: nowrap; }
 .medical-tracker-list > .empty-state { padding: 16px 2px; }
@@ -5122,6 +5126,18 @@ a:focus-visible {
 .message-detail-metadata > span { display: grid; gap: 5px; min-width: 110px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text); font-size: 11px; }
 .message-detail-metadata strong { color: var(--color-muted); font-size: 9px; text-transform: uppercase; }
 .message-content { margin: 16px 0 22px; padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); color: var(--color-text); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-thread { display: grid; gap: 10px; margin: 18px 0; }
+.message-thread h3 { margin: 0 0 2px; font-size: 14px; }
+.message-thread-item { max-width: min(760px, 94%); padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-muted); }
+.message-thread-item.is-outgoing { justify-self: end; border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+.message-thread-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--color-muted); font-size: 10px; }
+.message-thread-meta strong { color: var(--color-text); font-size: 11px; }
+.message-thread-item p { margin: 7px 0 0; color: var(--color-text); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-reply-form { display: grid; gap: 12px; margin: 18px 0; padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); }
+.message-reply-form h3 { margin: 0; font-size: 14px; }
+.message-reply-form > .meta { margin: -5px 0 0; line-height: 1.5; }
+.message-reply-form .form-group { margin: 0; }
+.message-reply-form textarea { width: 100%; }
 .message-reminder-schedule { display: grid; gap: 5px; margin: 16px 0; padding: 14px; border-left: 3px solid var(--color-primary); border-radius: 6px; background: var(--color-primary-soft); color: var(--color-text); font-size: 12px; }
 .message-reminder-schedule strong { color: var(--color-primary); }
 .student-message-items { display: grid; }
