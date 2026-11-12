@@ -2283,21 +2283,7 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     .medical-tracker-right { justify-items: start; margin-left: 44px; }
     .medical-hero { flex-direction: column; align-items: flex-start; }
 }
-@media print {
-    body { background: #fff; }
-    .portal-sidebar, .portal-sidebar-backdrop, .portal-topbar, .module-header, .notice, .report-filter-panel, .report-type-panel, .report-actions, .report-low-attendance, .report-application-summary { display: none !important; }
-    .portal-main { padding: 0; }
-    .table-wrap { overflow: visible; border: 0; }
-    .report-table, .data-table { min-width: 0 !important; }
-    .report-print-header { display: block; margin-bottom: 18px; text-align: center; }
-    .report-print-header h1 { font-size: 24px; }
-    .report-print-header h2 { margin: 6px 0; font-size: 18px; }
-    .report-print-header p { color: #555; font-size: 11px; }
-    .report-summary-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .report-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .card { box-shadow: none; border: 1px solid #ddd; }
-    .report-data-panel { margin-top: 18px; }
-}
+
 .activity-list { display: grid; gap: 14px; }
 .activity-item { display: flex; align-items: flex-start; gap: 10px; }
 .activity-marker { width: 9px; height: 9px; margin-top: 4px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 4px var(--color-primary-soft); }
@@ -5267,4 +5253,43 @@ a:focus-visible {
     .message-recipient-list { grid-template-columns: 1fr; }
     .message-search-form .form-control { max-width: none; }
     .student-message-status { display: none; }
+}
+
+
+@media print {
+    body { background: #fff; }
+    .portal-sidebar, .portal-sidebar-backdrop, .portal-topbar, .module-header, .notice, .report-filter-panel, .report-type-panel, .report-actions, .report-export-panel, .report-export-choice, .report-export-actions, .report-export-sports, .report-low-attendance, .report-application-summary { display: none !important; }
+    .portal-main { padding: 0; }
+    .table-wrap { overflow: visible; border: 0; }
+
+    /*
+     * A printed report is a document of the school. The table therefore uses
+     * the whole width of the paper, its columns share that width instead of
+     * pushing the last ones off the page, and the header of the table is
+     * repeated on every sheet.
+     */
+    .report-table, .data-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: auto;
+        font-size: 9px;
+    }
+    .report-table th, .data-table th { padding: 6px 5px; font-size: 8px; word-break: normal; overflow-wrap: break-word; }
+    .report-table td, .data-table td { padding: 6px 5px; overflow-wrap: break-word; word-break: normal; }
+    .report-table thead { display: table-header-group; }
+    .report-table tfoot { display: table-footer-group; }
+    .report-table tr { break-inside: avoid; }
+    .report-print-header { display: block; margin-bottom: 10px; text-align: center; }
+    .report-print-header h1 { font-size: 20px; }
+    .report-print-header h2 { margin: 4px 0; font-size: 15px; }
+    .report-print-header p { color: #555; font-size: 9px; }
+    .report-summary-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .report-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .report-summary-grid .card { padding: 7px 9px; }
+    .report-summary-grid .card strong { font-size: 14px; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    .report-data-panel { margin-top: 10px; padding: 10px; }
+    .report-data-panel .section-heading { margin-bottom: 6px; }
+    .report-data-panel .section-heading h2 { font-size: 13px; }
+    .report-data-panel .section-heading p { font-size: 9px; }
 }
