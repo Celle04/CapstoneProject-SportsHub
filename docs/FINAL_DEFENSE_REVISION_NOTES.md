@@ -2,6 +2,38 @@
 
 This document records the Final Defense documentation revisions aligned with the current implemented SNNHS SportsHub system (Laravel 12, PHP 8.2, MySQL, Blade/Tailwind/PWA). It covers the Conceptual Framework, Project Gantt Chart (May–November 2026), Use Case Diagram, Class Diagram, and Sequence Diagram.
 
+## Revision 4 — Section 1.4 Scope and Limitations rewritten (current)
+
+Section 1.4 now describes the project as it is actually built and deployed. The wording was checked against the code, not against the earlier draft.
+
+**What was corrected**
+- The public status page (reference number + application email) is named in the scope, because applicants without an account use it.
+- The Messages & Follow-ups bullet now states the real composing options: category, priority, recipient group (one athlete, a selected set, all active athletes, or one sport), and drafts.
+- The athlete bullet now includes the acknowledgment of a medical follow-up and the reply to the sports office.
+- The administrator bullet now includes the administrator's own profile.
+- The delivery bullet now states where the system runs: a live container deployment with PHP 8.3 served by Apache and the data in MySQL.
+- The evaluation bullet is now in the past tense, because the ISO/IEC 25010 evaluation with fifteen (15) respondents has been carried out, and it mentions the automated feature test suite that backs the software.
+- The scope no longer says the evaluation "will be conducted".
+
+**Limitations added, each tied to a real boundary of the system**
+1. Notifications are in-app only; no SMS, email, or push, so an athlete who does not open the portal is not alerted.
+2. Only two account roles exist; coaches are records and cannot sign in, and there is no finer permission level for a sports adviser or medical officer.
+3. There is no parent or guardian portal; the consent form and the medical certificate are scanned documents verified by hand.
+4. The clearance status depends on the uploaded certificate and the coordinator's entry; the system does not verify fitness to play against the school clinic.
+5. The system runs as a single hosted instance with one database, without an automated backup and restore routine, multi-school support, or high availability.
+6. The evaluation rests on fifteen respondents at one school, and the automated test suite proves the behaviour of the software but cannot stand in for a longer period of actual use.
+
+The old limitations that were kept are unchanged: no financial management, no grading, no external system integration, no native mobile application, the generalizability of the evaluation, the dependence on manual data entry, and the limits of the offline caching.
+
+**Files updated**
+- `docs/SportsHub_Revised.md` — section 1.4 replaced.
+- `docs/Capstone_Project_Final_Documentation.md` and `.txt` — section 1.4 replaced.
+- `docs/LatestDocuments_SportsHub_CORRECTED.txt` — section 1.4 replaced with the same wording in the numbered layout of that export.
+- `docs/SportsHub_Capstone_Final_Revised.docx` — the twelve scope bullets and the ten limitation bullets of the Word manuscript were rewritten in place; the numbering and the run formatting of the list are unchanged.
+
+**Manual step still open in the Google Doc**
+The Google copy of the manuscript has to receive the same section by hand: delete the current scope and limitation bullets of 1.4 and paste the new ones from `docs/SportsHub_Revised.md` (lines 96 to 118). The section is the only part that changed, so nothing else in the Google Doc has to be touched.
+
 ## Revision 3 — Clearer headings and forgiving action addresses (current)
 
 - **Repeated headings removed.** The athlete pages no longer print their own title twice: *My Application* now carries the section *Application details*, *Messages & Follow-ups* carries *Received messages*, and *Sports Programs* carries *Enrolled programs*. On the administrator side the records sections carry *Examination records*, *Recorded accomplishments*, and *Sent messages and drafts*.
