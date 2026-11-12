@@ -74,7 +74,9 @@
             $navGroups = collect($navItems ?? [])->groupBy('group');
             $portalUser = auth()->user();
             $portalHome = $homeUrl ?? ($portalUser?->role === 'Student' ? route('student.dashboard') : route('dashboard'));
-            $portalProfileUrl = $portalUser?->role === 'Student' ? route('student.profile') : null;
+            $portalProfileUrl = $portalUser?->role === 'Student'
+                ? route('student.profile')
+                : ($portalUser?->role === 'Administrator' ? route('admin.profile') : null);
         @endphp
         <aside class="portal-sidebar" id="portal-sidebar">
             <button type="button" class="portal-sidebar-close" data-sidebar-close aria-label="Close navigation">

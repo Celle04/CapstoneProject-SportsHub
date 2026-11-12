@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\AttendanceController;
@@ -723,12 +724,16 @@ $adminPage = function (string $page, array $data = []) use ($adminNav) {
         'events' => ['Event Scheduling', 'Manage training sessions and competitions', 'Create Event'],
         'attendance' => ['Attendance Management', 'Track and record athlete attendance', null],
         'reports' => ['Reports', 'Generate and download reports', null],
+        'profile' => ['My Profile', 'Manage your personal administrator account', null],
     ][$page];
 
     return view('admin.page', array_merge(['page' => $page, 'heading' => $content[0], 'subtitle' => $content[1], 'action' => $content[2], 'active' => $page, 'navItems' => $adminNav, 'roleLabel' => 'Admin Portal', 'userName' => auth()->user()->name, 'userRole' => 'Administrator'], $data));
 };
 
 Route::middleware(['auth', 'administrator'])->group(function () use ($adminPage, $calendarData) {
+Route::get('/admin/profile', fn () => $adminPage('profile', ['admin' => auth()->user()]))->name('admin.profile');
+Route::patch('/admin/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+Route::patch('/admin/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 Route::get('/dashboard', function () use ($adminPage) {
     $today = today();
 

@@ -33,6 +33,7 @@ class PortalNavigation
             ['key' => 'achievements', 'label' => 'Achievements', 'icon' => 'trophy', 'route' => 'admin.achievements', 'group' => 'Records'],
             ['key' => 'certificate-requests', 'label' => 'Certificate Requests', 'icon' => 'certificate', 'route' => 'admin.certificate-requests', 'group' => 'Records'],
             ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart', 'route' => 'reports.index', 'group' => 'Insights'],
+            ['key' => 'profile', 'label' => 'My Profile', 'icon' => 'user', 'route' => 'admin.profile', 'group' => 'Account'],
         ];
     }
 

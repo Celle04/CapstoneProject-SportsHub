@@ -9,9 +9,8 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Shared profile photo upload, replacement and removal.
  *
- * Both the athlete's own profile form and the administrator's athlete form post
- * the same fields, so the rules, messages and file handling live here instead of
- * being copied between the two controllers.
+ * Profile forms post the same fields, so the rules, messages and file handling
+ * live here instead of being copied between controllers.
  */
 trait HandlesProfilePhotos
 {
@@ -51,31 +50,35 @@ trait HandlesProfilePhotos
      * Uploading always wins over the remove checkbox: picking a new image and
      * ticking "remove" in the same submission keeps the new image.
      */
-    protected function syncProfilePhoto(Request $request, User $athlete): void
+    protected function syncProfilePhoto(Request $request, User $user): void
     {
-        $previousPhoto = $athlete->profile_photo_path;
+        $previousPhoto = $user->profile_photo_path;
 
         if ($request->boolean('remove_photo') && ! $request->hasFile('profile_photo')) {
-            $athlete->profile_photo_path = null;
+            $user->profile_photo_path = null;
         }
 
         if ($request->hasFile('profile_photo')) {
-            $athlete->profile_photo_path = $request->file('profile_photo')->store(self::PHOTO_DIRECTORY, 'public');
+            $user->profile_photo_path = $request->file('profile_photo')->store(self::PHOTO_DIRECTORY, 'public');
         }
 
-        $athlete->save();
+        $user->save();
 
-        if ($athlete->profile_photo_path !== $previousPhoto) {
-            $this->deleteStoredPhoto($previousPhoto);
+        if ($user->profile_photo_path !== $previousPhoto) {
+            $this->deleteStoredPhoto($previousPhoto, (int) $user->getKey());
         }
     }
 
     /**
-     * Only uploaded profile photos are removed. Shared or default images stay.
+     * Only unreferenced uploads in the profile directory are removed.
      */
-    private function deleteStoredPhoto(?string $path): void
+    private function deleteStoredPhoto(?string $path, int $userId): void
     {
         if (! $path || ! str_starts_with($path, self::PHOTO_DIRECTORY.'/')) {
+            return;
+        }
+
+        if (User::where('profile_photo_path', $path)->whereKeyNot($userId)->exists()) {
             return;
         }
 

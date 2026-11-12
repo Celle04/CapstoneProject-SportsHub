@@ -81,6 +81,16 @@ run `php artisan migrate --force` after confirming the production database and
 backup). Students see only messages addressed to their own account, and
 opening a message records its read timestamp.
 
+### Administrator profile
+
+Administrators can manage only their own name, email, optional username,
+profile picture, and password at **My Profile** in the admin sidebar.
+Profile pictures use the existing `users.profile_photo_path` field and public
+storage disk; no profile table or migration is needed. A changed email is
+marked unverified because the current portal does not implement email
+verification. On Railway, keep the configured persistent storage volume
+mounted at `storage/app` so uploaded profile pictures survive redeployments.
+
 The demo `admin@example.com` account is only seeded in local and testing
 environments. To create a production administrator, open the Railway web
 service console after this code is deployed and run `php artisan admin:create`.
