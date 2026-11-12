@@ -85,7 +85,7 @@
 @else
     <section class="card student-message-list">
         <div class="section-heading">
-            <div><span class="admin-dashboard-kicker">YOUR INBOX</span><h2>Messages &amp; Follow-ups</h2></div>
+            <div><span class="admin-dashboard-kicker">YOUR INBOX</span><h2>Received messages</h2></div>
         </div>
         <nav class="message-filter-tabs" aria-label="Message filters">
             <a href="{{ route('student.messages', ['tab' => 'all']) }}" class="{{ $messageTab === 'all' ? 'is-active' : '' }}">All ({{ $messageSummary['total'] }})</a>

@@ -197,7 +197,7 @@
         <div class="section-heading">
             <div>
                 <span class="admin-dashboard-kicker">ALL RECORDS</span>
-                <h2>Achievements</h2>
+                <h2>Recorded accomplishments</h2>
                 <p>{{ count($achievements ?? []) }} record{{ count($achievements ?? []) === 1 ? '' : 's' }} matching the current filters</p>
             </div>
             <a class="button button-secondary" href="{{ route('admin.achievements.certificate.generate') }}">Preview Certificate</a>

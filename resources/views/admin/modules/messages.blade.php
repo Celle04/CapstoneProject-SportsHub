@@ -302,7 +302,7 @@
 
     <section class="card message-list-card">
         <div class="section-heading">
-            <div><span class="admin-dashboard-kicker">SPORTSHUB INBOX</span><h2>Messages &amp; Follow-ups</h2></div>
+            <div><span class="admin-dashboard-kicker">SPORTSHUB INBOX</span><h2>Sent messages and drafts</h2></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <a class="button button-secondary" href="{{ route('admin.messages.create', ['category' => 'general']) }}">Compose Message</a>
                 <a class="button" href="{{ route('admin.messages.create', ['category' => 'medical_follow_up']) }}">Send Medical Follow-up</a>

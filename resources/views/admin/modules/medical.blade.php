@@ -607,7 +607,7 @@
         <div class="medical-card-head">
             <div>
                 <span class="admin-dashboard-kicker">ALL RECORDS</span>
-                <h2>Medical Records</h2>
+                <h2>Examination records</h2>
                 <p>{{ $recordCount }} record{{ $recordCount === 1 ? '' : 's' }} matching the current filters</p>
             </div>
             <span class="medical-count-chip">{{ $recordCount }}</span>

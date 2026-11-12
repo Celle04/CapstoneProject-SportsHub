@@ -2,7 +2,7 @@
     <header class="student-sports-heading">
         <div>
             <span class="student-sports-kicker">YOUR SPORTSHUB</span>
-            <h2>Sports programs</h2>
+            <h2>Enrolled programs</h2>
             <p>Choose a program to view its enrolled athletes.</p>
         </div>
         <span class="student-sports-count">{{ ($studentSports ?? collect())->count() }} {{ ($studentSports ?? collect())->count() === 1 ? 'program' : 'programs' }}</span>
