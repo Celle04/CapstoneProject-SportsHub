@@ -190,6 +190,12 @@
         @if ($errors->has('checkup_reminder'))
             <div class="notice notice-error" role="alert">{{ $errors->first('checkup_reminder') }}</div>
         @endif
+        <div class="medical-detail-back">
+            <a class="button button-secondary" href="{{ route('admin.medical') }}">
+                <svg class="button-icon" aria-hidden="true"><use href="#icon-arrow-left"></use></svg>
+                Back to list
+            </a>
+        </div>
         <div class="profile-hero medical-hero">
             <span class="avatar avatar--lg avatar-initials medical-hero-avatar" aria-hidden="true">{{ filled($selectedMedicalRecord->athlete?->name ?? '') ? $initials($selectedMedicalRecord->athlete->name) : '?' }}</span>
             <div class="medical-hero-copy">
@@ -202,7 +208,6 @@
                     @if ($selectedMedicalRecord->isArchived()) &middot; <span class="badge">Archived</span> @endif
                 </p>
             </div>
-            <a class="medical-hero-back" href="{{ route('admin.medical') }}">Back to list</a>
         </div>
 
         <div class="medical-fact-grid">

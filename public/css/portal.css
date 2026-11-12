@@ -2074,8 +2074,7 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
 .profile-hero .badge,
 .medical-hero .badge,
 .coach-detail-hero .badge { color: #fff; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .22); }
-.medical-hero-back { align-self: center; flex: 0 0 auto; padding: 8px 14px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700; text-decoration: none; transition: background .15s ease; }
-.medical-hero-back:hover { background: rgba(255, 255, 255, .14); color: #fff; }
+.medical-detail-back { display: flex; justify-content: flex-start; margin-bottom: 14px; }
 .medical-fact-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--color-border); }
 .medical-fact { display: grid; gap: 5px; min-width: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; background: rgba(255, 255, 255, .45); }
 .medical-fact span { color: var(--color-muted); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
@@ -2192,7 +2191,6 @@ html[data-theme="dark"] .attention-danger > span { background: var(--color-dange
     .medical-tracker-row { align-items: flex-start; flex-wrap: wrap; }
     .medical-tracker-right { justify-items: start; margin-left: 44px; }
     .medical-hero { flex-direction: column; align-items: flex-start; }
-    .medical-hero-back { align-self: flex-start; }
 }
 @media print {
     body { background: #fff; }
