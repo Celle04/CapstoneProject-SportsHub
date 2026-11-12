@@ -59,6 +59,12 @@ return new class extends Migration
             });
         }
 
+        if (! $this->hasIndex('medical_follow_ups', 'medical_follow_ups_message_id_unique')) {
+            Schema::table('medical_follow_ups', function (Blueprint $table) {
+                $table->unique('message_id', 'medical_follow_ups_message_id_unique');
+            });
+        }
+
         if (! $this->hasIndex('medical_follow_up_recipients', 'medical_follow_up_recipient_unique')) {
             Schema::table('medical_follow_up_recipients', function (Blueprint $table) {
                 $table->unique(['medical_follow_up_id', 'recipient_id'], 'medical_follow_up_recipient_unique');
