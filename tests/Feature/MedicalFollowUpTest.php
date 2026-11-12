@@ -520,6 +520,33 @@ class MedicalFollowUpTest extends TestCase
         $this->assertTrue($followUp->recipients()->firstOrFail()->isAcknowledged());
     }
 
+    public function test_the_confirmation_of_an_action_is_shown_once(): void
+    {
+        [$admin, $first] = $this->context();
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->followUpPayload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+            'response_required' => true,
+        ]));
+
+        $response = $this->actingAs($first)
+            ->from(route('student.messages.show', $message))
+            ->post(route('student.messages.acknowledge', $message));
+
+        $response->assertRedirect(route('student.messages.show', $message));
+
+        $page = $this->actingAs($first)->get(route('student.messages.show', $message));
+
+        $page->assertOk();
+
+        // The confirmation is written once, not once per layer of the page.
+        $this->assertSame(
+            1,
+            substr_count($page->getContent(), 'Acknowledged. The sports office can now see your confirmation.'),
+            'The confirmation is shown more than once.'
+        );
+    }
+
     public function test_the_old_follow_up_links_point_to_the_unified_module(): void
     {
         [$admin, $first] = $this->context();

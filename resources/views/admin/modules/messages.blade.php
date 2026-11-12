@@ -178,9 +178,7 @@
         $detailCategory = \App\Models\Message::categoryName($messageRecord->category);
     @endphp
     <section class="card message-detail-card">
-        @if (session('success'))
-            <div class="notice" role="status">{{ session('success') }}</div>
-        @endif
+        {{-- The confirmation of an action is shown once, at the top of the module. --}}
         @if ($errors->any())
             <div class="admin-profile-errors" role="alert">
                 <ul>

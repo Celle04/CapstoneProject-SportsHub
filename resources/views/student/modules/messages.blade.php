@@ -7,9 +7,7 @@
     @php($category = \App\Models\Message::categoryName($message->category))
     @php($followUp = $message->followUp)
     <section class="card student-message-detail">
-        @if (session('success'))
-            <div class="notice" role="status">{{ session('success') }}</div>
-        @endif
+        {{-- The confirmation of an action is shown once, by the page itself. --}}
         @if ($errors->any())
             <div class="admin-profile-errors" role="alert">
                 <ul>

@@ -404,6 +404,35 @@ class MessagesTest extends TestCase
             ->assertSee('Unread');
     }
 
+    public function test_the_confirmation_of_an_action_is_shown_once(): void
+    {
+        [$admin, $first] = $this->context();
+
+        $message = app(\App\Services\MessageDeliveryService::class)->send($admin, $this->payload([
+            'recipient_type' => 'individual',
+            'athlete_id' => $first->id,
+        ]));
+
+        $this->actingAs($admin)
+            ->from(route('admin.messages.show', $message))
+            ->post(route('admin.messages.reply', $message), [
+                'recipient_id' => $first->id,
+                'content' => 'Noted, thank you.',
+            ])
+            ->assertRedirect(route('admin.messages.show', $message));
+
+        $page = $this->actingAs($admin)->get(route('admin.messages.show', $message));
+
+        $page->assertOk();
+
+        // The confirmation is written once, not once per layer of the page.
+        $this->assertSame(
+            1,
+            substr_count($page->getContent(), 'Reply sent to Juan Dela Cruz.'),
+            'The confirmation is shown more than once.'
+        );
+    }
+
     public function test_invalid_compose_submission_returns_to_a_renderable_form_with_validation_errors(): void
     {
         [$admin] = $this->context();
