@@ -222,5 +222,3 @@
 		@endif
 	</section>
 </div>
-
-<script src="{{ asset('js/profile.js') }}" defer></script>

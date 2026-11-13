@@ -572,4 +572,16 @@ class StudentProfileTest extends TestCase
     {
         return Sport::create(['name' => 'Basketball', 'classification' => 'Team Sport', 'description' => 'Court sport', 'status' => 'Active']);
     }
+
+    public function test_the_profile_page_loads_profile_js_exactly_once(): void
+    {
+        $athlete = $this->athlete();
+
+        $html = (string) $this->actingAs($athlete)->get(route('student.profile'))->getContent();
+
+        // profile.js attaches its click handlers once per load. When the page
+        // carries the file twice, every click on the eye icon toggles the
+        // password on and straight back off, and the icon looks dead.
+        $this->assertSame(1, substr_count($html, 'js/profile.js'));
+    }
 }

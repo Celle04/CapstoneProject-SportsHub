@@ -5266,6 +5266,16 @@ a:focus-visible {
     .student-message-status { display: none; }
 }
 
+/* Framework error pages (403 / 404 / 419 / 422 / 500) reuse the auth card:
+ * the code, a plain-language title, any message the app attached to the
+ * error, and one clear button back to the user's own portal. */
+.error-page-body { text-align: center; padding: 8px 4px 4px; }
+.error-page-code { margin: 0; font-size: 44px; font-weight: 800; letter-spacing: 3px; color: var(--color-primary); line-height: 1; }
+.error-page-title { margin: 10px 0 6px; font-size: 19px; color: var(--color-text); }
+.error-page-text { margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-muted); }
+.error-page-text strong { color: var(--color-muted-strong); }
+.error-page-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
 
 @media print {
     body { background: #fff; }
