@@ -158,8 +158,12 @@ class AttendanceSessionService
             abort_unless($locked->session_date?->isToday(), 422, 'Check-in is only available on the session date.');
 
             $sportId = $locked->effectiveSportId();
+            /* A session with no sport anywhere is an "All Sports" session, so
+             * every active athlete belongs to it (the same rule the roster and
+             * the notifications use). A session with a sport only admits the
+             * athletes of that sport. */
             abort_unless(
-                $sportId && $athlete->sport_id && (int) $sportId === (int) $athlete->sport_id,
+                ! $sportId || (int) $sportId === (int) $athlete->sport_id,
                 403,
                 'You are not eligible for this attendance session.'
             );

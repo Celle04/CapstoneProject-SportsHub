@@ -237,6 +237,45 @@ class SportBasedAttendanceTest extends TestCase
         $this->assertDatabaseMissing('attendances', ['attendance_session_id' => $open->id, 'user_id' => $runner->id]);
     }
 
+    public function test_every_active_athlete_can_check_in_to_an_all_sports_session(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+        $basketball = $this->sport('Basketball');
+        $athletics = $this->sport('Athletics');
+        $juan = $this->athlete($basketball, 'Juan Dela Cruz', '20260001');
+        $runner = $this->athlete($athletics, 'Runner Boy', '20260005');
+
+        // A session with no sport anywhere is an "All Sports" session: it is
+        // announced to every athlete and must admit every athlete.
+        $session = AttendanceSession::create([
+            'title' => 'Intramurals Attendance',
+            'session_date' => today(),
+            'start_time' => now()->subMinutes(30)->format('H:i'),
+            'late_grace_minutes' => 60,
+            'venue' => 'SNNHS Gymnasium',
+            'status' => 'Open',
+            'created_by' => $admin->id,
+        ]);
+
+        app(AttendanceSessionService::class)->syncRoster($session);
+
+        $this->actingAs($juan)->post(route('student.attendance.check-in', $session))
+            ->assertSessionHas('success');
+        $this->actingAs($runner)->post(route('student.attendance.check-in', $session))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendances', [
+            'attendance_session_id' => $session->id,
+            'user_id' => $juan->id,
+            'status' => 'Present',
+        ]);
+        $this->assertDatabaseHas('attendances', [
+            'attendance_session_id' => $session->id,
+            'user_id' => $runner->id,
+            'status' => 'Present',
+        ]);
+    }
+
     public function test_closed_and_cancelled_sessions_reject_new_check_ins(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);
