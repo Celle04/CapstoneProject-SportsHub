@@ -21,6 +21,31 @@ class EventSchedulingTest extends TestCase
         $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
+    public function test_the_attendance_card_explains_a_field_that_lies_behind_it(): void
+    {
+        $admin = User::factory()->create(['role' => 'Administrator']);
+
+        $response = $this->actingAs($admin)->get(route('events.create'));
+
+        $response->assertOk()
+            // The card carries the notice that explains a missing field.
+            ->assertSee('data-app-modal-notice', false)
+            // The event fields are required and live behind the card.
+            ->assertSee('id="title"', false)
+            ->assertSee('name="starts_at"', false);
+
+        $html = $response->getContent();
+
+        // The attendance fields travel with the event form, so one submit saves
+        // the event and its first session.
+        $this->assertStringContainsString('name="attendance[title]"', $html);
+        $this->assertLessThan(
+            strpos($html, 'name="attendance[title]"'),
+            strpos($html, 'id="title"'),
+            'The attendance fields are no longer part of the event form.'
+        );
+    }
+
     public function test_the_calendar_opens_the_events_it_shows(): void
     {
         $admin = User::factory()->create(['role' => 'Administrator']);

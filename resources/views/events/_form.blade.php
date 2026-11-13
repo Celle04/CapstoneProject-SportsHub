@@ -67,6 +67,13 @@
             <button class="app-modal-close" type="button" data-app-modal-close aria-label="Close dialog"><svg aria-hidden="true"><use href="#icon-x"></use></svg></button>
         </header>
         <div class="app-modal-body">
+            {{--
+                The event fields live behind this card. When one of them is
+                empty, the browser refuses to send the form and puts its own
+                warning behind the card, where nobody can see it. This notice
+                says what is missing instead.
+            --}}
+            <div class="app-modal-error" data-app-modal-notice role="alert" hidden></div>
             @include('events._attendance-fields', [
                 'attendancePrefix' => $attendancePrefix,
                 'attendanceFormId' => $attendanceFormId,

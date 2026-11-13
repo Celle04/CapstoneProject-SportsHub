@@ -3703,6 +3703,12 @@ html[data-theme="dark"] .cert-request-reject-reason { border-color: rgba(255, 25
 .app-modal-error[hidden] { display: none; }
 .app-modal-error strong { display: block; margin: 0 0 2px; color: var(--color-danger-hover); font-size: 12px; }
 
+/* The "missing field behind the card" notice is clickable: it closes the card
+ * and puts the cursor in the field that blocked the save. */
+.app-modal-error[data-app-modal-notice] { cursor: pointer; }
+.app-modal-error[data-app-modal-notice]:hover { border-color: var(--color-danger-hover); }
+.app-modal-error[data-app-modal-notice]:focus-visible { outline: 2px solid var(--color-danger-hover); outline-offset: 2px; }
+
 /* Foot */
 .app-modal-foot {
     flex: 0 0 auto;

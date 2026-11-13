@@ -141,7 +141,113 @@
             }
         }
         window.scrollTo(0, scrollY);
+        hideMissingBehind(dialog);
     }
+
+    /* ---- A required field that lies behind the card ----
+     * The browser refuses to send the form when a field that is hidden behind
+     * an open card is empty, and it puts its own warning right there, behind
+     * the card, where nobody can see it. The card itself then says what is
+     * missing, so the button never looks like it does nothing.
+     */
+    function fieldLabel(control) {
+        if (!control || !control.id) {
+            return '';
+        }
+
+        var label = document.querySelector('label[for="' + control.id + '"]');
+
+        return label ? label.textContent.trim() : '';
+    }
+
+    function showMissingBehind(dialog, control) {
+        var notice = dialog.querySelector('[data-app-modal-notice]');
+
+        if (!notice) {
+            return;
+        }
+
+        dialog._missingControl = control;
+
+        var label = fieldLabel(control);
+        var message = label
+            ? 'Complete "' + label + '" first - it is behind this card. Click here to fill it in.'
+            : 'Complete the required fields first - they are behind this card. Click here to fill them in.';
+
+        notice.textContent = message;
+        notice.hidden = false;
+
+        try {
+            notice.scrollIntoView({ block: 'nearest' });
+        } catch (e) {
+            /* the notice is already in view */
+        }
+    }
+
+    /* Clicking the notice closes the card and puts the cursor in the field
+     * that blocked the save. The card keeps everything the user already
+     * typed, because closing a dialog only hides it. */
+    document.addEventListener('click', function (event) {
+        var notice = closest(event.target, '[data-app-modal-notice]');
+
+        if (!notice) {
+            return;
+        }
+
+        var dialog = closest(notice, 'dialog.app-modal');
+
+        if (!dialog || !dialog.open) {
+            return;
+        }
+
+        var control = dialog._missingControl;
+
+        closeDialog(dialog);
+
+        if (control && typeof control.focus === 'function') {
+            try {
+                control.focus({ preventScroll: true });
+            } catch (e) {
+                control.focus();
+            }
+            try {
+                control.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            } catch (e) {
+                /* the field may already be in view */
+            }
+        }
+    });
+
+    function hideMissingBehind(dialog) {
+        var notice = dialog.querySelector('[data-app-modal-notice]');
+
+        if (notice) {
+            notice.hidden = true;
+            notice.textContent = '';
+        }
+    }
+
+    document.addEventListener('invalid', function (event) {
+        var control = event.target;
+        var dialog = document.querySelector('dialog.app-modal[open]');
+
+        if (!dialog || !control || dialog.contains(control)) {
+            return;
+        }
+
+        showMissingBehind(dialog, control);
+    }, true);
+
+    /* The notice disappears as soon as the field behind the card is filled. */
+    document.addEventListener('input', function (event) {
+        var dialog = document.querySelector('dialog.app-modal[open]');
+
+        if (!dialog || dialog.contains(event.target)) {
+            return;
+        }
+
+        hideMissingBehind(dialog);
+    }, true);
 
     function isBusy(dialog) {
         return dialog.getAttribute(BUSY_ATTR) === 'true';
